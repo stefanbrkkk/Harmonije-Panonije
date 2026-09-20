@@ -10,7 +10,6 @@ export function createSocialImage() {
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
           width: "100%",
           height: "100%",
           position: "relative",
@@ -19,23 +18,26 @@ export function createSocialImage() {
           color: "#fbf7ec",
         }}
       >
-        {/* Background decorative circles - using display: none to avoid flex validation error */}
-        <div style={{ position: "absolute", width: 650, height: 650, borderRadius: 999, border: "1px solid rgba(239,201,110,.2)", right: -150, top: -100, display: "none" }} />
-        <div style={{ position: "absolute", width: 470, height: 470, borderRadius: 999, border: "1px solid rgba(239,201,110,.16)", right: -20, top: 35, display: "none" }} />
+        {/* Background decorative circles */}
+        <div style={{ position: "absolute", width: 650, height: 650, borderRadius: 999, border: "1px solid rgba(239,201,110,.2)", right: -150, top: -100 }} />
+        <div style={{ position: "absolute", width: 470, height: 470, borderRadius: 999, border: "1px solid rgba(239,201,110,.16)", right: -20, top: 35 }} />
         
-        {/* Main content container */}
-        <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: "100%", height: "100%", padding: "70px 74px" }}>
-          <div style={{ display: "flex", flexDirection: "column", width: 690 }}>
+        {/* Main content: horizontal row */}
+        <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", width: "100%", height: "100%", padding: "70px 74px" }}>
+          
+          {/* LEFT: Text column */}
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", gap: 30 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 18, letterSpacing: 3, textTransform: "uppercase", color: "#efc96e" }}>
               <span style={{ width: 48, height: 1, background: "#efc96e" }} /> Novi Sad · od 2022.
             </div>
-            <div style={{ marginTop: 30, fontSize: 78, lineHeight: .92, letterSpacing: -4 }}>Harmonija prirode u svakoj flaši.</div>
-            <div style={{ marginTop: 34, width: 610, fontSize: 22, lineHeight: 1.45, color: "rgba(251,247,236,.72)" }}>
+            <div style={{ fontSize: 78, lineHeight: .92, letterSpacing: -4 }}>Harmonija prirode u svakoj flaši.</div>
+            <div style={{ width: 610, fontSize: 22, lineHeight: 1.45, color: "rgba(251,247,236,.72)" }}>
               Immuno Craft sirupi, sokovi i busteri sa livadskim medom, ceđenim limunom, voćem i biljem.
             </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 14, height: 430, marginRight: 45 }}>
+          {/* RIGHT: Bottle group */}
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-end", gap: 24 }}>
             {[0, 1, 2].map((item) => (
               <div
                 key={item}

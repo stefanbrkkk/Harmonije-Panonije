@@ -48,7 +48,8 @@ export function ProductCatalog() {
   };
 
   useEffect(() => {
-    setExpanded(false);
+    const timer = setTimeout(() => setExpanded(false), 0);
+    return () => clearTimeout(timer);
   }, [active]);
 
   return (
