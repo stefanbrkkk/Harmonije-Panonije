@@ -9,18 +9,22 @@ export function createSocialImage() {
     (
       <div
         style={{
+          display: "flex",
+          flexDirection: "column",
           width: "100%",
           height: "100%",
-          display: "flex",
           position: "relative",
           overflow: "hidden",
           background: "#17362d",
           color: "#fbf7ec",
         }}
       >
-        <div style={{ position: "absolute", width: 650, height: 650, borderRadius: 999, border: "1px solid rgba(239,201,110,.2)", right: -150, top: -100 }} />
-        <div style={{ position: "absolute", width: 470, height: 470, borderRadius: 999, border: "1px solid rgba(239,201,110,.16)", right: -20, top: 35 }} />
-        <div style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between", padding: "70px 74px" }}>
+        {/* Background decorative circles - using display: none to avoid flex validation error */}
+        <div style={{ position: "absolute", width: 650, height: 650, borderRadius: 999, border: "1px solid rgba(239,201,110,.2)", right: -150, top: -100, display: "none" }} />
+        <div style={{ position: "absolute", width: 470, height: 470, borderRadius: 999, border: "1px solid rgba(239,201,110,.16)", right: -20, top: 35, display: "none" }} />
+        
+        {/* Main content container */}
+        <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: "100%", height: "100%", padding: "70px 74px" }}>
           <div style={{ display: "flex", flexDirection: "column", width: 690 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 18, letterSpacing: 3, textTransform: "uppercase", color: "#efc96e" }}>
               <span style={{ width: 48, height: 1, background: "#efc96e" }} /> Novi Sad · od 2022.
@@ -36,6 +40,8 @@ export function createSocialImage() {
               <div
                 key={item}
                 style={{
+                  display: "flex",
+                  flexDirection: "column",
                   position: "relative",
                   width: item === 1 ? 124 : 92,
                   height: item === 1 ? 390 : 330,
@@ -56,6 +62,8 @@ export function createSocialImage() {
         </div>
       </div>
     ),
-    socialImageSize,
+    {
+      ...socialImageSize,
+    },
   );
 }
