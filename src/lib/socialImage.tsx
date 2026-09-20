@@ -40,6 +40,8 @@ export function createSocialImage() {
               <div
                 key={item}
                 style={{
+                  display: "flex",
+                  flexDirection: "column",
                   position: "relative",
                   width: item === 1 ? 124 : 92,
                   height: item === 1 ? 390 : 330,
