@@ -18,7 +18,8 @@ export function Header() {
       if (raf) return;
       raf = requestAnimationFrame(() => {
         raf = 0;
-        setScrolled(window.scrollY > 24);
+        // Hysteresis avoids flicker when hovering near the threshold.
+        setScrolled((value) => (value ? window.scrollY > 12 : window.scrollY > 24));
       });
     };
     onScroll();
@@ -30,6 +31,7 @@ export function Header() {
   }, []);
 
   useEffect(() => {
+    document.body.classList.toggle("has-overlay", menuOpen);
     if (!menuOpen) return;
     const previous = document.body.style.overflow;
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -58,6 +60,7 @@ export function Header() {
     window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = previous;
+      document.body.classList.remove("has-overlay");
       window.removeEventListener("keydown", onKeyDown);
       (previousFocus ?? menuButtonRef.current)?.focus();
     };

@@ -41,7 +41,11 @@ export function OrderDrawer() {
   useEffect(() => {
     if (!isOpen) return;
     const previous = document.body.style.overflow;
+    const previousPadding = document.documentElement.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";
+    document.body.classList.add("has-overlay");
+    if (scrollbarWidth > 0) document.documentElement.style.paddingRight = `${scrollbarWidth}px`;
     const returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     requestAnimationFrame(() => closeRef.current?.focus());
 
@@ -69,6 +73,8 @@ export function OrderDrawer() {
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = previous;
+      document.documentElement.style.paddingRight = previousPadding;
+      document.body.classList.remove("has-overlay");
       window.removeEventListener("keydown", onKey);
       returnFocus?.focus();
     };

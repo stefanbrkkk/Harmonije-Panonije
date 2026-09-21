@@ -11,6 +11,8 @@ export function ProductCatalog() {
   const [active, setActive] = useState<ProductCategory>("sirupi");
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState("");
+  const [transitionKey, setTransitionKey] = useState(0);
+  const [newFrom, setNewFrom] = useState(0);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const { add, items, open } = useCart();
 
@@ -28,11 +30,22 @@ export function ProductCatalog() {
 
   const visible = expanded || query ? categoryProducts : categoryProducts.slice(0, 6);
   const copy = categoryCopy[active];
+  const baseCount = Math.min(6, categoryProducts.length);
 
   const switchCategory = (category: ProductCategory) => {
+    if (category === active) return;
+    setNewFrom(0);
     setActive(category);
     setExpanded(false);
     setQuery("");
+    setTransitionKey((value) => value + 1);
+  };
+
+  const toggleExpanded = () => {
+    // Preserve visible cards: only newly inserted cards animate.
+    setNewFrom(expanded ? categoryProducts.length : baseCount);
+    setExpanded((value) => !value);
+    setTransitionKey((value) => value + 1);
   };
 
   const onTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
@@ -103,11 +116,16 @@ export function ProductCatalog() {
           </div>
 
           {visible.length > 0 ? (
-            <div className="product-grid" key={active}>
+            <div className="product-grid catalog-enter" key={`${active}-${transitionKey}`}>
               {visible.map((product, index) => {
                 const quantity = items.find((item) => item.product.id === product.id)?.quantity ?? 0;
+                const isNew = index >= newFrom;
                 return (
-                  <article className={`product-card ${product.featured ? "product-card--featured" : ""}`} key={product.id}>
+                  <article
+                    className={`product-card ${product.featured ? "product-card--featured" : ""} ${isNew ? "product-card--new" : ""}`}
+                    key={product.id}
+                    style={isNew ? { animationDelay: `${Math.min(240, (index - newFrom) * 45)}ms` } : undefined}
+                  >
                     <div className="product-card__visual">
                       <ProductVisual category={product.category} index={index} />
                       <span className="product-card__availability">Dostupnost po upitu</span>
@@ -140,7 +158,7 @@ export function ProductCatalog() {
 
           {!query && categoryProducts.length > 6 && (
             <div className="catalog-more">
-              <button type="button" className="button button--outline" onClick={() => setExpanded((value) => !value)}>
+              <button type="button" className="button button--outline" onClick={toggleExpanded}>
                 {expanded ? "Prikaži manje" : `Prikaži svih ${categoryProducts.length}`}
               </button>
             </div>

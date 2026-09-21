@@ -4,31 +4,34 @@ import { useEffect, useRef } from "react";
 
 type Waypoint = { p: number; x: number; y: number; scale: number };
 
+/*
+ * Cinematic route: long arcs on one gutter, only two deliberate crossings.
+ * Stays near edges / decorative space, avoids sustained travel through
+ * centered headings, body copy and product controls.
+ */
 const desktopPath: Waypoint[] = [
-  { p: 0.00, x: 79, y: 47, scale: 1.00 },
-  { p: 0.09, x: 67, y: 24, scale: 0.92 },
-  { p: 0.18, x: 18, y: 43, scale: 0.86 },
-  { p: 0.29, x: 83, y: 59, scale: 0.96 },
-  { p: 0.40, x: 17, y: 28, scale: 0.82 },
-  { p: 0.51, x: 77, y: 36, scale: 0.92 },
-  { p: 0.61, x: 48, y: 62, scale: 1.12 },
-  { p: 0.70, x: 20, y: 35, scale: 0.84 },
-  { p: 0.80, x: 78, y: 47, scale: 0.90 },
-  { p: 0.90, x: 24, y: 57, scale: 0.82 },
-  { p: 1.00, x: 76, y: 20, scale: 0.96 },
+  { p: 0.0, x: 80, y: 47, scale: 1.0 },
+  { p: 0.14, x: 76, y: 24, scale: 0.92 },
+  { p: 0.28, x: 82, y: 44, scale: 0.9 },
+  { p: 0.42, x: 68, y: 32, scale: 0.88 },
+  { p: 0.55, x: 22, y: 30, scale: 0.82 },
+  { p: 0.66, x: 18, y: 44, scale: 0.84 },
+  { p: 0.78, x: 24, y: 52, scale: 0.86 },
+  { p: 0.9, x: 76, y: 46, scale: 0.9 },
+  { p: 1.0, x: 74, y: 20, scale: 0.94 },
 ];
 
 const mobilePath: Waypoint[] = [
-  { p: 0.00, x: 82, y: 30, scale: 0.78 },
-  { p: 0.22, x: 15, y: 26, scale: 0.70 },
-  { p: 0.42, x: 84, y: 36, scale: 0.74 },
-  { p: 0.63, x: 18, y: 29, scale: 0.70 },
-  { p: 0.82, x: 82, y: 34, scale: 0.72 },
-  { p: 1.00, x: 70, y: 20, scale: 0.74 },
+  { p: 0.0, x: 82, y: 30, scale: 0.78 },
+  { p: 0.3, x: 78, y: 26, scale: 0.72 },
+  { p: 0.55, x: 80, y: 36, scale: 0.72 },
+  { p: 0.75, x: 22, y: 30, scale: 0.7 },
+  { p: 1.0, x: 70, y: 20, scale: 0.72 },
 ];
 
 function smooth(value: number) {
-  return value * value * (3 - 2 * value);
+  const t = Math.min(1, Math.max(0, value));
+  return t * t * (3 - 2 * t);
 }
 
 function sample(points: Waypoint[], progress: number) {
@@ -47,6 +50,17 @@ function sample(points: Waypoint[], progress: number) {
   };
 }
 
+const JOURNEY_SELECTORS = [
+  "#vrh",
+  "#put-pcele",
+  "#proizvodi",
+  "#prica",
+  "#sastojci",
+  ".honey-harvest",
+  "#dostava",
+  "#kontakt",
+];
+
 export function PageBee() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const beeRef = useRef<SVGSVGElement>(null);
@@ -58,63 +72,183 @@ export function PageBee() {
     if (!wrapper || !bee) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const localScenes = Array.from(document.querySelectorAll<HTMLElement>("#put-pcele, .honey-harvest"));
     let raf = 0;
-    let lastX = 0;
-    let lastY = 0;
+    let running = false;
+
+    // Damped state (target/current model).
+    let targetProgress = 0;
+    let currentProgress = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let currentScale = 1;
+    let currentAngle = 0;
+    let currentFacing: 1 | -1 = 1;
+    let facingLock = 0;
+    let currentOpacity = 0;
+    let wingDuration = 0.34;
+    let initialized = false;
+    let anchors: number[] = [];
+    let anchorCount = 0;
+    let localScenes: HTMLElement[] = [];
+
+    const measureAnchors = () => {
+      const tops: number[] = [];
+      for (const selector of JOURNEY_SELECTORS) {
+        const node = document.querySelector<HTMLElement>(selector);
+        if (!node) continue;
+        tops.push(node.offsetTop);
+      }
+      tops.sort((a, b) => a - b);
+      anchors = tops;
+      anchorCount = tops.length;
+      localScenes = Array.from(document.querySelectorAll<HTMLElement>("#put-pcele, .honey-harvest"));
+    };
+
+    const sectionProgress = (scrollY: number) => {
+      if (anchorCount < 2) {
+        const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        return Math.min(1, Math.max(0, scrollY / max));
+      }
+      const viewportCenter = scrollY + window.innerHeight * 0.5;
+      if (viewportCenter <= anchors[0]) return 0;
+      const last = anchors[anchorCount - 1];
+      if (viewportCenter >= last) return 1;
+      for (let i = 0; i < anchorCount - 1; i += 1) {
+        const a = anchors[i];
+        const b = anchors[i + 1];
+        if (viewportCenter >= a && viewportCenter <= b) {
+          const local = (viewportCenter - a) / Math.max(1, b - a);
+          return (i + smooth(local)) / (anchorCount - 1);
+        }
+      }
+      return 0;
+    };
+
+    const overlayOpen = () =>
+      document.querySelector(".order-drawer.is-open") !== null ||
+      document.querySelector(".mobile-menu--open") !== null ||
+      document.body.classList.contains("has-overlay");
 
     const render = () => {
       raf = 0;
+      if (!running) return;
       if (reduced.matches) {
         wrapper.style.opacity = "0";
+        raf = requestAnimationFrame(render);
         return;
       }
 
-      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      const progress = Math.min(1, Math.max(0, window.scrollY / maxScroll));
+      // Damp progress toward target: stable under flicks, no teleport on
+      // catalog expand because anchors move coherently.
+      const progressDelta = targetProgress - currentProgress;
+      currentProgress += progressDelta * 0.14;
+      if (Math.abs(progressDelta) < 0.0004) currentProgress = targetProgress;
+
       const points = window.innerWidth < 720 ? mobilePath : desktopPath;
-      const point = sample(points, progress);
-      const x = window.innerWidth * point.x / 100;
-      const y = window.innerHeight * point.y / 100;
-      const dx = x - lastX;
-      const dy = y - lastY;
-      const angle = Math.max(-34, Math.min(34, Math.atan2(dy, Math.abs(dx) + 0.01) * 180 / Math.PI));
-      const facing = dx < -0.2 ? -1 : 1;
-      const banking = angle * 0.42;
+      const point = sample(points, currentProgress);
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const targetX = (vw * point.x) / 100;
+      const targetY = (vh * point.y) / 100;
 
-      const handoffActive = localScenes.some((scene) => {
-        const sceneRect = scene.getBoundingClientRect();
-        const focusY = window.innerHeight * 0.48;
-        return sceneRect.top < focusY && sceneRect.bottom > focusY;
-      });
-      const edgeOpacity = progress < 0.012 ? 0 : progress > 0.985 ? 0.25 : 1;
-      wrapper.style.opacity = String(handoffActive ? Math.min(edgeOpacity, 0.08) : edgeOpacity);
-      wrapper.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) scale(${point.scale})`;
-      bee.style.transform = `rotate(${banking}deg) scaleX(${facing})`;
-      wrapper.style.setProperty("--flight-speed", `${Math.min(1.35, 0.72 + Math.hypot(dx, dy) / 18)}s`);
-      wrapper.style.setProperty("--bee-glow", `${0.28 + Math.sin(progress * 30) * 0.05}`);
-      if (shadowRef.current) {
-        shadowRef.current.style.transform = `translate3d(${facing * -7}px, 17px, 0) scale(${0.82 + point.scale * 0.08})`;
+      if (!initialized) {
+        currentX = targetX;
+        currentY = targetY;
+        currentScale = point.scale;
+        initialized = true;
       }
-      lastX = x;
-      lastY = y;
+
+      // Position + scale damping.
+      currentX += (targetX - currentX) * 0.16;
+      currentY += (targetY - currentY) * 0.16;
+      currentScale += (point.scale - currentScale) * 0.1;
+
+      const dx = targetX - currentX;
+      const dy = targetY - currentY;
+      const speed = Math.hypot(dx, dy);
+      const rawAngle = Math.max(-18, Math.min(18, (Math.atan2(dy, Math.abs(dx) + 0.01) * 180) / Math.PI));
+      currentAngle += (rawAngle * 0.5 - currentAngle) * 0.08;
+
+      // Facing with dead zone + delayed flip to avoid micro-scroll flicker.
+      if (dx < -6) {
+        facingLock += 1;
+        if (facingLock >= 3) currentFacing = -1;
+      } else if (dx > 6) {
+        facingLock += 1;
+        if (facingLock >= 3) currentFacing = 1;
+      } else {
+        facingLock = 0;
+      }
+
+      // Local cinematic handoff: fade out smoothly near sticky scenes.
+      let handoff = 0;
+      const focusY = vh * 0.48;
+      for (const scene of localScenes) {
+        const r = scene.getBoundingClientRect();
+        if (r.top < focusY && r.bottom > focusY) {
+          handoff = 1;
+          break;
+        }
+      }
+
+      let targetOpacity: number;
+      if (currentProgress < 0.012) targetOpacity = 0;
+      else if (currentProgress > 0.985) targetOpacity = 0.25;
+      else if (handoff === 1) targetOpacity = 0.0;
+      else targetOpacity = 1;
+      if (overlayOpen()) targetOpacity = 0;
+      currentOpacity += (targetOpacity - currentOpacity) * 0.12;
+      if (Math.abs(targetOpacity - currentOpacity) < 0.004) currentOpacity = targetOpacity;
+
+      wrapper.style.opacity = currentOpacity.toFixed(3);
+      wrapper.style.transform = `translate3d(${currentX.toFixed(1)}px, ${currentY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${currentScale.toFixed(3)})`;
+      bee.style.transform = `rotate(${currentAngle.toFixed(2)}deg) scaleX(${currentFacing})`;
+
+      // Wings: stable baseline, narrow speed-reactive band, smoothed so no
+      // sudden animation-duration jumps.
+      const targetWing = Math.min(0.42, Math.max(0.28, 0.34 - speed * 0.0012));
+      wingDuration += (targetWing - wingDuration) * 0.06;
+      wrapper.style.setProperty("--flight-speed", `${wingDuration.toFixed(3)}s`);
+      if (shadowRef.current) {
+        shadowRef.current.style.transform = `translate3d(${(currentFacing * -7).toFixed(1)}px, 17px, 0) scale(${(0.82 + currentScale * 0.08).toFixed(3)})`;
+      }
+
+      raf = requestAnimationFrame(render);
     };
 
-    const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(render);
+    const updateTarget = () => {
+      targetProgress = sectionProgress(window.scrollY);
     };
 
-    render();
-    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(schedule) : null;
+    const scheduleMeasure = () => {
+      measureAnchors();
+      updateTarget();
+    };
+
+    measureAnchors();
+    updateTarget();
+    currentProgress = targetProgress;
+    running = true;
+    raf = requestAnimationFrame(render);
+
+    const onScroll = () => updateTarget();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", scheduleMeasure);
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(scheduleMeasure) : null;
     if (resizeObserver) resizeObserver.observe(document.body);
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    reduced.addEventListener?.("change", schedule);
+    // Catalog expand / search / tab changes alter document height and anchor
+    // offsets; re-measure without moving the bee.
+    const mutations = new MutationObserver(scheduleMeasure);
+    mutations.observe(document.body, { childList: true, subtree: true });
+    reduced.addEventListener?.("change", onScroll);
+
     return () => {
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      reduced.removeEventListener?.("change", schedule);
+      running = false;
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", scheduleMeasure);
+      reduced.removeEventListener?.("change", onScroll);
       resizeObserver?.disconnect();
+      mutations.disconnect();
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);

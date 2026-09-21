@@ -27,7 +27,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; background: var(--forest-2); }
+html { scroll-behavior: smooth; background: var(--forest-2); scrollbar-gutter: stable; }
 body {
   margin: 0;
   color: var(--ink);
@@ -121,10 +121,11 @@ button { color: inherit; }
   z-index: 80;
   top: 0; left: 0; right: 0;
   color: var(--white);
-  transition: background .3s ease, color .3s ease, box-shadow .3s ease;
+  background: rgba(243,237,223,0);
+  transition: background-color .45s ease, color .35s ease, box-shadow .45s ease;
 }
-.site-header::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: rgba(255,255,255,.1); }
-.site-header--scrolled { color: var(--ink); background: rgba(243,237,223,.88); backdrop-filter: blur(18px); box-shadow: 0 8px 30px rgba(19,45,37,.08); }
+.site-header::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: rgba(255,255,255,.1); transition: background-color .45s ease; }
+.site-header--scrolled { color: var(--ink); background: rgba(243,237,223,.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 8px 30px rgba(19,45,37,.08); }
 .site-header--scrolled::after { background: rgba(28,47,40,.12); }
 .site-header__inner { height: 82px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
 .site-header__logo { justify-self: start; }
@@ -142,8 +143,16 @@ button { color: inherit; }
 .menu-button span:last-child { top: 26px; }
 .menu-button--open span:first-child { top: 21px; transform: rotate(45deg); }
 .menu-button--open span:last-child { top: 21px; transform: rotate(-45deg); }
-.mobile-menu { position: fixed; inset: 0; z-index: -1; opacity: 0; pointer-events: none; padding-top: 100px; background: var(--paper); color: var(--ink); transition: opacity .25s ease; }
-.mobile-menu--open { opacity: 1; z-index: 75; pointer-events: auto; }
+.mobile-menu { position: fixed; inset: 0; z-index: -1; opacity: 0; pointer-events: none; padding-top: 100px; background: var(--paper); color: var(--ink); transition: opacity .28s ease, visibility 0s linear .28s; visibility: hidden; }
+.mobile-menu--open { opacity: 1; z-index: 75; pointer-events: auto; transition: opacity .28s ease; visibility: visible; }
+.mobile-menu__inner { display: grid; align-content: start; gap: 2px; }
+.mobile-menu--open .mobile-menu__inner > a { animation: menuItemIn .34s cubic-bezier(.22,.8,.24,1) both; }
+.mobile-menu--open .mobile-menu__inner > a:nth-child(2) { animation-delay: .04s; }
+.mobile-menu--open .mobile-menu__inner > a:nth-child(3) { animation-delay: .08s; }
+.mobile-menu--open .mobile-menu__inner > a:nth-child(4) { animation-delay: .12s; }
+.mobile-menu--open .mobile-menu__inner > a:nth-child(5) { animation-delay: .16s; }
+.mobile-menu--open .mobile-menu__inner > a:nth-child(6) { animation-delay: .2s; }
+@keyframes menuItemIn { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: 0 0; } }
 .mobile-menu__inner { display: grid; align-content: start; gap: 2px; }
 .mobile-menu__inner > a { display: flex; align-items: baseline; gap: 20px; padding: 15px 0; border-bottom: 1px solid var(--line); font-family: var(--serif); font-size: clamp(2rem, 9vw, 3.4rem); }
 .mobile-menu__inner > a span { min-width: 26px; font-family: var(--sans); font-size: .65rem; font-weight: 800; letter-spacing: .12em; color: var(--muted); }
@@ -211,20 +220,22 @@ button { color: inherit; }
 .bee-journey { position: relative; height: 190vh; background: var(--cream); color: var(--forest-2); }
 .bee-journey__sticky { position: sticky; top: 0; height: 100svh; overflow: hidden; display: grid; place-items: center; }
 .bee-journey__sticky::before { content: ""; position: absolute; inset: 0; opacity: .55; background-image: linear-gradient(rgba(23,54,45,.035) 1px,transparent 1px), linear-gradient(90deg,rgba(23,54,45,.035) 1px,transparent 1px); background-size: 52px 52px; mask-image: linear-gradient(to bottom,transparent,#000 20%,#000 80%,transparent); }
-.bee-journey__intro { position: absolute; z-index: 4; top: clamp(98px, 14vh, 150px); left: 50%; transform: translateX(-50%); pointer-events: none; transition: opacity .08s linear; }
+.bee-journey__intro { position: absolute; z-index: 4; top: clamp(98px, 14vh, 150px); left: 50%; transform: translateX(-50%); pointer-events: none; will-change: opacity, transform; }
 .bee-journey__intro h2 { max-width: 650px; margin: 0; font-family: var(--serif); font-size: clamp(3.1rem, 5.8vw, 6.8rem); font-weight: 400; line-height: .9; letter-spacing: -.055em; }
 .bee-journey__intro > p:last-child { max-width: 500px; margin: 24px 0 0; color: #657169; font-size: .94rem; line-height: 1.72; }
 .bee-scene { position: absolute; z-index: 2; left: 50%; top: 52%; width: min(1100px, 94vw); transform: translate(-50%,-40%); overflow: visible; }
 .bee-scene__contour { fill: none; stroke: rgba(23,54,45,.13); stroke-width: 1; stroke-dasharray: 3 8; }
 .bee-scene__path { fill: none; stroke: rgba(23,54,45,.2); stroke-width: 1; stroke-dasharray: 2 12; stroke-linecap: round; }
-.scene-ingredient { transform-box: fill-box; transform-origin: center; transition: transform .08s linear; }
+.scene-ingredient { transform-box: fill-box; transform-origin: center; }
+.scene-ingredient__motion { transform-box: fill-box; transform-origin: center; will-change: transform; }
 .scene-ingredient > * { fill: none; stroke: currentColor; stroke-width: 1.5; }
 .scene-ingredient--lemon { color: #b68a2f; }
 .scene-ingredient--berry { color: var(--berry); }
 .scene-ingredient--leaf { color: #607e68; }
 .scene-ingredient--honey { color: var(--honey-dark); }
 .scene-ingredient--honey > path:first-child { fill: rgba(216,162,72,.14); }
-.scene-house { fill: none; stroke: var(--forest-2); stroke-width: 1.6; opacity: .12; transition: opacity .08s linear; }
+.scene-house__anchor { fill: none; }
+.scene-house { fill: none; stroke: var(--forest-2); stroke-width: 1.6; opacity: .12; transform-box: fill-box; transform-origin: center; will-change: transform, opacity; }
 .scene-house__check { stroke-width: .6; opacity: .17; }
 .scene-house text { fill: var(--forest-2); stroke: none; font-family: var(--sans); font-size: 9px; font-weight: 800; letter-spacing: 2px; }
 .scene-bee { fill: var(--honey); stroke: var(--forest-2); stroke-width: 1.2; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 6px 7px rgba(23,54,45,.18)); }
@@ -262,7 +273,7 @@ button { color: inherit; }
 .product-card:nth-child(6n) { grid-column: span 12; grid-template-columns: 42% 58%; grid-template-rows: 1fr; min-height: 430px; }
 .product-card:nth-child(6n) .product-card__visual { border-right: 1px solid rgba(28,47,40,.1); border-bottom: 0; }
 .product-card:nth-child(6n) .product-card__body { padding: 34px; }
-.product-card:hover { transform: translateY(-5px); border-color: rgba(168,111,37,.43); box-shadow: 0 22px 55px rgba(31,49,42,.08); }
+.product-card:hover { transform: translateY(-3px); border-color: rgba(168,111,37,.5); background: rgba(255,255,255,.34); box-shadow: 0 14px 34px rgba(31,49,42,.09); }
 .product-card__visual { overflow: hidden; border-bottom: 1px solid rgba(28,47,40,.1); }
 .product-card__body { display: flex; flex-direction: column; padding: 24px 24px 20px; }
 .product-card__meta { display: flex; justify-content: space-between; color: var(--muted); font-size: .64rem; font-weight: 750; letter-spacing: .075em; text-transform: uppercase; }
@@ -290,7 +301,7 @@ button { color: inherit; }
 .product-visual__fruit { position:absolute;width:42px;height:42px;border-radius:50%;background:rgba(83,45,66,.38);box-shadow:24px 14px 0 rgba(83,45,66,.28); }
 .product-visual__fruit--a{left:7%;top:15%}.product-visual__fruit--b{right:11%;bottom:14%;transform:scale(.72);}
 .product-bottle { position:relative;z-index:2;width:76px;height:232px;filter:drop-shadow(0 17px 13px rgba(32,43,37,.23));transition:transform .35s ease; }
-.product-card:hover .product-bottle,.product-card:hover .product-jar { transform: translateY(-7px) rotate(1.5deg); }
+.product-card:hover .product-bottle,.product-card:hover .product-jar { transform: translateY(-4px) rotate(.8deg); }
 .product-bottle__cap{position:absolute;z-index:3;top:0;left:50%;width:38px;height:25px;transform:translateX(-50%);border-radius:5px 5px 2px 2px;background:linear-gradient(90deg,#8a754d,#e4d4a0,#8f7748)}
 .product-bottle__body{position:absolute;inset:20px 0 0;border:1px solid rgba(255,255,255,.45);border-radius:25px 25px 14px 14px / 40px 40px 14px 14px;background:linear-gradient(90deg,rgba(255,255,255,.26),transparent 25% 72%,rgba(255,255,255,.18)),rgba(75,35,48,.78);box-shadow:inset 8px 0 10px rgba(255,255,255,.08)}
 .product-visual--gold .product-bottle__body{background:linear-gradient(90deg,rgba(255,255,255,.22),transparent 25% 72%,rgba(255,255,255,.17)),rgba(158,101,30,.78)}
@@ -410,10 +421,10 @@ button { color: inherit; }
 .site-footer__bottom div{display:flex;gap:22px}.site-footer__bottom>a:last-child{justify-self:end}.site-footer__bottom a:hover{color:var(--white)}
 
 /* Drawer */
-.drawer-backdrop { position:fixed;z-index:94;inset:0;border:0;background:rgba(5,18,14,.58);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s ease; }
-.drawer-backdrop.is-open { opacity:1;pointer-events:auto; }
-.order-drawer { position:fixed;z-index:95;top:0;right:0;width:min(520px,100vw);height:100dvh;display:grid;grid-template-rows:auto 1fr auto;background:var(--paper);transform:translateX(101%);transition:transform .42s cubic-bezier(.22,.8,.24,1);box-shadow:-30px 0 80px rgba(7,22,17,.25); }
-.order-drawer.is-open { transform:translateX(0); }
+.drawer-backdrop { position:fixed;z-index:94;inset:0;border:0;background:rgba(5,18,14,.58);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s ease, visibility 0s linear .3s; visibility: hidden; }
+.drawer-backdrop.is-open { opacity:1;pointer-events:auto; transition:opacity .3s ease; visibility: visible; }
+.order-drawer { position:fixed;z-index:95;top:0;right:0;width:min(520px,100vw);height:100dvh;display:grid;grid-template-rows:auto 1fr auto;background:var(--paper);transform:translateX(101%);transition:transform .42s cubic-bezier(.22,.8,.24,1), visibility 0s linear .42s;visibility:hidden;box-shadow:-30px 0 80px rgba(7,22,17,.25); }
+.order-drawer.is-open { transform:translateX(0); transition:transform .42s cubic-bezier(.22,.8,.24,1); visibility: visible; }
 .order-drawer__head { min-height:105px;display:flex;align-items:center;justify-content:space-between;padding:24px 26px;border-bottom:1px solid var(--line); }
 .order-drawer__head .eyebrow { margin-bottom:6px; }
 .order-drawer__head h2 { margin:0;font-family:var(--serif);font-size:2rem;font-weight:400; }
@@ -587,9 +598,11 @@ button { color: inherit; }
    replace visuals without rewriting the base design system.
    ========================================================= */
 
-/* Persistent page bee */
+/* Z-index system: base content 1-10, decorative scene 2, sticky art 2-5,
+   page-bee 38-42, mobile order bar 70, mobile menu 75, header 80,
+   toast 86, backdrop 94, drawer 95, skip-link 120. Decor never covers UI. */
 .page-bee {
-  --flight-speed: .9s;
+  --flight-speed: .34s;
   --bee-glow: .3;
   position: fixed;
   z-index: 42;
@@ -611,7 +624,9 @@ button { color: inherit; }
   will-change: transform;
   filter: drop-shadow(0 8px 9px rgba(14, 28, 20, .14));
 }
-.page-bee__wings { transform-origin: 51% 55%; animation: pageBeeWing var(--flight-speed) linear infinite alternate; }
+.page-bee__wings { transform-origin: 51% 55%; animation: pageBeeWing var(--flight-speed, .34s) linear infinite alternate; }
+/* Decorative flight recedes behind overlays. */
+body.has-overlay .page-bee { opacity: 0 !important; }
 .page-bee__shadow {
   position: absolute;
   z-index: -1;
@@ -630,13 +645,14 @@ button { color: inherit; }
   100% { transform: rotateX(64deg) scaleY(.48); }
 }
 
-/* Hero depth / motion */
-.hero-art__bottles { animation: heroBottleGroup 8s ease-in-out infinite alternate; }
-.hero-art__ingredient--lemon { animation: heroFloatA 7.4s ease-in-out infinite alternate; }
-.hero-art__ingredient--berry { animation: heroFloatB 8.2s ease-in-out infinite alternate; }
-.hero-art__ingredient--leaf { animation: heroFloatA 9.1s ease-in-out -2s infinite alternate; }
-.hero-art__ingredient--flower { animation: heroFloatB 7.8s ease-in-out -1.2s infinite alternate; }
-.hero-art__halo { animation: heroHalo 9s ease-in-out infinite alternate; }
+/* Hero depth / motion — restrained hierarchy: bottles primary, 1-2
+   ingredients secondary, halo tertiary. Small amplitudes, long periods. */
+.hero-art__bottles { animation: heroBottleGroup 9s ease-in-out infinite alternate; }
+.hero-art__ingredient--lemon { animation: heroFloatA 8.6s ease-in-out infinite alternate; }
+.hero-art__ingredient--berry { animation: heroFloatB 10.2s ease-in-out infinite alternate; }
+.hero-art__ingredient--leaf { animation: heroFloatA 11.4s ease-in-out -2s infinite alternate; }
+.hero-art__ingredient--flower { animation: heroFloatB 9.6s ease-in-out -1.2s infinite alternate; }
+.hero-art__halo { animation: heroHalo 11s ease-in-out infinite alternate; }
 .hero-bottle__glass::after {
   content: "";
   position: absolute;
@@ -649,11 +665,21 @@ button { color: inherit; }
   transform: skewX(-12deg);
   animation: bottleGlint 6.8s ease-in-out infinite;
 }
-@keyframes heroBottleGroup { to { translate: 0 -7px; rotate: .35deg; } }
-@keyframes heroFloatA { to { translate: 7px -11px; } }
-@keyframes heroFloatB { to { translate: -9px 9px; } }
-@keyframes heroHalo { to { transform: scale(1.045); opacity: .76; } }
+@keyframes heroBottleGroup { to { translate: 0 -4px; rotate: .2deg; } }
+@keyframes heroFloatA { to { translate: 4px -6px; } }
+@keyframes heroFloatB { to { translate: -5px 5px; } }
+@keyframes heroHalo { to { transform: scale(1.03); opacity: .82; } }
 @keyframes bottleGlint { 0%,58% { left:-25%;opacity:0 } 67%{opacity:.85} 78%,100%{left:118%;opacity:0} }
+
+/* Hero entrance (once, gated on .motion-ready so no-JS stays composed). */
+.motion-ready .hero-copy > *:nth-child(1) { animation: heroEnter .7s cubic-bezier(.22,.8,.24,1) .1s both; }
+.motion-ready .hero-copy > *:nth-child(2) { animation: heroEnter .8s cubic-bezier(.22,.8,.24,1) .22s both; }
+.motion-ready .hero-copy > *:nth-child(3) { animation: heroEnter .7s cubic-bezier(.22,.8,.24,1) .38s both; }
+.motion-ready .hero-copy > *:nth-child(4) { animation: heroEnter .7s cubic-bezier(.22,.8,.24,1) .5s both; }
+.motion-ready .hero-copy > *:nth-child(5) { animation: heroEnter .7s cubic-bezier(.22,.8,.24,1) .62s both; }
+.motion-ready .hero-art { animation: heroArtSettle 1s cubic-bezier(.22,.8,.24,1) .35s both; }
+@keyframes heroEnter { from { opacity: 0; translate: 0 16px; } to { opacity: 1; translate: 0 0; } }
+@keyframes heroArtSettle { from { opacity: 0; translate: 0 22px; scale: .985; } to { opacity: 1; translate: 0 0; scale: 1; } }
 
 /* Product navigation + search */
 .catalog-toolbar {
@@ -778,7 +804,6 @@ button { color: inherit; }
 
 /* Honey harvest: scroll-driven pseudo-3D macro sequence */
 .honey-harvest {
-  --harvest: 0;
   --honey-fill: 0;
   position: relative;
   height: 255vh;
@@ -849,7 +874,8 @@ button { color: inherit; }
   transform: translateY(-52%);
   overflow: visible;
 }
-.honey-flower { transform-origin: 0 0; will-change: transform; }
+.honey-flower__anchor { fill: none; }
+.honey-flower { transform-box: fill-box; transform-origin: 50% 92%; will-change: transform; }
 .honey-macro-bee { will-change: transform; }
 .honey-macro-bee path:first-child,
 .honey-macro-bee path:nth-child(2) { transform-box: fill-box; transform-origin: center; animation: macroWing .11s linear infinite alternate; }
@@ -1068,20 +1094,31 @@ button { color: inherit; }
 .honeycomb-3d__cells > span:nth-child(n+22):nth-child(-n+28),
 .honeycomb-3d__cells > span:nth-child(n+36):nth-child(-n+42) { translate: 50% 0; }
 
-/* Global reveal choreography — added only after hydration, so no-JS content stays visible. */
+/* Global reveal choreography. Hierarchy: headings stronger, body subtle,
+   cards owned by the catalog. .is-initial marks above-fold nodes so the
+   first paint never flashes visible -> hidden. */
 .motion-ready .reveal-target {
   opacity: 0;
-  translate: 0 24px;
+  translate: 0 14px;
   transition:
-    opacity .72s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms),
-    translate .82s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms),
+    opacity .6s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms),
+    translate .65s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms),
 }
+.motion-ready .section-heading.reveal-target { translate: 0 18px; }
+.motion-ready .ingredient-card.reveal-target,
+.motion-ready .delivery-copy.reveal-target { translate: 0 10px; }
+.motion-ready .reveal-target.is-initial { transition: none; }
 .motion-ready .reveal-target.is-inview {
   opacity: 1;
   translate: 0 0;
 }
-.product-grid { animation: catalogEnter .5s cubic-bezier(.22,.8,.24,1) both; }
-@keyframes catalogEnter { from { opacity:.35; translate:0 12px; } to { opacity:1; translate:0 0; } }
+/* Single fast catalog transition (250-450ms). Container fades once;
+   only newly inserted cards stagger. */
+.product-grid.catalog-enter { animation: catalogEnter .32s cubic-bezier(.22,.8,.24,1) both; }
+.product-card--new { animation: catalogCardEnter .34s cubic-bezier(.22,.8,.24,1) both; }
+@keyframes catalogEnter { from { opacity:.4; translate:0 10px; } to { opacity:1; translate:0 0; } }
+@keyframes catalogCardEnter { from { opacity: 0; translate: 0 12px; } to { opacity: 1; translate: 0 0; } }
+.product-grid { animation: none; }
 
 /* Non-blocking inquiry confirmation */
 .cart-toast {
@@ -1110,7 +1147,8 @@ button { color: inherit; }
 .cart-toast__mark { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--honey); color: var(--forest-2); font-weight: 900; }
 .cart-toast__copy { min-width: 0; display: grid; gap: 3px; }
 .cart-toast__copy span { color: rgba(251,247,236,.55); font-size: .52rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
-.cart-toast__copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--serif); font-size: 1rem; font-weight: 400; }
+.cart-toast__copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--serif); font-size: 1rem; font-weight: 400; animation: toastCopyIn .3s cubic-bezier(.22,.8,.24,1) both; }
+@keyframes toastCopyIn { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
 .cart-toast > button:not(.cart-toast__close) { border: 0; border-bottom: 1px solid rgba(251,247,236,.28); padding: 4px 0; background: transparent; color: var(--white); cursor: pointer; font-size: .65rem; font-weight: 780; }
 .cart-toast__close { width: 24px; height: 30px; border: 0; background: transparent; color: rgba(251,247,236,.55); cursor: pointer; font-size: 1.15rem; }
 
@@ -1124,7 +1162,7 @@ button { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .motion-ready .reveal-target,
   .motion-ready .reveal-target.is-inview { opacity:1;translate:none;transition:none; }
-  .product-grid { animation:none; }
+  .product-grid.catalog-enter, .product-card--new { animation:none; }
 }
 
 /* Keyboard entry point */

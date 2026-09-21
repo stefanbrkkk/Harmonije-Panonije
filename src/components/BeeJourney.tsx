@@ -2,6 +2,11 @@
 
 import { useEffect, useRef } from "react";
 
+function smoothstep(value: number) {
+  const t = Math.min(1, Math.max(0, value));
+  return t * t * (3 - 2 * t);
+}
+
 export function BeeJourney() {
   const sectionRef = useRef<HTMLElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
@@ -21,71 +26,129 @@ export function BeeJourney() {
 
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     let raf = 0;
-    let length = path.getTotalLength();
+    let running = false;
+    let length = 0;
+    try {
+      length = path.getTotalLength();
+    } catch {
+      length = 1000;
+    }
+
+    let target = 0;
+    let current = 0;
+    let initialized = false;
+
+    const readProgress = () => {
+      const rect = section.getBoundingClientRect();
+      const scrollable = Math.max(1, rect.height - window.innerHeight);
+      return Math.min(1, Math.max(0, -rect.top / scrollable));
+    };
 
     const render = () => {
       raf = 0;
-      const rect = section.getBoundingClientRect();
-      const scrollable = Math.max(1, rect.height - window.innerHeight);
-      const progress = Math.min(1, Math.max(0, -rect.top / scrollable));
+      if (!running) return;
 
       if (media.matches) {
-        const p = path.getPointAtLength(length * 0.86);
-        bee.setAttribute("transform", `translate(${p.x} ${p.y}) rotate(-7)`);
-        if (houseRef.current) houseRef.current.style.opacity = "1";
+        try {
+          const p = path.getPointAtLength(length * 0.86);
+          bee.setAttribute("transform", `translate(${p.x} ${p.y}) rotate(-7)`);
+        } catch {
+          /* static fallback */
+        }
+        if (houseRef.current) {
+          houseRef.current.style.opacity = "1";
+          houseRef.current.style.transform = "none";
+        }
         if (introRef.current) introRef.current.style.opacity = "1";
-        if (outroRef.current) outroRef.current.style.opacity = "1";
+        if (outroRef.current) {
+          outroRef.current.style.opacity = "1";
+          outroRef.current.style.transform = "translate(-50%, 0)";
+        }
+        raf = requestAnimationFrame(render);
         return;
       }
 
-      const eased = progress < 0.5
-        ? 2 * progress * progress
-        : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-      const distance = length * Math.min(0.985, eased);
-      const p = path.getPointAtLength(distance);
-      const p2 = path.getPointAtLength(Math.min(length, distance + 2));
-      const angle = Math.atan2(p2.y - p.y, p2.x - p.x) * 180 / Math.PI;
-      bee.setAttribute("transform", `translate(${p.x} ${p.y}) rotate(${angle})`);
+      target = readProgress();
+      if (!initialized) {
+        current = target;
+        initialized = true;
+      }
+      // Damped progress: survives flicks, scrollbar drags, resize jumps.
+      current += (target - current) * 0.16;
+      if (Math.abs(target - current) < 0.0005) current = target;
+      const progress = current;
 
-      if (introRef.current) introRef.current.style.opacity = String(Math.max(0, 1 - progress * 3.2));
+      const eased = smoothstep(progress);
+      const distance = length * Math.min(0.985, Math.max(0, eased));
+      try {
+        const p = path.getPointAtLength(distance);
+        const p2 = path.getPointAtLength(Math.min(length, distance + 2));
+        const angle = (Math.atan2(p2.y - p.y, p2.x - p.x) * 180) / Math.PI;
+        // Slight perpendicular independence so the bee doesn't look glued to
+        // the dotted debug spline.
+        const wobble = Math.sin(progress * Math.PI * 2) * 5;
+        const nx = -(p2.y - p.y);
+        const ny = p2.x - p.x;
+        const nLen = Math.hypot(nx, ny) || 1;
+        const ox = (nx / nLen) * wobble;
+        const oy = (ny / nLen) * wobble;
+        bee.setAttribute(
+          "transform",
+          `translate(${(p.x + ox).toFixed(1)} ${(p.y + oy).toFixed(1)}) rotate(${angle.toFixed(1)})`,
+        );
+      } catch {
+        /* keep last pose on path errors */
+      }
+
+      if (introRef.current) {
+        const o = 1 - smoothstep(progress / 0.32);
+        introRef.current.style.opacity = o.toFixed(3);
+        introRef.current.style.transform = `translateX(-50%) translateY(${((1 - o) * -12).toFixed(1)}px)`;
+      }
       if (outroRef.current) {
-        const o = Math.max(0, Math.min(1, (progress - 0.72) / 0.2));
-        outroRef.current.style.opacity = String(o);
-        outroRef.current.style.transform = `translateY(${(1 - o) * 24}px)`;
+        const o = smoothstep((progress - 0.68) / 0.22);
+        outroRef.current.style.opacity = o.toFixed(3);
+        outroRef.current.style.transform = `translate(-50%, ${((1 - o) * 18).toFixed(1)}px)`;
       }
       if (houseRef.current) {
-        const o = Math.max(0.12, Math.min(1, (progress - 0.58) / 0.26));
-        houseRef.current.style.opacity = String(o);
-        houseRef.current.style.transformOrigin = "760px 328px";
-        houseRef.current.style.transform = `scale(${0.9 + o * 0.1})`;
+        const o = smoothstep((progress - 0.56) / 0.28);
+        const opacity = 0.12 + o * 0.88;
+        houseRef.current.style.opacity = opacity.toFixed(3);
+        houseRef.current.style.transform = `scale(${(0.94 + o * 0.06).toFixed(3)})`;
       }
 
+      // Subtle ingredient parallax: ~2-3px, ~1deg. Rooted, never jumping.
       const react = (node: SVGGElement | null, point: number, direction: number) => {
         if (!node) return;
-        const d = Math.max(0, 1 - Math.abs(progress - point) * 9);
-        node.style.transform = `translate(${d * 7 * direction}px, ${-d * 9}px) rotate(${d * 5 * direction}deg)`;
+        const d = Math.max(0, 1 - Math.abs(progress - point) * 7);
+        const e = smoothstep(d);
+        node.style.transform =
+          `translate(${(e * 2.6 * direction).toFixed(2)}px, ${(-e * 3).toFixed(2)}px) ` +
+          `rotate(${(e * 1.2 * direction).toFixed(2)}deg)`;
       };
       react(lemonRef.current, 0.23, 1);
       react(berryRef.current, 0.42, -1);
       react(leafRef.current, 0.58, 1);
+
+      raf = requestAnimationFrame(render);
     };
 
-    const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(render);
-    };
     const onResize = () => {
-      length = path.getTotalLength();
-      schedule();
+      try {
+        length = path.getTotalLength();
+      } catch {
+        /* keep previous length */
+      }
     };
 
-    render();
-    window.addEventListener("scroll", schedule, { passive: true });
+    running = true;
+    raf = requestAnimationFrame(render);
     window.addEventListener("resize", onResize);
-    media.addEventListener?.("change", schedule);
+    media.addEventListener?.("change", onResize);
     return () => {
-      window.removeEventListener("scroll", schedule);
+      running = false;
       window.removeEventListener("resize", onResize);
-      media.removeEventListener?.("change", schedule);
+      media.removeEventListener?.("change", onResize);
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);
@@ -110,22 +173,28 @@ export function BeeJourney() {
           <path className="bee-scene__contour" d="M-50 440 C130 395 240 488 375 420 C535 339 621 194 786 172 C899 158 974 206 1065 134" />
           <path ref={pathRef} className="bee-scene__path" d="M75 375 C165 290 238 365 311 297 C378 235 425 136 530 168 C641 201 634 329 732 309 C826 290 837 216 878 195" />
 
-          <g ref={lemonRef} className="scene-ingredient scene-ingredient--lemon" transform="translate(250 330)">
-            <ellipse cx="0" cy="0" rx="47" ry="36" transform="rotate(-18)" />
-            <path d="M-10 -31c10-26 35-21 40-5" />
-            <path d="M-32 -2h64M0-31V29M-23-22 23 22M23-22-23 22" />
+          <g transform="translate(250 330)" className="scene-ingredient scene-ingredient--lemon">
+            <g ref={lemonRef} className="scene-ingredient__motion">
+              <ellipse cx="0" cy="0" rx="47" ry="36" transform="rotate(-18)" />
+              <path d="M-10 -31c10-26 35-21 40-5" />
+              <path d="M-32 -2h64M0-31V29M-23-22 23 22M23-22-23 22" />
+            </g>
           </g>
 
-          <g ref={berryRef} className="scene-ingredient scene-ingredient--berry" transform="translate(470 178)">
-            <circle cx="-20" cy="10" r="17" /><circle cx="9" cy="1" r="18" /><circle cx="28" cy="24" r="15" /><circle cx="-4" cy="30" r="17" />
-            <path d="M2-18c10-20 30-24 43-16M3-17c-8-19-26-23-39-15" />
+          <g transform="translate(470 178)" className="scene-ingredient scene-ingredient--berry">
+            <g ref={berryRef} className="scene-ingredient__motion">
+              <circle cx="-20" cy="10" r="17" /><circle cx="9" cy="1" r="18" /><circle cx="28" cy="24" r="15" /><circle cx="-4" cy="30" r="17" />
+              <path d="M2-18c10-20 30-24 43-16M3-17c-8-19-26-23-39-15" />
+            </g>
           </g>
 
-          <g ref={leafRef} className="scene-ingredient scene-ingredient--leaf" transform="translate(665 335)">
-            <path d="M0 68C4 27 6-10 11-62" />
-            <path d="M7 30c-38-10-54-35-44-55 31 2 49 20 44 55Z" />
-            <path d="M10 5c35-12 50-36 38-55-29 5-44 23-38 55Z" />
-            <path d="M4 52c-31 0-50-16-48-34 27-5 46 7 48 34Z" />
+          <g transform="translate(665 335)" className="scene-ingredient scene-ingredient--leaf">
+            <g ref={leafRef} className="scene-ingredient__motion">
+              <path d="M0 68C4 27 6-10 11-62" />
+              <path d="M7 30c-38-10-54-35-44-55 31 2 49 20 44 55Z" />
+              <path d="M10 5c35-12 50-36 38-55-29 5-44 23-38 55Z" />
+              <path d="M4 52c-31 0-50-16-48-34 27-5 46 7 48 34Z" />
+            </g>
           </g>
 
           <g className="scene-ingredient scene-ingredient--honey" transform="translate(585 260)">
@@ -133,13 +202,15 @@ export function BeeJourney() {
             <ellipse cx="0" cy="16" rx="49" ry="49" fill="url(#honeyGlow)" stroke="none" />
           </g>
 
-          <g ref={houseRef} className="scene-house" transform="translate(760 235)">
-            <path d="M0 76V-5L108-77 216-5v81H0Z" />
-            <path d="M40 76V6h55v70M125 12h52v38h-52z" />
-            <path d="M-9-3 108-91 225-3" />
-            <circle cx="108" cy="-34" r="9" />
-            <path className="scene-house__check" d="M16 59h182M16 39h182M34-3v79M62-22v98M90-40v116M118-40v116M146-22v98M174-4v80" />
-            <text x="108" y="107" textAnchor="middle">HARMONIJE PANONIJE</text>
+          <g transform="translate(760 235)" className="scene-house__anchor">
+            <g ref={houseRef} className="scene-house">
+              <path d="M0 76V-5L108-77 216-5v81H0Z" />
+              <path d="M40 76V6h55v70M125 12h52v38h-52z" />
+              <path d="M-9-3 108-91 225-3" />
+              <circle cx="108" cy="-34" r="9" />
+              <path className="scene-house__check" d="M16 59h182M16 39h182M34-3v79M62-22v98M90-40v116M118-40v116M146-22v98M174-4v80" />
+              <text x="108" y="107" textAnchor="middle">HARMONIJE PANONIJE</text>
+            </g>
           </g>
 
           <g ref={beeRef} className="scene-bee">

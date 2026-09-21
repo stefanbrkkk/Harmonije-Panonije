@@ -4,6 +4,11 @@ import { useEffect, useMemo, useRef } from "react";
 
 const cells = Array.from({ length: 42 }, (_, index) => index);
 
+function smoothstep(value: number) {
+  const t = Math.min(1, Math.max(0, value));
+  return t * t * (3 - 2 * t);
+}
+
 export function HoneyHarvestSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const dropRef = useRef<SVGCircleElement>(null);
@@ -21,15 +26,82 @@ export function HoneyHarvestSection() {
     if (!section) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     let raf = 0;
+    let running = false;
+    let target = 0;
+    let current = 0;
+    let initialized = false;
+
+    const readProgress = () => {
+      const rect = section.getBoundingClientRect();
+      const span = Math.max(1, rect.height - window.innerHeight);
+      return Math.min(1, Math.max(0, -rect.top / span));
+    };
+
+    const paint = (progress: number) => {
+      // Phase windows: flower 0-0.22, collect 0.18-0.44, transfer 0.38-0.64,
+      // honey 0.58-0.82, final 0.78-1.0.
+      const collect = smoothstep((progress - 0.12) / 0.3);
+      const transfer = smoothstep((progress - 0.38) / 0.26);
+      const fill = smoothstep((progress - 0.58) / 0.24);
+      section.style.setProperty("--honey-fill", fill.toFixed(4));
+
+      if (beeRef.current) {
+        // Approach arc, hover at flower center, then carry across.
+        const approachX = 108 + collect * 212;
+        const approachY = 184 - Math.sin(collect * Math.PI) * 60;
+        const carryX = approachX + transfer * 293;
+        const carryY = approachY + transfer * 98 - Math.sin(transfer * Math.PI) * 14;
+        const rotate = -12 + collect * 6 + transfer * 15;
+        beeRef.current.setAttribute(
+          "transform",
+          `translate(${carryX.toFixed(1)} ${carryY.toFixed(1)}) rotate(${rotate.toFixed(1)}) scale(${(0.9 + transfer * 0.08).toFixed(3)})`,
+        );
+      }
+      if (flowerRef.current) {
+        // Rooted: ambient sway + tiny 2-3px / ~1.5deg collection reaction.
+        const ambient = Math.sin(progress * Math.PI * 2) * 1.2;
+        const y = ambient * (1 - collect * 0.5) + collect * 3;
+        const r = ambient * 0.3 + collect * -1.5;
+        flowerRef.current.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0) rotate(${r.toFixed(2)}deg)`;
+      }
+      if (dropRef.current) {
+        const x = 320 + transfer * 235;
+        const y = 170 + transfer * 165 - Math.sin(transfer * Math.PI) * 10;
+        dropRef.current.setAttribute("cx", x.toFixed(1));
+        dropRef.current.setAttribute("cy", y.toFixed(1));
+        dropRef.current.setAttribute("r", String(7 + transfer * 5));
+        dropRef.current.style.opacity = transfer > 0.06 && transfer < 0.95 ? "1" : "0";
+      }
+      if (streamRef.current) {
+        streamRef.current.style.opacity = fill > 0.04 ? Math.min(1, fill * 2).toFixed(3) : "0";
+        streamRef.current.style.strokeDashoffset = String(140 - fill * 140);
+      }
+      if (combRef.current) {
+        combRef.current.style.transform =
+          `perspective(900px) rotateX(${(58 - fill * 8).toFixed(2)}deg) ` +
+          `rotateZ(${(-10 + fill * 4).toFixed(2)}deg) translate3d(0, ${(18 - fill * 18).toFixed(1)}px, 0)`;
+      }
+
+      // Eased crossfades with guaranteed dominant chapter.
+      const fade = (node: HTMLDivElement | null, start: number, end: number) => {
+        if (!node) return;
+        const enter = smoothstep((progress - start) / 0.07);
+        const exit = smoothstep((end - progress) / 0.07);
+        const o = Math.min(enter, exit);
+        node.style.opacity = o.toFixed(3);
+        node.style.transform = `translate3d(0, ${((1 - enter) * 14).toFixed(1)}px, 0)`;
+        node.style.visibility = o <= 0.01 ? "hidden" : "visible";
+      };
+      fade(copyARef.current, 0.0, 0.36);
+      fade(copyBRef.current, 0.34, 0.64);
+      fade(copyCRef.current, 0.62, 1.02);
+    };
 
     const render = () => {
       raf = 0;
-      const rect = section.getBoundingClientRect();
-      const span = Math.max(1, rect.height - window.innerHeight);
-      const progress = Math.min(1, Math.max(0, -rect.top / span));
+      if (!running) return;
 
       if (reduced.matches) {
-        section.style.setProperty("--harvest", "1");
         section.style.setProperty("--honey-fill", "1");
         beeRef.current?.setAttribute("transform", "translate(420 246) rotate(4) scale(.96)");
         if (flowerRef.current) flowerRef.current.style.transform = "none";
@@ -38,71 +110,38 @@ export function HoneyHarvestSection() {
           streamRef.current.style.opacity = ".9";
           streamRef.current.style.strokeDashoffset = "0";
         }
-        if (combRef.current) combRef.current.style.transform = "perspective(900px) rotateX(50deg) rotateZ(-6deg) translate3d(0,0,0)";
+        if (combRef.current)
+          combRef.current.style.transform = "perspective(900px) rotateX(50deg) rotateZ(-6deg) translate3d(0,0,0)";
         [copyARef.current, copyBRef.current, copyCRef.current].forEach((node) => {
           if (node) {
             node.style.opacity = "1";
             node.style.transform = "none";
+            node.style.visibility = "visible";
           }
         });
+        raf = requestAnimationFrame(render);
         return;
       }
 
-      section.style.setProperty("--harvest", String(progress));
-      const collect = Math.min(1, Math.max(0, (progress - 0.12) / 0.36));
-      const transfer = Math.min(1, Math.max(0, (progress - 0.38) / 0.34));
-      const fill = Math.min(1, Math.max(0, (progress - 0.58) / 0.32));
-      section.style.setProperty("--honey-fill", String(fill));
-
-      if (beeRef.current) {
-        const x = 108 + collect * 220 + transfer * 285;
-        const y = 184 - Math.sin(collect * Math.PI) * 76 + transfer * 98;
-        const rotate = -16 + transfer * 19;
-        beeRef.current.setAttribute("transform", `translate(${x} ${y}) rotate(${rotate}) scale(${0.9 + transfer * 0.08})`);
+      target = readProgress();
+      if (!initialized) {
+        // First paint equals current scroll position: no init jump even on
+        // deep links or back/forward into mid-scene.
+        current = target;
+        initialized = true;
+        paint(current);
+      } else {
+        current += (target - current) * 0.18;
+        if (Math.abs(target - current) < 0.0004) current = target;
+        paint(current);
       }
-      if (flowerRef.current) {
-        flowerRef.current.style.transform = `translate3d(0, ${collect * 6}px, 0) rotate(${collect * -2.5}deg)`;
-      }
-      if (dropRef.current) {
-        const x = 320 + transfer * 235;
-        const y = 170 + transfer * 165;
-        dropRef.current.setAttribute("cx", String(x));
-        dropRef.current.setAttribute("cy", String(y));
-        dropRef.current.setAttribute("r", String(7 + transfer * 5));
-        dropRef.current.style.opacity = transfer > 0.08 && transfer < 0.94 ? "1" : "0";
-      }
-      if (streamRef.current) {
-        streamRef.current.style.opacity = fill > 0.05 ? String(Math.min(1, fill * 2)) : "0";
-        streamRef.current.style.strokeDashoffset = String(140 - fill * 140);
-      }
-      if (combRef.current) {
-        combRef.current.style.transform = `perspective(900px) rotateX(${58 - fill * 8}deg) rotateZ(${-10 + fill * 4}deg) translate3d(0, ${18 - fill * 18}px, 0)`;
-      }
-
-      const fade = (node: HTMLDivElement | null, start: number, end: number) => {
-        if (!node) return;
-        const enter = Math.min(1, Math.max(0, (progress - start) / 0.08));
-        const exit = Math.min(1, Math.max(0, (end - progress) / 0.08));
-        node.style.opacity = String(Math.min(enter, exit));
-        node.style.transform = `translate3d(0, ${(1 - enter) * 18}px, 0)`;
-      };
-      fade(copyARef.current, 0.00, 0.39);
-      fade(copyBRef.current, 0.31, 0.70);
-      fade(copyCRef.current, 0.62, 1.02);
+      raf = requestAnimationFrame(render);
     };
 
-    const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(render);
-    };
-
-    render();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    reduced.addEventListener?.("change", schedule);
+    running = true;
+    raf = requestAnimationFrame(render);
     return () => {
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      reduced.removeEventListener?.("change", schedule);
+      running = false;
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);
@@ -137,16 +176,18 @@ export function HoneyHarvestSection() {
               <linearGradient id="macroWing" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fff" stopOpacity=".86"/><stop offset="1" stopColor="#d9e0d7" stopOpacity=".12"/></linearGradient>
               <filter id="macroShadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="9" floodColor="#49320f" floodOpacity=".25"/></filter>
             </defs>
-            <g ref={flowerRef} className="honey-flower" transform="translate(106 262)">
-              <path d="M0 175c38-75 61-123 69-195" fill="none" stroke="#32533e" strokeWidth="11" strokeLinecap="round"/>
-              <path d="M30 100c-54-18-76-55-62-84 50 2 76 30 62 84Z" fill="#6c8467"/>
-              {Array.from({ length: 8 }, (_, i) => {
-                const angle = i * 45;
-                return <ellipse key={i} cx="0" cy="-20" rx="48" ry="20" fill="url(#petal)" transform={`rotate(${angle}) translate(64 0)`}/>;
-              })}
-              <circle cx="0" cy="-20" r="31" fill="#d49b28"/>
-              <circle cx="-8" cy="-28" r="7" fill="#f3ce63"/>
-              <circle cx="11" cy="-11" r="6" fill="#a76a14"/>
+            <g transform="translate(106 262)" className="honey-flower__anchor">
+              <g ref={flowerRef} className="honey-flower">
+                <path d="M0 175c38-75 61-123 69-195" fill="none" stroke="#32533e" strokeWidth="11" strokeLinecap="round"/>
+                <path d="M30 100c-54-18-76-55-62-84 50 2 76 30 62 84Z" fill="#6c8467"/>
+                {Array.from({ length: 8 }, (_, i) => {
+                  const angle = i * 45;
+                  return <ellipse key={i} cx="0" cy="-20" rx="48" ry="20" fill="url(#petal)" transform={`rotate(${angle}) translate(64 0)`}/>;
+                })}
+                <circle cx="0" cy="-20" r="31" fill="#d49b28"/>
+                <circle cx="-8" cy="-28" r="7" fill="#f3ce63"/>
+                <circle cx="11" cy="-11" r="6" fill="#a76a14"/>
+              </g>
             </g>
 
             <g ref={beeRef} className="honey-macro-bee" filter="url(#macroShadow)">
