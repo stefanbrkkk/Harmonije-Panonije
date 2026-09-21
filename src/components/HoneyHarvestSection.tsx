@@ -1,16 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { cameraShift, createSceneLoop, smoothstep } from "@/src/lib/scene";
+
+// Pre-paint scene ownership without tripping the SSR useLayoutEffect warning.
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const cells = Array.from({ length: 42 }, (_, index) => index);
 
-function smoothstep(value: number) {
-  const t = Math.min(1, Math.max(0, value));
-  return t * t * (3 - 2 * t);
-}
+// Flower head (nectar) center in macro viewBox coordinates.
+const FLOWER_X = 106;
+const FLOWER_Y = 242;
+// Honey stream origin: the drop's destination and the stream's start.
+const STREAM_X = 556;
+const STREAM_Y = 325;
 
 export function HoneyHarvestSection() {
   const sectionRef = useRef<HTMLElement>(null);
+  const macroRef = useRef<SVGSVGElement>(null);
   const dropRef = useRef<SVGCircleElement>(null);
   const streamRef = useRef<SVGPathElement>(null);
   const beeRef = useRef<SVGGElement>(null);
@@ -19,22 +26,23 @@ export function HoneyHarvestSection() {
   const copyARef = useRef<HTMLDivElement>(null);
   const copyBRef = useRef<HTMLDivElement>(null);
   const copyCRef = useRef<HTMLDivElement>(null);
-  const renderedCells = useMemo(() => cells, []);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let raf = 0;
-    let running = false;
-    let target = 0;
-    let current = 0;
-    let initialized = false;
 
     const readProgress = () => {
       const rect = section.getBoundingClientRect();
       const span = Math.max(1, rect.height - window.innerHeight);
       return Math.min(1, Math.max(0, -rect.top / span));
+    };
+
+    // Narrow-screen camera state (reads coalesced, writes only on change).
+    let macroWidth = 0;
+    let lastShift = 0;
+    const measureMacro = () => {
+      macroWidth = macroRef.current?.getBoundingClientRect().width ?? 0;
     };
 
     const paint = (progress: number) => {
@@ -46,16 +54,29 @@ export function HoneyHarvestSection() {
       section.style.setProperty("--honey-fill", fill.toFixed(4));
 
       if (beeRef.current) {
-        // Approach arc, hover at flower center, then carry across.
-        const approachX = 108 + collect * 212;
-        const approachY = 184 - Math.sin(collect * Math.PI) * 60;
-        const carryX = approachX + transfer * 293;
-        const carryY = approachY + transfer * 98 - Math.sin(transfer * Math.PI) * 14;
-        const rotate = -12 + collect * 6 + transfer * 15;
+        // The bee descends onto the actual flower head, holds through late
+        // collect, then carries across to the comb. The carry starts exactly
+        // where the approach ends, so transfer boundaries stay continuous.
+        const approachX = 150 - collect * (150 - FLOWER_X);
+        const approachY = 150 + collect * (FLOWER_Y - 150) - Math.sin(collect * Math.PI) * 20;
+        const carryX = approachX + transfer * (600 - FLOWER_X);
+        const carryY = approachY + transfer * (280 - FLOWER_Y) - Math.sin(transfer * Math.PI) * 14;
+        const rotate = -12 + collect * 4 + transfer * 18;
         beeRef.current.setAttribute(
           "transform",
           `translate(${carryX.toFixed(1)} ${carryY.toFixed(1)}) rotate(${rotate.toFixed(1)}) scale(${(0.9 + transfer * 0.08).toFixed(3)})`,
         );
+        // Narrow screens: pan the macro so the bee stays in frame.
+        if (macroRef.current && window.innerWidth < 720) {
+          const shift = cameraShift(carryX, 760, window.innerWidth, macroWidth);
+          if (Math.abs(shift - lastShift) > 0.5) {
+            macroRef.current.style.translate = `${shift.toFixed(1)}px 0`;
+            lastShift = shift;
+          }
+        } else if (macroRef.current && lastShift !== 0) {
+          macroRef.current.style.translate = "";
+          lastShift = 0;
+        }
       }
       if (flowerRef.current) {
         // Rooted: ambient sway + tiny 2-3px / ~1.5deg collection reaction.
@@ -65,12 +86,22 @@ export function HoneyHarvestSection() {
         flowerRef.current.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0) rotate(${r.toFixed(2)}deg)`;
       }
       if (dropRef.current) {
-        const x = 320 + transfer * 235;
-        const y = 170 + transfer * 165 - Math.sin(transfer * Math.PI) * 10;
-        dropRef.current.setAttribute("cx", x.toFixed(1));
-        dropRef.current.setAttribute("cy", y.toFixed(1));
-        dropRef.current.setAttribute("r", String(7 + transfer * 5));
-        dropRef.current.style.opacity = transfer > 0.06 && transfer < 0.95 ? "1" : "0";
+        if (transfer <= 0.001 && collect > 0.7) {
+          // Nectar budding at the flower head while the bee collects.
+          const bud = smoothstep((collect - 0.7) / 0.3);
+          dropRef.current.setAttribute("cx", String(FLOWER_X));
+          dropRef.current.setAttribute("cy", String(FLOWER_Y));
+          dropRef.current.setAttribute("r", String(4 + bud * 3));
+          dropRef.current.style.opacity = bud.toFixed(3);
+        } else {
+          // Carried from the flower head to the stream origin.
+          const x = FLOWER_X + transfer * (STREAM_X - FLOWER_X);
+          const y = FLOWER_Y + transfer * (STREAM_Y - FLOWER_Y) - Math.sin(transfer * Math.PI) * 10;
+          dropRef.current.setAttribute("cx", x.toFixed(1));
+          dropRef.current.setAttribute("cy", y.toFixed(1));
+          dropRef.current.setAttribute("r", String(7 + transfer * 5));
+          dropRef.current.style.opacity = transfer > 0.02 && transfer < 0.98 ? "1" : "0";
+        }
       }
       if (streamRef.current) {
         streamRef.current.style.opacity = fill > 0.04 ? Math.min(1, fill * 2).toFixed(3) : "0";
@@ -82,67 +113,65 @@ export function HoneyHarvestSection() {
           `rotateZ(${(-10 + fill * 4).toFixed(2)}deg) translate3d(0, ${(18 - fill * 18).toFixed(1)}px, 0)`;
       }
 
-      // Eased crossfades with guaranteed dominant chapter.
-      const fade = (node: HTMLDivElement | null, start: number, end: number) => {
+      // Complementary chapter weights: exactly one dominant chapter outside
+      // the brief 0.05 handoff windows, so text is never caught in a
+      // dual-faint trough and never doubly readable for long.
+      const fade = (node: HTMLDivElement | null, in0: number, in1: number, out0: number, out1: number) => {
         if (!node) return;
-        const enter = smoothstep((progress - start) / 0.07);
-        const exit = smoothstep((end - progress) / 0.07);
+        const enter = smoothstep((progress - in0) / (in1 - in0));
+        const exit = smoothstep((out1 - progress) / (out1 - out0));
         const o = Math.min(enter, exit);
         node.style.opacity = o.toFixed(3);
         node.style.transform = `translate3d(0, ${((1 - enter) * 14).toFixed(1)}px, 0)`;
         node.style.visibility = o <= 0.01 ? "hidden" : "visible";
       };
-      fade(copyARef.current, 0.0, 0.36);
-      fade(copyBRef.current, 0.34, 0.64);
-      fade(copyCRef.current, 0.62, 1.02);
+      fade(copyARef.current, -0.05, 0.0, 0.33, 0.38);
+      fade(copyBRef.current, 0.33, 0.38, 0.61, 0.66);
+      fade(copyCRef.current, 0.61, 0.66, 1.02, 1.07);
     };
 
-    const render = () => {
-      raf = 0;
-      if (!running) return;
-
-      if (reduced.matches) {
-        section.style.setProperty("--honey-fill", "1");
-        beeRef.current?.setAttribute("transform", "translate(420 246) rotate(4) scale(.96)");
-        if (flowerRef.current) flowerRef.current.style.transform = "none";
-        if (dropRef.current) dropRef.current.style.opacity = "0";
-        if (streamRef.current) {
-          streamRef.current.style.opacity = ".9";
-          streamRef.current.style.strokeDashoffset = "0";
+    const paintStatic = () => {
+      section.style.setProperty("--honey-fill", "1");
+      beeRef.current?.setAttribute("transform", "translate(420 246) rotate(4) scale(.96)");
+      if (flowerRef.current) flowerRef.current.style.transform = "none";
+      if (dropRef.current) dropRef.current.style.opacity = "0";
+      if (streamRef.current) {
+        streamRef.current.style.opacity = ".9";
+        streamRef.current.style.strokeDashoffset = "0";
+      }
+      if (combRef.current)
+        combRef.current.style.transform = "perspective(900px) rotateX(50deg) rotateZ(-6deg) translate3d(0,0,0)";
+      if (macroRef.current) macroRef.current.style.translate = "";
+      [copyARef.current, copyBRef.current, copyCRef.current].forEach((node) => {
+        if (node) {
+          node.style.opacity = "1";
+          node.style.transform = "none";
+          node.style.visibility = "visible";
         }
-        if (combRef.current)
-          combRef.current.style.transform = "perspective(900px) rotateX(50deg) rotateZ(-6deg) translate3d(0,0,0)";
-        [copyARef.current, copyBRef.current, copyCRef.current].forEach((node) => {
-          if (node) {
-            node.style.opacity = "1";
-            node.style.transform = "none";
-            node.style.visibility = "visible";
-          }
-        });
-        raf = requestAnimationFrame(render);
-        return;
-      }
-
-      target = readProgress();
-      if (!initialized) {
-        // First paint equals current scroll position: no init jump even on
-        // deep links or back/forward into mid-scene.
-        current = target;
-        initialized = true;
-        paint(current);
-      } else {
-        current += (target - current) * 0.18;
-        if (Math.abs(target - current) < 0.0004) current = target;
-        paint(current);
-      }
-      raf = requestAnimationFrame(render);
+      });
     };
 
-    running = true;
-    raf = requestAnimationFrame(render);
+    measureMacro();
+    window.addEventListener("resize", measureMacro);
+    // Own the scene before first paint: no flash of unmanaged state, and the
+    // initial frame already matches the live scroll position.
+    section.classList.add("is-live");
+    if (reduced.matches) paintStatic();
+    else paint(readProgress());
+    const stopLoop = createSceneLoop(
+      section,
+      reduced,
+      {
+        paint,
+        readTarget: readProgress,
+        advance: (current, target, blend) => current + (target - current) * blend,
+        paintStatic,
+      },
+      0.18,
+    );
     return () => {
-      running = false;
-      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("resize", measureMacro);
+      stopLoop();
     };
   }, []);
 
@@ -169,7 +198,7 @@ export function HoneyHarvestSection() {
 
         <div className="honey-harvest__scene" aria-hidden="true">
           <div className="honey-harvest__atmosphere" />
-          <svg className="honey-harvest__macro" viewBox="0 0 760 500">
+          <svg ref={macroRef} className="honey-harvest__macro" viewBox="0 0 760 500">
             <defs>
               <radialGradient id="petal" cx="40%" cy="35%" r="72%"><stop offset="0" stopColor="#fff9df"/><stop offset=".7" stopColor="#e9dec1"/><stop offset="1" stopColor="#bdae8b"/></radialGradient>
               <radialGradient id="nectar" cx="38%" cy="30%" r="70%"><stop offset="0" stopColor="#fff0a8"/><stop offset=".4" stopColor="#e5ad38"/><stop offset="1" stopColor="#8c5009"/></radialGradient>
@@ -190,7 +219,7 @@ export function HoneyHarvestSection() {
               </g>
             </g>
 
-            <g ref={beeRef} className="honey-macro-bee" filter="url(#macroShadow)">
+            <g ref={beeRef} className="honey-macro-bee" transform="translate(150 150) rotate(-10)" filter="url(#macroShadow)">
               <path d="M-8-5c-38-42-75-20-64 12 8 23 40 27 67 11Z" fill="url(#macroWing)" stroke="rgba(50,64,55,.28)"/>
               <path d="M19-7c34-44 73-28 68 6-4 25-38 34-67 21Z" fill="url(#macroWing)" stroke="rgba(50,64,55,.28)"/>
               <ellipse cx="4" cy="12" rx="36" ry="24" fill="#d9961e"/>
@@ -207,7 +236,7 @@ export function HoneyHarvestSection() {
           <div ref={combRef} className="honeycomb-3d">
             <div className="honeycomb-3d__rim" />
             <div className="honeycomb-3d__cells">
-              {renderedCells.map((cell) => <span key={cell}><i /></span>)}
+              {cells.map((cell) => <span key={cell}><i /></span>)}
             </div>
             <div className="honeycomb-3d__gloss" />
           </div>

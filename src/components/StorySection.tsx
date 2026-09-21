@@ -11,14 +11,14 @@ export function StorySection() {
           <div className="story-copy__paragraphs">
             {story.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
           </div>
-          <div className="story-signature" aria-label="Osnivači i poreklo">
+          <div className="story-signature" role="group" aria-label="Osnivači i poreklo">
             <div><span>Osnivači</span><strong>Anita &amp; Laslo Toth</strong></div>
             <div><span>Početak</span><strong>Proleće 2022.</strong></div>
             <div><span>Mesto</span><strong>Novi Sad · Budisava</strong></div>
           </div>
-          <div className="story-timeline" aria-label="Kratka vremenska linija">
+          <div className="story-timeline" role="list" aria-label="Kratka vremenska linija">
             {story.timeline.map((item) => (
-              <div key={item.year}>
+              <div key={item.year} role="listitem">
                 <span>{item.year}</span>
                 <p>{item.text}</p>
               </div>
@@ -26,7 +26,7 @@ export function StorySection() {
           </div>
         </div>
 
-        <div className="story-art" aria-label="Stilizovana ilustracija vojvođanskog imanja i biljaka">
+        <div className="story-art">
           <div className="story-art__sun" aria-hidden="true" />
           <div className="story-art__frame" aria-hidden="true"><span>Porodična priča</span><i>2022 → danas</i></div>
           <svg viewBox="0 0 620 760" role="img" aria-label="Stilizovana vojvođanska kuća, voćnjak i bilje">

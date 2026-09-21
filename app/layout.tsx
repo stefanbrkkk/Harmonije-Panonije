@@ -4,7 +4,10 @@ import "./globals.css";
 
 const description = "Ručno pravljeni Immuno Craft proizvodi iz Novog Sada — sirupi, sokovi i busteri sa livadskim medom, ceđenim limunom, voćem i biljem.";
 const siteUrl = getSiteUrl();
-const shouldIndex = process.env.VERCEL_ENV === "production" || Boolean(process.env.NEXT_PUBLIC_SITE_URL);
+// Indexing policy depends ONLY on the deployment environment (HP-24):
+// previews stay noindex/disallow even when NEXT_PUBLIC_SITE_URL is set.
+// The site URL variable only controls canonical/OG URL wording.
+const shouldIndex = process.env.VERCEL_ENV === "production";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

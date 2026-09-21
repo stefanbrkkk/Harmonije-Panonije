@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { createSceneLoop } from "@/src/lib/scene";
 
 type Waypoint = { p: number; x: number; y: number; scale: number };
 
@@ -72,12 +73,8 @@ export function PageBee() {
     if (!wrapper || !bee) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let raf = 0;
-    let running = false;
 
     // Damped state (target/current model).
-    let targetProgress = 0;
-    let currentProgress = 0;
     let currentX = 0;
     let currentY = 0;
     let currentScale = 1;
@@ -129,23 +126,13 @@ export function PageBee() {
       document.querySelector(".mobile-menu--open") !== null ||
       document.body.classList.contains("has-overlay");
 
-    const render = () => {
-      raf = 0;
-      if (!running) return;
-      if (reduced.matches) {
-        wrapper.style.opacity = "0";
-        raf = requestAnimationFrame(render);
-        return;
-      }
+    const paintStatic = () => {
+      wrapper.style.opacity = "0";
+    };
 
-      // Damp progress toward target: stable under flicks, no teleport on
-      // catalog expand because anchors move coherently.
-      const progressDelta = targetProgress - currentProgress;
-      currentProgress += progressDelta * 0.14;
-      if (Math.abs(progressDelta) < 0.0004) currentProgress = targetProgress;
-
+    const paint = (progress: number, dt: number) => {
       const points = window.innerWidth < 720 ? mobilePath : desktopPath;
-      const point = sample(points, currentProgress);
+      const point = sample(points, progress);
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const targetX = (vw * point.x) / 100;
@@ -158,24 +145,27 @@ export function PageBee() {
         initialized = true;
       }
 
-      // Position + scale damping.
-      currentX += (targetX - currentX) * 0.16;
-      currentY += (targetY - currentY) * 0.16;
-      currentScale += (point.scale - currentScale) * 0.1;
+      // Position + scale damping (frame-rate independent).
+      const move = 1 - Math.pow(1 - 0.16, dt);
+      currentX += (targetX - currentX) * move;
+      currentY += (targetY - currentY) * move;
+      currentScale += (point.scale - currentScale) * (1 - Math.pow(1 - 0.1, dt));
 
       const dx = targetX - currentX;
       const dy = targetY - currentY;
       const speed = Math.hypot(dx, dy);
       const rawAngle = Math.max(-18, Math.min(18, (Math.atan2(dy, Math.abs(dx) + 0.01) * 180) / Math.PI));
-      currentAngle += (rawAngle * 0.5 - currentAngle) * 0.08;
+      currentAngle += (rawAngle * 0.5 - currentAngle) * (1 - Math.pow(1 - 0.08, dt));
 
       // Facing with dead zone + delayed flip to avoid micro-scroll flicker.
+      // The artwork faces left natively (head at low x), so motion to the
+      // right mirrors it and motion to the left keeps it as drawn.
       if (dx < -6) {
         facingLock += 1;
-        if (facingLock >= 3) currentFacing = -1;
+        if (facingLock >= 3) currentFacing = 1;
       } else if (dx > 6) {
         facingLock += 1;
-        if (facingLock >= 3) currentFacing = 1;
+        if (facingLock >= 3) currentFacing = -1;
       } else {
         facingLock = 0;
       }
@@ -192,12 +182,12 @@ export function PageBee() {
       }
 
       let targetOpacity: number;
-      if (currentProgress < 0.012) targetOpacity = 0;
-      else if (currentProgress > 0.985) targetOpacity = 0.25;
+      if (progress < 0.012) targetOpacity = 0;
+      else if (progress > 0.985) targetOpacity = 0.25;
       else if (handoff === 1) targetOpacity = 0.0;
       else targetOpacity = 1;
       if (overlayOpen()) targetOpacity = 0;
-      currentOpacity += (targetOpacity - currentOpacity) * 0.12;
+      currentOpacity += (targetOpacity - currentOpacity) * (1 - Math.pow(1 - 0.12, dt));
       if (Math.abs(targetOpacity - currentOpacity) < 0.004) currentOpacity = targetOpacity;
 
       wrapper.style.opacity = currentOpacity.toFixed(3);
@@ -207,32 +197,18 @@ export function PageBee() {
       // Wings: stable baseline, narrow speed-reactive band, smoothed so no
       // sudden animation-duration jumps.
       const targetWing = Math.min(0.42, Math.max(0.28, 0.34 - speed * 0.0012));
-      wingDuration += (targetWing - wingDuration) * 0.06;
+      wingDuration += (targetWing - wingDuration) * (1 - Math.pow(1 - 0.06, dt));
       wrapper.style.setProperty("--flight-speed", `${wingDuration.toFixed(3)}s`);
       if (shadowRef.current) {
         shadowRef.current.style.transform = `translate3d(${(currentFacing * -7).toFixed(1)}px, 17px, 0) scale(${(0.82 + currentScale * 0.08).toFixed(3)})`;
       }
-
-      raf = requestAnimationFrame(render);
-    };
-
-    const updateTarget = () => {
-      targetProgress = sectionProgress(window.scrollY);
     };
 
     const scheduleMeasure = () => {
       measureAnchors();
-      updateTarget();
     };
 
     measureAnchors();
-    updateTarget();
-    currentProgress = targetProgress;
-    running = true;
-    raf = requestAnimationFrame(render);
-
-    const onScroll = () => updateTarget();
-    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", scheduleMeasure);
     const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(scheduleMeasure) : null;
     if (resizeObserver) resizeObserver.observe(document.body);
@@ -240,16 +216,26 @@ export function PageBee() {
     // offsets; re-measure without moving the bee.
     const mutations = new MutationObserver(scheduleMeasure);
     mutations.observe(document.body, { childList: true, subtree: true });
-    reduced.addEventListener?.("change", onScroll);
+
+    // The shared loop owns scroll wakeups, viewport gating (body is always
+    // in view), hidden-document pauses and reduced-motion static state.
+    const stopLoop = createSceneLoop(
+      document.body,
+      reduced,
+      {
+        paint: (progress, dt) => paint(progress, dt),
+        readTarget: () => sectionProgress(window.scrollY),
+        advance: (current, target, blend) => current + (target - current) * blend,
+        paintStatic,
+      },
+      0.14,
+    );
 
     return () => {
-      running = false;
-      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", scheduleMeasure);
-      reduced.removeEventListener?.("change", onScroll);
       resizeObserver?.disconnect();
       mutations.disconnect();
-      if (raf) cancelAnimationFrame(raf);
+      stopLoop();
     };
   }, []);
 

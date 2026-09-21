@@ -1,6 +1,6 @@
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
-    <span className={`brand-mark ${compact ? "brand-mark--compact" : ""}`} aria-label="Harmonije Panonije">
+    <span className={`brand-mark ${compact ? "brand-mark--compact" : ""}`}>
       <svg className="brand-mark__icon" viewBox="0 0 48 48" aria-hidden="true">
         <path d="M8 35V21L24 10l16 11v14H8Z" />
         <path d="M17 35V25h14v10" />

@@ -2,6 +2,48 @@
 
 This file records the final pre-upload review performed on the Harmonije Panonije website source.
 
+## Addendum — production polish pass, 21 September 2026 (branch `polish/hp-fixes`)
+
+Scope: visual QA + motion engineering + interaction reliability across 50
+tracked findings (HP-01–HP-50), verified with 10 test→inspect→fix→retest
+cycles (107 browser assertions: Chromium desktop/mobile/tablet/landscape
+plus a WebKit cross-engine run), axe-core (0 violations), locked-dependency
+`npm ci`, and genuine Next.js production builds served over `next start`.
+
+Notable corrections beyond the 20 September baseline:
+
+- mobile menu is a header sibling (was covered by its own panel through a
+  nested stacking context), closes by pointer/keyboard, scrolls
+  independently in short viewports, and reconciles on desktop resize
+- catalog expansion preserves card DOM identity and viewport position
+  (panel-level scroll-anchor opt-out), animates only new cards, treats
+  whitespace as empty, folds Serbian diacritics (đ↔dj), and announces a
+  restrained result count
+- inquiry notices carry sequence/product/quantity, pause on hover/focus,
+  never steal focus, and never restore focus into hidden content; empty
+  drawer CTA routes to the catalog with focus; selectable draft fallback;
+  bounded inputs; quantities capped at 99; drafts intentionally reset on
+  reload (no persistence)
+- honey bee visibly meets the flower head, nectar travels to the stream
+  origin, and a narrow-screen camera keeps the action framed; chapters use
+  complementary weights with full first/last readability
+- all three scroll scenes share one delta-time scheduler (view-gated,
+  parks when still/hidden, static single paint in reduced motion)
+- persistent-bee facing corrected to the artwork's forward direction
+- reduced-motion and no-JS views expose all content in static layouts
+- contrast raised to AA (muted/honey-dark tokens, honey copy, footer),
+  labelled containers carry roles, hero bottle labels render real newlines
+- preview deployments stay noindex/disallow even with an explicit site URL
+- social artwork rebuilt with explicit column widths (verified 1200×630)
+- `scripts/verify.mjs` gained 30 structural regression tripwires; prices
+  publish only through per-product confirmation (`publishedPrice`)
+
+Full cycle log, findings ledger, screenshots and raw logs are kept with
+the change report; evidence paths are listed there, not in this file.
+Deferred product scope (shareable filters, product URLs, extra headers,
+CSP) and unresolved business approvals (prices, availability, assets in
+`CLIENT-CONFIRMATION.md`) remain open by design.
+
 ## Source and structure
 
 - project verification script: PASS
