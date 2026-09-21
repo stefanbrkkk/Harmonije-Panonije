@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Product } from "@/src/data/siteContent";
 
 type CartItem = { product: Product; quantity: number };
@@ -35,15 +35,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isOpen, setOpen] = useState(false);
   const [notice, setNotice] = useState<CartNotice | null>(null);
   const seqRef = useRef(0);
+  // Mirrors committed items for notice-quantity computation. Updater
+  // functions must stay pure (React may invoke them twice and reads their
+  // result asynchronously), so the notice quantity is derived here from
+  // the last committed state instead of from inside setItems.
+  const itemsRef = useRef<CartItem[]>([]);
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
 
   const add = useCallback((product: Product, options: AddOptions = {}) => {
-    let quantity = 1;
+    const found = itemsRef.current.find((item) => item.product.id === product.id);
+    const quantity = found ? Math.min(MAX_QUANTITY, found.quantity + 1) : 1;
     setItems((current) => {
-      const found = current.find((item) => item.product.id === product.id);
-      if (found) {
-        quantity = Math.min(MAX_QUANTITY, found.quantity + 1);
+      const existing = current.find((item) => item.product.id === product.id);
+      if (existing) {
         return current.map((item) =>
-          item.product.id === product.id ? { ...item, quantity } : item,
+          item.product.id === product.id ? { ...item, quantity: Math.min(MAX_QUANTITY, item.quantity + 1) } : item,
         );
       }
       return [...current, { product, quantity: 1 }];

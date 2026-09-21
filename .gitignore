@@ -24,6 +24,10 @@ coverage/
 htmlcov/
 .coverage
 
+# Playwright
+playwright-report/
+test-results/
+
 # Python
 __pycache__/
 *.pyc

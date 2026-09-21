@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { BrandMark } from "./BrandMark";
 import { navigation } from "@/src/data/siteContent";
 import { useCart } from "./CartProvider";
+import { useOverlayIsolation } from "@/src/lib/overlay";
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -11,6 +12,24 @@ export function Header() {
   const { count, open } = useCart();
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Declared first so inertness lifts before focus is restored on close.
+  // The toggle stays live: only unrelated header controls are isolated.
+  useOverlayIsolation(
+    menuOpen,
+    [menuRef, menuButtonRef],
+    [
+      ".site-header__logo",
+      ".site-nav",
+      ".order-button",
+      "main",
+      "footer.site-footer",
+      ".mobile-order-bar",
+      ".cart-toast",
+      ".order-drawer",
+      ".drawer-backdrop",
+    ],
+  );
 
   useEffect(() => {
     let raf = 0;
@@ -35,6 +54,9 @@ export function Header() {
     if (!menuOpen) return;
     const previous = document.body.style.overflow;
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    // Capture the toggle node at setup: reading a mutable ref during effect
+    // cleanup is unreliable once React has detached the node.
+    const toggleNode = menuButtonRef.current;
     document.body.style.overflow = "hidden";
     requestAnimationFrame(() => menuRef.current?.querySelector<HTMLElement>("a,button")?.focus());
 
@@ -47,8 +69,7 @@ export function Header() {
       // Focus scope covers the toggle (close) plus the menu panel, so the
       // close control stays keyboard-reachable while open.
       const panel = menuRef.current ? Array.from(menuRef.current.querySelectorAll<HTMLElement>('a[href],button:not([disabled])')) : [];
-      const toggle = menuButtonRef.current;
-      const focusable = toggle ? [toggle, ...panel] : panel;
+      const focusable = toggleNode ? [toggleNode, ...panel] : panel;
       if (!focusable.length) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
@@ -70,7 +91,7 @@ export function Header() {
       // after a breakpoint change, so fall back to the logo link.
       const visible = (node: HTMLElement | null) => (node && node.offsetParent !== null ? node : null);
       const logo = document.querySelector<HTMLElement>(".site-header__logo");
-      (visible(previousFocus) ?? visible(menuButtonRef.current) ?? logo)?.focus();
+      (visible(previousFocus) ?? visible(toggleNode) ?? logo)?.focus();
     };
   }, [menuOpen]);
 

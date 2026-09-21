@@ -68,7 +68,7 @@ export const hero = {
   headline: "Harmonija prirode u svakoj flaši.",
   subheadline:
     "Ručno pravljeni Immuno Craft sirupi, sokovi i busteri sa livadskim medom, ceđenim limunom, voćem i biljem.",
-  trustPoints: ["Bez dodatog šećera", "Craft proizvodnja", "Pažljivo birani sastojci"],
+  trustPoints: ["Med · limun · voće i bilje", "Craft proizvodnja", "Pažljivo birani sastojci"],
   primaryCta: "Pogledaj ukuse",
   secondaryCta: "Naša priča",
   sourceStatus: "CREATIVE_COPY" as SourceStatus,

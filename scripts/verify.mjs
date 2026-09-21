@@ -36,8 +36,21 @@ const forbidden = [
   ["Lorem ipsum", "Lorem ipsum placeholder"],
   ["console.log", "console.log statement"],
   ["0% sugar", "unsupported sugar-free claim"],
-  ["Besplatna dostava širom Srbije", "unsupported nationwide delivery claim"],
+  ["sugar free", "unsupported sugar-free claim"],
+  ["sugar-free", "unsupported sugar-free claim"],
+  ["bez dodatog šećera", "unconfirmed nutrition claim (CLIENT-CONFIRMATION.md)"],
+  ["bez dodatog secera", "unconfirmed nutrition claim (CLIENT-CONFIRMATION.md)"],
+  ["bez šećera", "unconfirmed nutrition claim (CLIENT-CONFIRMATION.md)"],
+  ["bez secera", "unconfirmed nutrition claim (CLIENT-CONFIRMATION.md)"],
   ["organski sertifikovani proizvodi", "unsupported organic-certification claim"],
+  ["organski sertifikat", "unsupported organic-certification claim"],
+  ["jača imunitet", "unconfirmed health claim (CLIENT-CONFIRMATION.md)"],
+  ["jaca imunitet", "unconfirmed health claim (CLIENT-CONFIRMATION.md)"],
+  ["leči ", "unconfirmed medical claim (CLIENT-CONFIRMATION.md)"],
+  ["leci ", "unconfirmed medical claim (CLIENT-CONFIRMATION.md)"],
+  ["detoks", "unconfirmed health claim (CLIENT-CONFIRMATION.md)"],
+  ["detox", "unconfirmed health claim (CLIENT-CONFIRMATION.md)"],
+  ["Besplatna dostava širom Srbije", "unsupported nationwide delivery claim"],
 ];
 for (const [needle, label] of forbidden) {
   if (source.toLocaleLowerCase("sr").includes(needle.toLocaleLowerCase("sr"))) errors.push(`Found ${label}: ${needle}`);
@@ -76,7 +89,7 @@ const scene = read("src/lib/scene.ts");
 const tripwires = [
   // HP-01/02/25: menu must be a header sibling (stacking context), not a child.
   ["menu/header sibling", header.indexOf('id="mobile-menu"') > header.indexOf("</header>")],
-  ["menu trap covers toggle", header.includes("[toggle, ...panel]")],
+  ["menu trap covers toggle", header.includes("toggleNode, ...panel")],
   ["desktop breakpoint reconcile", header.includes("min-width: 1081px")],
   // HP-06/29: no remount-based grid transition on expansion.
   ["no expand remount key", !catalog.includes("transitionKey")],
