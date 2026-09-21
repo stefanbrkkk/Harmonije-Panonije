@@ -14,6 +14,8 @@ export type Product = {
   ingredients: string[];
   volume: string;
   legacyPriceRsd?: number;
+  /** Set only from client-confirmed data (see CLIENT-CONFIRMATION.md). */
+  confirmedPriceRsd?: number;
   priceStatus: "hidden" | "confirmed" | "legacy";
   available: boolean | null;
   featured: boolean;
@@ -25,6 +27,10 @@ export type Product = {
 };
 
 export const siteConfig = {
+  // Inert by itself: publishedPrice() additionally requires per-product
+  // confirmation (priceStatus "confirmed" + clientConfirmed), so flipping
+  // this flag can never publish historical values as current. Publication
+  // rule: only client-confirmed data ships; see CLIENT-CONFIRMATION.md.
   showLegacyPublicPricing: false,
   showTestimonials: true,
   showPress: true,
@@ -123,6 +129,18 @@ const legacy = (product: Omit<Product, "priceStatus" | "available" | "clientConf
   clientConfirmed: false,
   sourceStatus: "LEGACY_PUBLIC",
 });
+
+/**
+ * Safe publication rule for price display (HP-45). A price publishes only
+ * when the product itself carries client confirmation; no global flag can
+ * promote historical values to current pricing on its own.
+ */
+export function publishedPrice(product: Product): number | null {
+  if (product.priceStatus === "confirmed" && product.clientConfirmed && typeof product.confirmedPriceRsd === "number") {
+    return product.confirmedPriceRsd;
+  }
+  return null;
+}
 
 export const products: Product[] = [
   legacy({ id: "divlja-kupina", name: "Divlja kupina", category: "sirupi", ingredients: ["divlja kupina", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 800, featured: true, alt: "Ilustracija boce Immuno Craft sirupa od divlje kupine", description: "Dubok bobičasti ukus sa limunom i medom." }),

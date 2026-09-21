@@ -1,51 +1,97 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { categoryCopy, products, siteConfig, type ProductCategory } from "@/src/data/siteContent";
+import { categoryCopy, products, publishedPrice, type ProductCategory } from "@/src/data/siteContent";
 import { ProductVisual } from "./ProductVisual";
 import { useCart } from "./CartProvider";
 
 const categories: ProductCategory[] = ["sirupi", "djumbir", "busteri", "sokovi"];
+const BASE_COUNT = 6;
+
+/**
+ * Search normalization policy (HP-22): trim, Serbian-locale lowercase, then
+ * fold diacritics (š→s, ž→z, ć→c, č→c) with đ→dj so "djumbir" and "đumbir"
+ * match identically. Applied to BOTH the query and the searchable text, and
+ * the same normalized value drives filtering and UI state (empty vs active).
+ * Scope is the active category only.
+ */
+function normalizeQuery(value: string) {
+  return value
+    .trim()
+    .toLocaleLowerCase("sr")
+    .replace(/đ/g, "dj")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function resultCountText(count: number, total: number, searching: boolean) {
+  if (count === 0) return "Nema rezultata.";
+  const noun = count % 10 === 1 && count % 100 !== 11 ? "rezultat" : count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 12 || count % 100 > 14) ? "rezultata" : "rezultata";
+  if (searching) return `${count} ${noun} pretrage.`;
+  return count >= total ? `Prikazano svih ${total}.` : `Prikazano ${count} od ${total}.`;
+}
 
 export function ProductCatalog() {
   const [active, setActive] = useState<ProductCategory>("sirupi");
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState("");
-  const [transitionKey, setTransitionKey] = useState(0);
-  const [newFrom, setNewFrom] = useState(0);
+  // Ids of cards allowed to run the enter animation. Expansion appends to the
+  // existing grid (no remount), so only these animate; everything else keeps
+  // its DOM identity and stays put.
+  const [enterIds, setEnterIds] = useState<string[]>([]);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const moreRef = useRef<HTMLButtonElement | null>(null);
   const { add, items, open } = useCart();
 
+  const normalized = normalizeQuery(query);
+  const searching = normalized.length > 0;
+
   const categoryProducts = useMemo(() => {
-    const normalized = query.trim().toLocaleLowerCase("sr");
     return products.filter((product) => {
       if (product.category !== active) return false;
-      if (!normalized) return true;
-      return [product.name, product.description, ...product.ingredients]
-        .join(" ")
-        .toLocaleLowerCase("sr")
-        .includes(normalized);
+      if (!searching) return true;
+      return normalizeQuery([product.name, product.description, ...product.ingredients].join(" ")).includes(normalized);
     });
-  }, [active, query]);
+  }, [active, normalized, searching]);
 
-  const visible = expanded || query ? categoryProducts : categoryProducts.slice(0, 6);
+  const visible = expanded || searching ? categoryProducts : categoryProducts.slice(0, BASE_COUNT);
   const copy = categoryCopy[active];
-  const baseCount = Math.min(6, categoryProducts.length);
+  const baseCount = Math.min(BASE_COUNT, categoryProducts.length);
+
+  // Clear one-shot enter animations after they finish.
+  useEffect(() => {
+    if (!enterIds.length) return;
+    const timer = window.setTimeout(() => setEnterIds([]), 500);
+    return () => window.clearTimeout(timer);
+  }, [enterIds]);
 
   const switchCategory = (category: ProductCategory) => {
     if (category === active) return;
-    setNewFrom(0);
+    setEnterIds([]);
     setActive(category);
     setExpanded(false);
     setQuery("");
-    setTransitionKey((value) => value + 1);
   };
 
   const toggleExpanded = () => {
-    // Preserve visible cards: only newly inserted cards animate.
-    setNewFrom(expanded ? categoryProducts.length : baseCount);
-    setExpanded((value) => !value);
-    setTransitionKey((value) => value + 1);
+    if (expanded) {
+      setEnterIds([]);
+      setExpanded(false);
+      // Return to a useful position without a smooth-scroll race: if the
+      // toggle fell outside the viewport after collapse, re-anchor instantly.
+      requestAnimationFrame(() => {
+        const node = moreRef.current;
+        if (!node) return;
+        const rect = node.getBoundingClientRect();
+        if (rect.top < 0 || rect.bottom > window.innerHeight) {
+          const y = window.scrollY + rect.top - window.innerHeight * 0.4;
+          window.scrollTo({ top: Math.max(0, y), behavior: "instant" as ScrollBehavior });
+        }
+      });
+    } else {
+      setEnterIds(categoryProducts.slice(baseCount).map((product) => product.id));
+      setExpanded(true);
+    }
   };
 
   const onTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
@@ -60,18 +106,13 @@ export function ProductCatalog() {
     requestAnimationFrame(() => tabRefs.current[next]?.focus());
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => setExpanded(false), 0);
-    return () => clearTimeout(timer);
-  }, [active]);
-
   return (
     <section id="proizvodi" className="product-section section-paper">
       <div className="shell">
         <div className="section-heading section-heading--split">
           <div>
             <p className="eyebrow"><span />Immuno Craft</p>
-            <h2>Ukusi koji imaju karakter.</h2>
+            <h2 id="proizvodi-heading" tabIndex={-1}>Ukusi koji imaju karakter.</h2>
           </div>
           <p>Birajte kombinacije koje vas zanimaju i dodajte ih u upit. Aktuelnu dostupnost i cenu proizvođač potvrđuje direktno — bez checkouta, naloga ili skrivenih koraka.</p>
         </div>
@@ -115,25 +156,28 @@ export function ProductCatalog() {
             <p>{copy.note}</p>
           </div>
 
+          <p className="catalog-count" role="status">{resultCountText(visible.length, categoryProducts.length, searching)}</p>
+
           {visible.length > 0 ? (
-            <div className="product-grid catalog-enter" key={`${active}-${transitionKey}`}>
-              {visible.map((product, index) => {
+            <div className="product-grid" key={active}>
+              {visible.map((product) => {
                 const quantity = items.find((item) => item.product.id === product.id)?.quantity ?? 0;
-                const isNew = index >= newFrom;
+                const isNew = enterIds.includes(product.id);
+                const price = publishedPrice(product);
                 return (
                   <article
                     className={`product-card ${product.featured ? "product-card--featured" : ""} ${isNew ? "product-card--new" : ""}`}
                     key={product.id}
-                    style={isNew ? { animationDelay: `${Math.min(240, (index - newFrom) * 45)}ms` } : undefined}
+                    style={isNew ? { animationDelay: `${Math.min(240, enterIds.indexOf(product.id) * 45)}ms` } : undefined}
                   >
                     <div className="product-card__visual">
-                      <ProductVisual category={product.category} index={index} />
+                      <ProductVisual category={product.category} id={product.id} />
                       <span className="product-card__availability">Dostupnost po upitu</span>
                     </div>
                     <div className="product-card__body">
                       <div className="product-card__meta">
                         <span>{product.volume}</span>
-                        <span>{siteConfig.showLegacyPublicPricing && product.legacyPriceRsd ? `${product.legacyPriceRsd} RSD*` : "Cena po upitu"}</span>
+                        <span>{price != null ? `${price} RSD` : "Cena po upitu"}</span>
                       </div>
                       <h4>{product.name}</h4>
                       <p>{product.description}</p>
@@ -150,15 +194,15 @@ export function ProductCatalog() {
             </div>
           ) : (
             <div className="catalog-empty">
-              <strong>Nema poklapanja za „{query}“.</strong>
+              <strong>Nema poklapanja za „{normalized}“.</strong>
               <p>Probajte drugi sastojak ili otvorite neku od ostalih kategorija.</p>
               <button type="button" className="text-link" onClick={() => setQuery("")}>Obriši pretragu <span aria-hidden="true">↗</span></button>
             </div>
           )}
 
-          {!query && categoryProducts.length > 6 && (
+          {!searching && categoryProducts.length > BASE_COUNT && (
             <div className="catalog-more">
-              <button type="button" className="button button--outline" onClick={toggleExpanded}>
+              <button ref={moreRef} type="button" className="button button--outline" aria-expanded={expanded} onClick={toggleExpanded}>
                 {expanded ? "Prikaži manje" : `Prikaži svih ${categoryProducts.length}`}
               </button>
             </div>

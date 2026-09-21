@@ -15,7 +15,7 @@ export function DeliverySection() {
           <p className="delivery-copy__note">Novi Sad je polazna tačka. Za adresu, preuzimanje i termin javite se direktno — dogovor ostaje jednostavan i ličan.</p>
         </div>
 
-        <div className="delivery-map" aria-label="Stilizovana ruta od Novog Sada ka kupcu">
+        <div className="delivery-map">
           <svg viewBox="0 0 720 470" role="img" aria-label="Apstraktna mapa Panonije sa rutom od Novog Sada">
             <path className="delivery-map__land" d="M56 73c101-49 170-12 242 2 77 15 140-22 211-3 75 20 115 82 111 151-4 73-58 104-86 164-31 67-88 55-155 38-73-18-131 9-204-14C93 385 37 329 33 249c-3-67-21-139 23-176Z" />
             <path className="delivery-map__river" d="M129-5c17 80 91 85 124 141 38 64-30 109 8 167 39 59 121 61 168 140" />

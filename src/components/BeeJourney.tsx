@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { cameraShift, createSceneLoop, smoothstep } from "@/src/lib/scene";
 
-function smoothstep(value: number) {
-  const t = Math.min(1, Math.max(0, value));
-  return t * t * (3 - 2 * t);
-}
+// Pre-paint scene ownership without tripping the SSR useLayoutEffect warning.
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export function BeeJourney() {
   const sectionRef = useRef<HTMLElement>(null);
+  const sceneRef = useRef<SVGSVGElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
   const beeRef = useRef<SVGGElement>(null);
   const houseRef = useRef<SVGGElement>(null);
@@ -18,15 +18,15 @@ export function BeeJourney() {
   const berryRef = useRef<SVGGElement>(null);
   const lemonRef = useRef<SVGGElement>(null);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const section = sectionRef.current;
+    const scene = sceneRef.current;
     const path = pathRef.current;
     const bee = beeRef.current;
     if (!section || !path || !bee) return;
 
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let raf = 0;
-    let running = false;
+
     let length = 0;
     try {
       length = path.getTotalLength();
@@ -34,9 +34,8 @@ export function BeeJourney() {
       length = 1000;
     }
 
-    let target = 0;
-    let current = 0;
-    let initialized = false;
+    let sceneWidth = 0;
+    let lastShift = 0;
 
     const readProgress = () => {
       const rect = section.getBoundingClientRect();
@@ -44,40 +43,36 @@ export function BeeJourney() {
       return Math.min(1, Math.max(0, -rect.top / scrollable));
     };
 
-    const render = () => {
-      raf = 0;
-      if (!running) return;
+    const measureScene = () => {
+      sceneWidth = scene?.getBoundingClientRect().width ?? 0;
+    };
 
-      if (media.matches) {
-        try {
-          const p = path.getPointAtLength(length * 0.86);
-          bee.setAttribute("transform", `translate(${p.x} ${p.y}) rotate(-7)`);
-        } catch {
-          /* static fallback */
-        }
-        if (houseRef.current) {
-          houseRef.current.style.opacity = "1";
-          houseRef.current.style.transform = "none";
-        }
-        if (introRef.current) introRef.current.style.opacity = "1";
-        if (outroRef.current) {
-          outroRef.current.style.opacity = "1";
-          outroRef.current.style.transform = "translate(-50%, 0)";
-        }
-        raf = requestAnimationFrame(render);
-        return;
+    const paintStatic = () => {
+      try {
+        const p = path.getPointAtLength(length * 0.86);
+        bee.setAttribute("transform", `translate(${p.x} ${p.y}) rotate(-7)`);
+      } catch {
+        /* static fallback */
       }
-
-      target = readProgress();
-      if (!initialized) {
-        current = target;
-        initialized = true;
+      if (houseRef.current) {
+        houseRef.current.style.opacity = "1";
+        houseRef.current.style.transform = "none";
       }
-      // Damped progress: survives flicks, scrollbar drags, resize jumps.
-      current += (target - current) * 0.16;
-      if (Math.abs(target - current) < 0.0005) current = target;
-      const progress = current;
+      if (introRef.current) {
+        introRef.current.style.opacity = "1";
+        introRef.current.style.transform = "translateX(-50%)";
+      }
+      if (outroRef.current) {
+        outroRef.current.style.opacity = "1";
+        outroRef.current.style.transform = "translate(-50%, 0)";
+      }
+      if (scene) {
+        scene.style.translate = "";
+        lastShift = 0;
+      }
+    };
 
+    const paint = (progress: number) => {
       const eased = smoothstep(progress);
       const distance = length * Math.min(0.985, Math.max(0, eased));
       try {
@@ -96,6 +91,18 @@ export function BeeJourney() {
           "transform",
           `translate(${(p.x + ox).toFixed(1)} ${(p.y + oy).toFixed(1)}) rotate(${angle.toFixed(1)})`,
         );
+        // Narrow screens: pan the scene so the bee (and nearby landmarks)
+        // stay in frame instead of showing an arbitrary cropped slice.
+        if (scene && window.innerWidth < 720) {
+          const shift = cameraShift(p.x + ox, 1000, window.innerWidth, sceneWidth);
+          if (Math.abs(shift - lastShift) > 0.5) {
+            scene.style.translate = `${shift.toFixed(1)}px 0`;
+            lastShift = shift;
+          }
+        } else if (scene && lastShift !== 0) {
+          scene.style.translate = "";
+          lastShift = 0;
+        }
       } catch {
         /* keep last pose on path errors */
       }
@@ -129,8 +136,6 @@ export function BeeJourney() {
       react(lemonRef.current, 0.23, 1);
       react(berryRef.current, 0.42, -1);
       react(leafRef.current, 0.58, 1);
-
-      raf = requestAnimationFrame(render);
     };
 
     const onResize = () => {
@@ -139,17 +144,30 @@ export function BeeJourney() {
       } catch {
         /* keep previous length */
       }
+      measureScene();
     };
 
-    running = true;
-    raf = requestAnimationFrame(render);
+    measureScene();
     window.addEventListener("resize", onResize);
-    media.addEventListener?.("change", onResize);
+    // Own the scene before first paint: no flash of unmanaged state, and the
+    // initial frame already matches the live scroll position.
+    section.classList.add("is-live");
+    if (media.matches) paintStatic();
+    else paint(readProgress());
+    const stopLoop = createSceneLoop(
+      section,
+      media,
+      {
+        paint,
+        readTarget: readProgress,
+        advance: (current, target, blend) => current + (target - current) * blend,
+        paintStatic,
+      },
+      0.16,
+    );
     return () => {
-      running = false;
       window.removeEventListener("resize", onResize);
-      media.removeEventListener?.("change", onResize);
-      if (raf) cancelAnimationFrame(raf);
+      stopLoop();
     };
   }, []);
 
@@ -162,7 +180,7 @@ export function BeeJourney() {
           <p>Put vodi od cveta i voća, preko meda i bilja, do prepoznatljive vojvođanske kućice sa etiketa.</p>
         </div>
 
-        <svg className="bee-scene" viewBox="0 0 1000 560" role="img" aria-label="Stilizovana pčela leti kroz sastojke ka vojvođanskoj kućici">
+        <svg ref={sceneRef} className="bee-scene" viewBox="0 0 1000 560" role="img" aria-label="Stilizovana pčela leti kroz sastojke ka vojvođanskoj kućici">
           <defs>
             <linearGradient id="honeyGlow" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0" stopColor="#e7b95d" stopOpacity=".3" />
@@ -213,11 +231,20 @@ export function BeeJourney() {
             </g>
           </g>
 
-          <g ref={beeRef} className="scene-bee">
+          <g ref={beeRef} className="scene-bee" transform="translate(75 375)">
             <ellipse cx="0" cy="0" rx="15" ry="9" />
             <path d="M-10-2h20M-6-8 1 8M5-7 10 5" />
-            <ellipse className="scene-bee__wing scene-bee__wing--a" cx="-7" cy="-12" rx="9" ry="5" transform="rotate(-35 -7 -12)" />
-            <ellipse className="scene-bee__wing scene-bee__wing--b" cx="6" cy="-12" rx="9" ry="5" transform="rotate(35 6 -12)" />
+            {/*
+              Wing ownership (HP-39): base splay lives on the static SVG
+              anchor; the CSS flap animates only the inner shape, so the two
+              transforms never compete for the same layer.
+            */}
+            <g transform="rotate(-35 -7 -12)">
+              <ellipse className="scene-bee__wing scene-bee__wing--a" cx="-7" cy="-12" rx="9" ry="5" />
+            </g>
+            <g transform="rotate(35 6 -12)">
+              <ellipse className="scene-bee__wing scene-bee__wing--b" cx="6" cy="-12" rx="9" ry="5" />
+            </g>
             <path d="M-15-1c-9-8-13-4-14 1M15-1c8-8 12-4 13 1" />
           </g>
         </svg>

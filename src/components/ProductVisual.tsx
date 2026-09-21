@@ -7,9 +7,22 @@ const palette: Record<ProductCategory, string> = {
   sokovi: "green",
 };
 
-export function ProductVisual({ category, index, compact = false }: { category: ProductCategory; index: number; compact?: boolean }) {
+/**
+ * Decorative label identity is derived from the stable product id, never the
+ * visible array index or cart insertion order — filtering or reordering must
+ * not shuffle the artwork's number/variant. The label is illustrative, not a
+ * reproduction of actual packaging.
+ */
+function identityFor(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i += 1) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return { variant: hash % 2 === 0 ? "IMMUNO" : "CRAFT", number: String((hash % 89) + 10).padStart(2, "0") };
+}
+
+export function ProductVisual({ category, id, compact = false }: { category: ProductCategory; id: string; compact?: boolean }) {
   const tone = palette[category];
   const isJar = category === "busteri";
+  const identity = identityFor(id);
   return (
     <div className={`product-visual product-visual--${tone} ${compact ? "product-visual--compact" : ""}`} aria-hidden="true">
       <span className="product-visual__sun" />
@@ -22,8 +35,8 @@ export function ProductVisual({ category, index, compact = false }: { category: 
         <span className={isJar ? "product-jar__body" : "product-bottle__body"} />
         <span className={isJar ? "product-jar__label" : "product-bottle__label"}>
           <small>HARMONIJE</small>
-          <strong>{isJar ? "BOOST" : index % 2 === 0 ? "IMMUNO" : "CRAFT"}</strong>
-          <i>{String(index + 1).padStart(2, "0")}</i>
+          <strong>{isJar ? "BOOST" : identity.variant}</strong>
+          <i>{identity.number}</i>
         </span>
       </div>
     </div>

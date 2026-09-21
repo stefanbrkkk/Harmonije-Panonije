@@ -13,7 +13,7 @@ export function ProofSection() {
         </div>
 
         {siteConfig.showTestimonials && (
-          <div className="proof-quotes" aria-label="Sažeci javnih utisaka kupaca">
+          <div className="proof-quotes" role="group" aria-label="Sažeci javnih utisaka kupaca">
             {testimonials.map((item, index) => (
               <article key={item.quote}>
                 <span aria-hidden="true">0{index + 1}</span>

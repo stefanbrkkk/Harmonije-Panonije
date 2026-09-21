@@ -1,16 +1,22 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Product } from "@/src/data/siteContent";
 
 type CartItem = { product: Product; quantity: number };
 type AddOptions = { notify?: boolean; openDrawer?: boolean };
 
+/** One feedback event per addition: unique sequence, product and live count. */
+export type CartNotice = { seq: number; product: Product; quantity: number };
+
+/** Upper bound keeps quantities (and the generated draft) reasonable. */
+const MAX_QUANTITY = 99;
+
 type CartContextValue = {
   items: CartItem[];
   count: number;
   isOpen: boolean;
-  notice: Product | null;
+  notice: CartNotice | null;
   add: (product: Product, options?: AddOptions) => void;
   decrement: (id: string) => void;
   remove: (id: string) => void;
@@ -23,21 +29,29 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  // Deliberately in-memory only (HP-34): inquiry drafts reset on reload.
+  // No product, quantity or personal data is persisted anywhere.
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setOpen] = useState(false);
-  const [notice, setNotice] = useState<Product | null>(null);
+  const [notice, setNotice] = useState<CartNotice | null>(null);
+  const seqRef = useRef(0);
 
   const add = useCallback((product: Product, options: AddOptions = {}) => {
+    let quantity = 1;
     setItems((current) => {
       const found = current.find((item) => item.product.id === product.id);
       if (found) {
+        quantity = Math.min(MAX_QUANTITY, found.quantity + 1);
         return current.map((item) =>
-          item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item,
+          item.product.id === product.id ? { ...item, quantity } : item,
         );
       }
       return [...current, { product, quantity: 1 }];
     });
-    if (options.notify !== false) setNotice(product);
+    if (options.notify !== false) {
+      seqRef.current += 1;
+      setNotice({ seq: seqRef.current, product, quantity });
+    }
     if (options.openDrawer) setOpen(true);
   }, []);
 

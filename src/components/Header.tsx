@@ -43,8 +43,12 @@ export function Header() {
         setMenuOpen(false);
         return;
       }
-      if (event.key !== "Tab" || !menuRef.current) return;
-      const focusable = Array.from(menuRef.current.querySelectorAll<HTMLElement>('a[href],button:not([disabled])'));
+      if (event.key !== "Tab") return;
+      // Focus scope covers the toggle (close) plus the menu panel, so the
+      // close control stays keyboard-reachable while open.
+      const panel = menuRef.current ? Array.from(menuRef.current.querySelectorAll<HTMLElement>('a[href],button:not([disabled])')) : [];
+      const toggle = menuButtonRef.current;
+      const focusable = toggle ? [toggle, ...panel] : panel;
       if (!focusable.length) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
@@ -62,11 +66,27 @@ export function Header() {
       document.body.style.overflow = previous;
       document.body.classList.remove("has-overlay");
       window.removeEventListener("keydown", onKeyDown);
-      (previousFocus ?? menuButtonRef.current)?.focus();
+      // Restore focus to a visible control: the toggle may be display:none
+      // after a breakpoint change, so fall back to the logo link.
+      const visible = (node: HTMLElement | null) => (node && node.offsetParent !== null ? node : null);
+      const logo = document.querySelector<HTMLElement>(".site-header__logo");
+      (visible(previousFocus) ?? visible(menuButtonRef.current) ?? logo)?.focus();
     };
   }, [menuOpen]);
 
+  // Reconcile with the desktop breakpoint: an open mobile menu cannot strand
+  // users after resize; focus returns to the (visible) toggle via cleanup.
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1081px)");
+    const onChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setMenuOpen(false);
+    };
+    query.addEventListener?.("change", onChange);
+    return () => query.removeEventListener?.("change", onChange);
+  }, []);
+
   return (
+    <>
     <header className={`site-header ${scrolled ? "site-header--scrolled" : ""}`}>
       <div className="site-header__inner shell">
         <a href="#vrh" className="site-header__logo" aria-label="Harmonije Panonije — početna">
@@ -98,26 +118,32 @@ export function Header() {
           </button>
         </div>
       </div>
-
-      <div
-        ref={menuRef}
-        id="mobile-menu"
-        className={`mobile-menu ${menuOpen ? "mobile-menu--open" : ""}`}
-        aria-hidden={!menuOpen}
-        inert={!menuOpen}
-      >
-        <div className="mobile-menu__inner shell">
-          <p className="eyebrow">Meni</p>
-          {navigation.map((item, index) => (
-            <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>
-              <span>{String(index + 1).padStart(2, "0")}</span>{item.label}
-            </a>
-          ))}
-          <button type="button" className="button button--honey" onClick={() => { setMenuOpen(false); open(); }}>
-            Započni upit
-          </button>
-        </div>
-      </div>
     </header>
+
+    {/*
+      Sibling of the header (not a child): the panel previously stacked above
+      the toggle because a positioned z-index child always paints over the
+      toggle's z-auto button inside the same header stacking context.
+    */}
+    <div
+      ref={menuRef}
+      id="mobile-menu"
+      className={`mobile-menu ${menuOpen ? "mobile-menu--open" : ""}`}
+      aria-hidden={!menuOpen}
+      inert={!menuOpen}
+    >
+      <div className="mobile-menu__inner shell">
+        <p className="eyebrow">Meni</p>
+        {navigation.map((item, index) => (
+          <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>
+            <span>{String(index + 1).padStart(2, "0")}</span>{item.label}
+          </a>
+        ))}
+        <button type="button" className="button button--honey" onClick={() => { setMenuOpen(false); open(); }}>
+          Započni upit
+        </button>
+      </div>
+    </div>
+    </>
   );
 }

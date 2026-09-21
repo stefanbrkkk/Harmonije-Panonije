@@ -29,12 +29,12 @@ export function Hero() {
             <a className="button button--honey" href="#proizvodi">{hero.primaryCta}</a>
             <a className="text-link text-link--light" href="#prica">{hero.secondaryCta}<span aria-hidden="true">↘</span></a>
           </div>
-          <div className="hero-trust" aria-label="Osnovne karakteristike">
-            {hero.trustPoints.map((point) => <span key={point}>{point}</span>)}
+          <div className="hero-trust" role="list" aria-label="Osnovne karakteristike">
+            {hero.trustPoints.map((point) => <span key={point} role="listitem">{point}</span>)}
           </div>
         </div>
 
-        <div className="hero-art" aria-label="Ilustrativna kompozicija Immuno Craft proizvoda">
+        <div className="hero-art">
           <div className="hero-art__halo" aria-hidden="true" />
           <div className="hero-art__line hero-art__line--a" aria-hidden="true" />
           <div className="hero-art__line hero-art__line--b" aria-hidden="true" />
@@ -43,9 +43,9 @@ export function Hero() {
           <div className="hero-art__ingredient hero-art__ingredient--leaf" aria-hidden="true"><span /><span /><span /></div>
           <div className="hero-art__ingredient hero-art__ingredient--flower" aria-hidden="true"><span /><span /><span /><span /><span /></div>
           <div className="hero-art__bottles">
-            <Bottle size="small" tone="gold" label="IMMU\nNO" />
+            <Bottle size="small" tone="gold" label={"IMMU\nNO"} />
             <Bottle size="large" tone="berry" />
-            <Bottle size="small" tone="green" label="CRAFT\nSOK" />
+            <Bottle size="small" tone="green" label={"CRAFT\nSOK"} />
           </div>
           <div className="hero-art__caption">
             <span>01</span>
