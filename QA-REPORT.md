@@ -152,15 +152,53 @@ Representative hero, product, story and honey-section screenshots were also visu
 - Next.js pinned to 16.3.5
 - React / React DOM pinned to 19.3.0
 
-## Environment limitation
+## Historical limitation — 20 September baseline only
 
-The sandbox cannot currently reach `registry.npmjs.org`, so `npm install` times out here. Because of that, the real framework packages could not be installed and a genuine `next build` could not be executed inside this environment.
-
-A semantic TypeScript pass against temporary framework type stubs succeeded after the final edits. The project also exposes `npm run qa`, which performs the real project verification, TypeScript check, and Next.js production build once dependencies are installed on a normal machine or by Vercel.
+An earlier audit environment could not reach `registry.npmjs.org`, so `npm
+install` timed out there and no genuine `next build` could be executed in
+that sandbox (a semantic TypeScript pass against temporary stubs was used
+instead). That limitation no longer applies: locked installs, real
+production builds, the committed Playwright suite, and `npm audit` all run
+in the current workflow and in CI (see `.github/workflows/qa.yml`).
 
 Before deployment, run:
 
 ```bash
-npm install
 npm run qa
 ```
+
+## Addendum — visual composition + motion system pass (branch `visual/art-direction`)
+
+Redesigned sections (same palette, typography, and content architecture):
+
+- Story art panel: layered botanical composition (sky contours, treeline,
+  orchard rows with fruit dots, detailed house, field rows, elderflower
+  foreground, single bee path) replacing the sparse sketch; no-JS/reduced
+  static fallbacks preserved.
+- BeeJourney: flower origin station, 1.12–1.35× larger stations, woven
+  path with vertical range, depth washes, stage numbers, persistent
+  stage captions (01–04) so the middle scroll never goes textually quiet;
+  section height 190vh → 165vh.
+- Ingredients: asymmetric garden with primary (med/limun) emphasis, orbit
+  dots, connective flora layer, center-disk ring, translucent icon fills;
+  mobile grid unchanged.
+- HoneyHarvest: discrete phase timeline (establish/approach/drink/
+  takeoff/carry/deposit/settle) via `phaseProgress`; real drink hold with
+  folded wings, proboscis, and nectar shimmer; single continuous nectar
+  path; shot-based mobile camera; comb rises into framing with the
+  deposit; chapters aligned to actions; stronger bee silhouette.
+- Reveals: per-section local order (never global index), translate-only
+  motion (headings stronger, media with subtle scale), no opacity fades.
+- PageBee: `data-page-bee="hide"` exclusions (story, ingredients,
+  delivery, kontakt) with damped fades; corrected facing preserved.
+- Delivery: contours, Dunav label, origin halo, route drift, sprig,
+  compass, legend intact; no invented coverage.
+- Header clearance from one variable (`--header-height` +
+  `--anchor-clearance`); clipboard timer race fixed (owned ref timer).
+
+Tests: 47 Chromium assertions + 8 WebKit/Firefox smoke assertions,
+axe fully-empty scans (incl. mid-reveal and 320px menu/drawer), dense
+honey sweep (0.05 steps, teleport bounds, drink geometry <70px,
+camera stillness, reverse recovery), journey captions, bee exclusions,
+idle scheduler silence, header-relative anchor clearance at 7 viewports,
+fresh-server default, QA CI workflow, 30+ verify tripwires.

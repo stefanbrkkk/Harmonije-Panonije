@@ -6,6 +6,18 @@ export function smoothstep(value: number) {
 }
 
 /**
+ * Discrete timeline phase: eased 0 → 1 between start and end, clamped.
+ * Sequential phases built from this are continuous by construction (each
+ * segment begins exactly where the previous one ends) and purely a
+ * function of scroll progress, so reverse/fast/jump scrolling recovers
+ * the identical visual state.
+ */
+export function phaseProgress(progress: number, start: number, end: number) {
+  if (end <= start) return progress >= end ? 1 : 0;
+  return smoothstep((progress - start) / (end - start));
+}
+
+/**
  * Camera-follow shift (px, ≤ 0) that centers a viewBox landmark in the
  * viewport, clamped to the artwork bounds. Returns 0 when the artwork fits.
  * Applied through the CSS `translate` property so SVG `transform` attributes

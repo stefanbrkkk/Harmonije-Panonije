@@ -28,15 +28,21 @@ export function MotionOrchestrator() {
   useLayoutEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     const observed = new WeakSet<Element>();
+    const scopeCounts = new Map<Element, number>();
     let observer: IntersectionObserver | null = null;
 
     const prepare = (root: ParentNode = document) => {
       const nodes = Array.from(root.querySelectorAll<HTMLElement>(selector));
-      nodes.forEach((node, index) => {
+      nodes.forEach((node) => {
         if (observed.has(node)) return;
         observed.add(node);
         node.classList.add("reveal-target");
-        node.style.setProperty("--reveal-delay", `${Math.min(200, (index % 6) * 35)}ms`);
+        // Local semantic order: position within the nearest section, never
+        // the global document index, capped so cascades stay tight.
+        const scope = node.closest("section, footer") ?? document.body;
+        const localIndex = scopeCounts.get(scope) ?? 0;
+        scopeCounts.set(scope, localIndex + 1);
+        node.style.setProperty("--reveal-delay", `${Math.min(180, localIndex * 60)}ms`);
         if (reduced.matches || inViewport(node)) {
           // Above-the-fold content becomes visible in the same pre-paint
           // frame: never visible -> hidden -> visible.

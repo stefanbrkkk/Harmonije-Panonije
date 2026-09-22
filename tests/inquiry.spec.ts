@@ -94,6 +94,17 @@ test("inquiry draft: fields, mailto inspection, clipboard stubs", async ({ page 
   });
   await page.locator(".order-drawer__alternatives button.text-link").click();
   await expect(page.locator(".order-drawer__alternatives button.text-link")).toContainText(/kopiran/i);
+  // Overlapping copies: the second success restarts the reset window.
+  await page.locator('.order-contact-form input[autocomplete="name"]').fill("Test Ime 3");
+  await page.locator(".order-drawer__alternatives button.text-link").click();
+  await expect(page.locator(".order-drawer__alternatives button.text-link")).toContainText(/kopiran/i);
+  await page.waitForTimeout(1200);
+  await page.locator('.order-contact-form input[autocomplete="name"]').fill("Test Ime 4");
+  await page.locator(".order-drawer__alternatives button.text-link").click();
+  await expect(page.locator(".order-drawer__alternatives button.text-link")).toContainText(/kopiran/i);
+  // Past the first timer's original deadline, the newer feedback survives.
+  await page.waitForTimeout(1000);
+  await expect(page.locator(".order-drawer__alternatives button.text-link")).toContainText(/kopiran/i);
   // Clipboard rejection stub.
   await page.evaluate(() => {
     Object.defineProperty(navigator, "clipboard", {

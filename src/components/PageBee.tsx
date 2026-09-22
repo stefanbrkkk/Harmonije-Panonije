@@ -87,6 +87,7 @@ export function PageBee() {
     let anchors: number[] = [];
     let anchorCount = 0;
     let localScenes: HTMLElement[] = [];
+    let hideSections: HTMLElement[] = [];
 
     const measureAnchors = () => {
       const tops: number[] = [];
@@ -99,6 +100,9 @@ export function PageBee() {
       anchors = tops;
       anchorCount = tops.length;
       localScenes = Array.from(document.querySelectorAll<HTMLElement>("#put-pcele, .honey-harvest"));
+      // Sections with strong dedicated artwork opt out of the global bee so
+      // it never competes with a local composition or covers its copy.
+      hideSections = Array.from(document.querySelectorAll<HTMLElement>('[data-page-bee="hide"]'));
     };
 
     const sectionProgress = (scrollY: number) => {
@@ -180,11 +184,21 @@ export function PageBee() {
           break;
         }
       }
+      // Dedicated-artwork sections suppress the global bee; the damped
+      // opacity below turns the boundary into a smooth fade.
+      let excluded = 0;
+      for (const section of hideSections) {
+        const r = section.getBoundingClientRect();
+        if (r.top < focusY && r.bottom > focusY) {
+          excluded = 1;
+          break;
+        }
+      }
 
       let targetOpacity: number;
       if (progress < 0.012) targetOpacity = 0;
       else if (progress > 0.985) targetOpacity = 0.25;
-      else if (handoff === 1) targetOpacity = 0.0;
+      else if (handoff === 1 || excluded === 1) targetOpacity = 0.0;
       else targetOpacity = 1;
       if (overlayOpen()) targetOpacity = 0;
       currentOpacity += (targetOpacity - currentOpacity) * (1 - Math.pow(1 - 0.12, dt));

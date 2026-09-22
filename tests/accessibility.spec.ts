@@ -6,7 +6,7 @@ test("no serious violations in the settled page", async ({ page }) => {
   const assertClean = trackErrors(page);
   await page.goto("/", { waitUntil: "networkidle" });
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-  expect(results.violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual([]);
+  expect(results.violations).toEqual([]);
   assertClean();
 });
 
@@ -19,7 +19,21 @@ test("no transient contrast failure during hero entrance", async ({ page }) => {
   );
   expect(opacity, "CTA opaque mid-entrance").toBe(1);
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-  expect(results.violations.filter((v) => v.id === "color-contrast")).toEqual([]);
+  expect(results.violations).toEqual([]);
+  assertClean();
+});
+
+test("axe clean mid-reveal while sections enter", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.goto("/", { waitUntil: "networkidle" });
+  // Scroll so several reveal targets are mid-transition, then scan.
+  await page.evaluate(() => document.querySelector("#proizvodi")!.scrollIntoView({ block: "center" }));
+  await page.waitForTimeout(250);
+  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+  expect(results.violations).toEqual([]);
+  // Sanity: the scan covered real reveal activity, not a static page.
+  const revealed = await page.evaluate(() => document.querySelectorAll("#proizvodi .is-inview").length);
+  expect(revealed).toBeGreaterThan(0);
   assertClean();
 });
 
@@ -29,13 +43,26 @@ test("axe clean with menu and drawer open at 320px", async ({ page }) => {
   await page.goto("/", { waitUntil: "networkidle" });
   await page.locator(".menu-button").click();
   await expect(page.locator("#mobile-menu")).toHaveClass(/mobile-menu--open/);
+  // Settle all motion before scanning: axe must judge the resting state,
+  // never a mid-transition frame.
+  await page.waitForFunction(() => {
+    if (getComputedStyle(document.querySelector<HTMLElement>("#mobile-menu")!).opacity !== "1") return false;
+    return document
+      .getAnimations()
+      .every((animation) => animation.playState !== "running" || (animation as CSSAnimation).animationName !== "menuItemIn");
+  });
   let results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-  expect(results.violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual([]);
+  expect(results.violations).toEqual([]);
   await page.keyboard.press("Escape");
   await page.locator(".order-button").first().click();
   await expect(page.locator(".order-drawer")).toHaveClass(/is-open/);
+  await page.waitForFunction(() => {
+    const drawer = document.querySelector<HTMLElement>(".order-drawer")!;
+    const rect = drawer.getBoundingClientRect();
+    return Math.abs(rect.right - window.innerWidth) < 1;
+  });
   results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-  expect(results.violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual([]);
+  expect(results.violations).toEqual([]);
   assertClean();
 });
 

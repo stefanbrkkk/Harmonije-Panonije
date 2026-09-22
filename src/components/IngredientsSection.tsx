@@ -12,7 +12,7 @@ function IngredientIcon({ kind }: { kind: string }) {
 
 export function IngredientsSection() {
   return (
-    <section id="sastojci" className="ingredients-section section-dark">
+    <section id="sastojci" data-page-bee="hide" className="ingredients-section section-dark">
       <div className="shell">
         <div className="section-heading section-heading--split section-heading--light">
           <div>
@@ -30,7 +30,7 @@ export function IngredientsSection() {
             <small>sklad sastojaka</small>
           </div>
           {ingredients.map((item, index) => (
-            <article className={`ingredient-card ingredient-card--${index + 1}`} key={item.name}>
+            <article className={`ingredient-card ingredient-card--${index + 1}${index < 2 ? " ingredient-card--primary" : ""}`} key={item.name}>
               <div className="ingredient-card__icon"><IngredientIcon kind={item.kind} /></div>
               <span>{String(index + 1).padStart(2, "0")}</span>
               <h3>{item.name}</h3>
@@ -40,6 +40,17 @@ export function IngredientsSection() {
           <svg className="ingredients-stage__orbit" viewBox="0 0 1000 620" aria-hidden="true">
             <ellipse cx="500" cy="310" rx="373" ry="220" />
             <ellipse cx="500" cy="310" rx="250" ry="147" />
+            <circle className="orbit-dot orbit-dot--honey" cx="873" cy="310" r="6" />
+            <circle className="orbit-dot orbit-dot--berry" cx="250" cy="163" r="5" />
+            <circle className="orbit-dot orbit-dot--sage" cx="500" cy="457" r="5" />
+          </svg>
+          <svg className="ingredients-stage__flora" viewBox="0 0 1000 620" aria-hidden="true">
+            <path d="M120 500C150 440 165 390 180 340M140 440c-40-10-58-34-48-56 34 2 52 22 48 56Z" />
+            <path d="M880 140C860 190 850 230 848 270M868 210c36-8 54-30 46-52-30 2-48 20-46 52Z" />
+            <path d="M820 520c-8-26-6-48 6-66M812 478c-20 2-32 12-34 28 16 4 28-6 34-28Z" />
+            <circle cx="205" cy="180" r="4" />
+            <circle cx="795" cy="420" r="4" />
+            <circle cx="620" cy="110" r="3.4" />
           </svg>
         </div>
       </div>

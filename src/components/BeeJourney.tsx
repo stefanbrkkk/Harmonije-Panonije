@@ -6,6 +6,20 @@ import { cameraShift, createSceneLoop, smoothstep } from "@/src/lib/scene";
 // Pre-paint scene ownership without tripping the SSR useLayoutEffect warning.
 const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
+const STAGES = [
+  { index: "01", text: "Cvet i voće — početak puta" },
+  { index: "02", text: "Med i bilje — darovi livade" },
+  { index: "03", text: "Zlatna kap — craft u nastajanju" },
+  { index: "04", text: "Panonija — dom sa etikete" },
+];
+
+const STAGE_WINDOWS: Array<[number, number]> = [
+  [-0.05, 0.32],
+  [0.27, 0.55],
+  [0.5, 0.75],
+  [0.7, 1.05],
+];
+
 export function BeeJourney() {
   const sectionRef = useRef<HTMLElement>(null);
   const sceneRef = useRef<SVGSVGElement>(null);
@@ -13,6 +27,7 @@ export function BeeJourney() {
   const beeRef = useRef<SVGGElement>(null);
   const houseRef = useRef<SVGGElement>(null);
   const introRef = useRef<HTMLDivElement>(null);
+  const captionRef = useRef<HTMLDivElement>(null);
   const outroRef = useRef<HTMLDivElement>(null);
   const leafRef = useRef<SVGGElement>(null);
   const berryRef = useRef<SVGGElement>(null);
@@ -36,6 +51,7 @@ export function BeeJourney() {
 
     let sceneWidth = 0;
     let lastShift = 0;
+    let stageIndex = -1;
 
     const readProgress = () => {
       const rect = section.getBoundingClientRect();
@@ -65,6 +81,10 @@ export function BeeJourney() {
       if (outroRef.current) {
         outroRef.current.style.opacity = "1";
         outroRef.current.style.transform = "translate(-50%, 0)";
+      }
+      if (captionRef.current) {
+        captionRef.current.style.opacity = "1";
+        captionRef.current.style.transform = "translateX(-50%)";
       }
       if (scene) {
         scene.style.translate = "";
@@ -136,6 +156,31 @@ export function BeeJourney() {
       react(lemonRef.current, 0.23, 1);
       react(berryRef.current, 0.42, -1);
       react(leafRef.current, 0.58, 1);
+
+      // Persistent stage caption: exactly one textual anchor is dominant at
+      // any progress, so the long middle of the scene never goes quiet.
+      if (captionRef.current) {
+        let best = 0;
+        let bestWeight = -1;
+        for (let i = 0; i < STAGES.length; i += 1) {
+          const [start, end] = STAGE_WINDOWS[i];
+          const enter = smoothstep((progress - start) / 0.05);
+          const exit = smoothstep((end - progress) / 0.05);
+          const weight = Math.min(enter, exit);
+          if (weight > bestWeight) {
+            bestWeight = weight;
+            best = i;
+          }
+        }
+        if (best !== stageIndex) {
+          stageIndex = best;
+          const index = captionRef.current.querySelector(".bee-journey__caption-index");
+          const label = captionRef.current.querySelector("p");
+          if (index) index.textContent = STAGES[best].index;
+          if (label) label.textContent = STAGES[best].text;
+        }
+        captionRef.current.style.opacity = bestWeight.toFixed(3);
+      }
     };
 
     const onResize = () => {
@@ -179,6 +224,10 @@ export function BeeJourney() {
           <h2>Priroda → sastojci → craft → Panonija.</h2>
           <p>Put vodi od cveta i voća, preko meda i bilja, do prepoznatljive vojvođanske kućice sa etiketa.</p>
         </div>
+        <div ref={captionRef} className="bee-journey__caption shell" aria-live="off">
+          <span className="bee-journey__caption-index">01</span>
+          <p>Cvet i voće — početak puta</p>
+        </div>
 
         <svg ref={sceneRef} className="bee-scene" viewBox="0 0 1000 560" role="img" aria-label="Stilizovana pčela leti kroz sastojke ka vojvođanskoj kućici">
           <defs>
@@ -186,41 +235,78 @@ export function BeeJourney() {
               <stop offset="0" stopColor="#e7b95d" stopOpacity=".3" />
               <stop offset="1" stopColor="#d38b2e" stopOpacity="0" />
             </linearGradient>
+            <radialGradient id="sageWash" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stopColor="#7e9379" stopOpacity=".16" />
+              <stop offset="1" stopColor="#7e9379" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="honeyWash" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stopColor="#e7b95d" stopOpacity=".2" />
+              <stop offset="1" stopColor="#e7b95d" stopOpacity="0" />
+            </radialGradient>
           </defs>
 
-          <path className="bee-scene__contour" d="M-50 440 C130 395 240 488 375 420 C535 339 621 194 786 172 C899 158 974 206 1065 134" />
-          <path ref={pathRef} className="bee-scene__path" d="M75 375 C165 290 238 365 311 297 C378 235 425 136 530 168 C641 201 634 329 732 309 C826 290 837 216 878 195" />
+          {/* Static depth washes */}
+          <ellipse cx="300" cy="300" rx="270" ry="150" fill="url(#sageWash)" />
+          <ellipse cx="790" cy="240" rx="220" ry="150" fill="url(#honeyWash)" />
+          {/* Faint background botanical silhouettes */}
+          <g className="bee-scene__backdrop" aria-hidden="true">
+            <path d="M60 520C90 440 110 380 140 320M96 452c-46-12-66-44-54-72 42 2 64 28 54 72ZM118 398c44-14 66-44 52-70-40 6-62 30-52 70Z" />
+            <path d="M920 480c-20-70-26-130-22-190M908 372c40-14 58-42 46-68-38 4-56 28-46 68Z" />
+            <path d="M880 120c30 22 68 30 108 26M852 210c22-30 58-44 96-40" />
+          </g>
 
-          <g transform="translate(250 330)" className="scene-ingredient scene-ingredient--lemon">
+          <path className="bee-scene__contour" d="M-50 440 C130 395 240 488 375 420 C535 339 621 194 786 172 C899 158 974 206 1065 134" />
+          <path ref={pathRef} className="bee-scene__path" d="M75 400 C150 300 220 430 310 330 C390 242 440 138 545 172 C650 206 640 338 735 312 C815 290 830 228 880 202" />
+
+          <g transform="translate(112 442)" className="scene-ingredient scene-ingredient--bloom">
+            <g className="scene-ingredient__static">
+              <path d="M0 40C2 10 4-12 6-34" />
+              <ellipse cx="-38" cy="-28" rx="26" ry="12" transform="rotate(-24 -38 -28)" style={{ fill: "rgba(126,147,121,.25)" }} />
+              <ellipse cx="38" cy="-28" rx="26" ry="12" transform="rotate(24 38 -28)" style={{ fill: "rgba(126,147,121,.25)" }} />
+              <ellipse cx="0" cy="-52" rx="15" ry="26" style={{ fill: "#fbf7ec" }} />
+              <ellipse cx="-24" cy="-38" rx="13" ry="22" transform="rotate(-38 -24 -38)" style={{ fill: "#fbf7ec" }} />
+              <ellipse cx="24" cy="-38" rx="13" ry="22" transform="rotate(38 24 -38)" style={{ fill: "#fbf7ec" }} />
+              <circle cx="0" cy="-30" r="13" style={{ fill: "#d8a248" }} />
+              <circle cx="-6" cy="-34" r="3.4" style={{ fill: "#7a4f0e", stroke: "none" }} />
+              <circle cx="7" cy="-26" r="3" style={{ fill: "#7a4f0e", stroke: "none" }} />
+            </g>
+            <text className="scene-stage" x="-58" y="-72">01</text>
+          </g>
+
+          <g transform="translate(250 330) scale(1.35)" className="scene-ingredient scene-ingredient--lemon">
             <g ref={lemonRef} className="scene-ingredient__motion">
               <ellipse cx="0" cy="0" rx="47" ry="36" transform="rotate(-18)" />
               <path d="M-10 -31c10-26 35-21 40-5" />
               <path d="M-32 -2h64M0-31V29M-23-22 23 22M23-22-23 22" />
             </g>
+            <text className="scene-stage" x="-64" y="-52">02</text>
           </g>
 
-          <g transform="translate(470 178)" className="scene-ingredient scene-ingredient--berry">
+          <g transform="translate(470 178) scale(1.35)" className="scene-ingredient scene-ingredient--berry">
             <g ref={berryRef} className="scene-ingredient__motion">
               <circle cx="-20" cy="10" r="17" /><circle cx="9" cy="1" r="18" /><circle cx="28" cy="24" r="15" /><circle cx="-4" cy="30" r="17" />
               <path d="M2-18c10-20 30-24 43-16M3-17c-8-19-26-23-39-15" />
             </g>
+            <text className="scene-stage" x="-70" y="-40">02</text>
           </g>
 
-          <g transform="translate(665 335)" className="scene-ingredient scene-ingredient--leaf">
+          <g transform="translate(665 335) scale(1.3)" className="scene-ingredient scene-ingredient--leaf">
             <g ref={leafRef} className="scene-ingredient__motion">
               <path d="M0 68C4 27 6-10 11-62" />
               <path d="M7 30c-38-10-54-35-44-55 31 2 49 20 44 55Z" />
               <path d="M10 5c35-12 50-36 38-55-29 5-44 23-38 55Z" />
               <path d="M4 52c-31 0-50-16-48-34 27-5 46 7 48 34Z" />
             </g>
+            <text className="scene-stage" x="44" y="-64">03</text>
           </g>
 
-          <g className="scene-ingredient scene-ingredient--honey" transform="translate(585 260)">
+          <g className="scene-ingredient scene-ingredient--honey" transform="translate(585 260) scale(1.3)">
             <path d="M0-34c22 27 33 44 33 63A33 33 0 1 1-33 29C-33 10-22-7 0-34Z" />
             <ellipse cx="0" cy="16" rx="49" ry="49" fill="url(#honeyGlow)" stroke="none" />
+            <text className="scene-stage" x="-72" y="-48">03</text>
           </g>
 
-          <g transform="translate(760 235)" className="scene-house__anchor">
+          <g transform="translate(760 235) scale(1.12)" className="scene-house__anchor">
             <g ref={houseRef} className="scene-house">
               <path d="M0 76V-5L108-77 216-5v81H0Z" />
               <path d="M40 76V6h55v70M125 12h52v38h-52z" />
@@ -229,6 +315,7 @@ export function BeeJourney() {
               <path className="scene-house__check" d="M16 59h182M16 39h182M34-3v79M62-22v98M90-40v116M118-40v116M146-22v98M174-4v80" />
               <text x="108" y="107" textAnchor="middle">HARMONIJE PANONIJE</text>
             </g>
+            <text className="scene-stage" x="150" y="-96">04</text>
           </g>
 
           <g ref={beeRef} className="scene-bee" transform="translate(75 375)">

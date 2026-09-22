@@ -7,6 +7,10 @@
   --forest-3: #274a3e;
   --ink: #1c2f28;
   --muted: #585e59;
+  /* Single source of truth for fixed-header clearance (HP-R2-01): anchor
+     scroll margins derive from the same variable as the header height. */
+  --header-height: 82px;
+  --anchor-clearance: 6px;
   --line: rgba(28, 47, 40, 0.18);
   --line-light: rgba(246, 236, 214, 0.18);
   --honey: #d8a248;
@@ -104,7 +108,7 @@ button { color: inherit; }
   color: inherit;
 }
 /* Fixed-header clearance for anchor navigation. */
-section[id] { scroll-margin-top: 72px; }
+section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-clearance)); }
 .text-link span { transition: transform .2s ease; }
 .text-link:hover span { transform: translate(3px, -3px); }
 .text-link--light { border-color: rgba(255,255,255,.25); }
@@ -133,7 +137,7 @@ section[id] { scroll-margin-top: 72px; }
 .site-header::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: rgba(255,255,255,.1); transition: background-color .45s ease; }
 .site-header--scrolled { color: var(--ink); background: rgba(243,237,223,.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 8px 30px rgba(19,45,37,.08); }
 .site-header--scrolled::after { background: rgba(28,47,40,.12); }
-.site-header__inner { height: 82px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+.site-header__inner { height: var(--header-height); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
 .site-header__logo { justify-self: start; }
 .site-nav { display: flex; align-items: center; gap: clamp(20px, 2.2vw, 34px); }
 .site-nav a { position: relative; font-size: .76rem; font-weight: 720; letter-spacing: .045em; }
@@ -223,13 +227,16 @@ section[id] { scroll-margin-top: 72px; }
 @keyframes scrollCue { 0%{transform:translateY(0)}70%,100%{transform:translateY(200%)} }
 
 /* Bee journey */
-.bee-journey { position: relative; height: 190vh; background: var(--cream); color: var(--forest-2); }
+.bee-journey { position: relative; height: 165vh; background: var(--cream); color: var(--forest-2); }
 .bee-journey__sticky { position: sticky; top: 0; height: 100svh; overflow: hidden; display: grid; place-items: center; }
 .bee-journey__sticky::before { content: ""; position: absolute; inset: 0; opacity: .55; background-image: linear-gradient(rgba(23,54,45,.035) 1px,transparent 1px), linear-gradient(90deg,rgba(23,54,45,.035) 1px,transparent 1px); background-size: 52px 52px; mask-image: linear-gradient(to bottom,transparent,#000 20%,#000 80%,transparent); }
 .bee-journey__intro { position: absolute; z-index: 4; top: clamp(98px, 14vh, 150px); left: 50%; transform: translateX(-50%); pointer-events: none; will-change: opacity, transform; }
 .bee-journey__intro h2 { max-width: 650px; margin: 0; font-family: var(--serif); font-size: clamp(3.1rem, 5.8vw, 6.8rem); font-weight: 400; line-height: .9; letter-spacing: -.055em; }
 .bee-journey__intro > p:last-child { max-width: 500px; margin: 24px 0 0; color: #657169; font-size: .94rem; line-height: 1.72; }
-.bee-scene { position: absolute; z-index: 2; left: 50%; top: 52%; width: min(1100px, 94vw); transform: translate(-50%,-40%); overflow: visible; }
+.bee-scene { position: absolute; z-index: 2; left: 50%; top: 52%; width: min(1300px, 110vw); transform: translate(-50%,-40%); overflow: visible; }
+.bee-scene__backdrop { fill: none; stroke: rgba(23,54,45,.16); stroke-width: 1.2; }
+.scene-ingredient .scene-stage,
+.scene-house__anchor .scene-stage { fill: rgba(28,47,40,.48); stroke: none; font-family: var(--sans); font-size: 13px; font-weight: 800; letter-spacing: 2px; }
 .bee-scene__contour { fill: none; stroke: rgba(23,54,45,.13); stroke-width: 1; stroke-dasharray: 3 8; }
 .bee-scene__path { fill: none; stroke: rgba(23,54,45,.2); stroke-width: 1; stroke-dasharray: 2 12; stroke-linecap: round; }
 .scene-ingredient { transform-box: fill-box; transform-origin: center; }
@@ -240,6 +247,12 @@ section[id] { scroll-margin-top: 72px; }
 .scene-ingredient--leaf { color: #607e68; }
 .scene-ingredient--honey { color: var(--honey-dark); }
 .scene-ingredient--honey > path:first-child { fill: rgba(216,162,72,.14); }
+.scene-ingredient--bloom { color: #607e68; }
+.scene-ingredient--bloom .scene-ingredient__static { transform-box: fill-box; transform-origin: center; }
+.bee-journey__caption { position: absolute; z-index: 4; top: clamp(92px, 12vh, 116px); left: 50%; transform: translateX(-50%); display: flex; align-items: baseline; gap: 12px; pointer-events: none; white-space: nowrap; }
+.bee-journey__caption-index { font-size: .68rem; font-weight: 800; letter-spacing: .14em; color: var(--honey-dark); }
+.bee-journey__caption p { margin: 0; font-family: var(--serif); font-size: clamp(1rem, 1.6vw, 1.35rem); font-style: italic; color: #4c5a51; }
+.bee-journey.is-live .bee-journey__caption { opacity: 0; }
 .scene-house__anchor { fill: none; }
 .scene-house { fill: none; stroke: var(--forest-2); stroke-width: 1.6; opacity: .12; transform-box: fill-box; transform-origin: center; will-change: transform, opacity; }
 .scene-house__check { stroke-width: .6; opacity: .17; }
@@ -357,12 +370,22 @@ section[id] { scroll-margin-top: 72px; }
 .story-timeline p { margin:0;font-family:var(--serif);font-size:1.05rem; }
 .story-art { position:relative;min-height:760px;background:rgba(255,255,255,.26);border:1px solid rgba(28,47,40,.11);overflow:hidden;box-shadow:var(--shadow); }
 .story-art::after { content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(23,54,45,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(23,54,45,.03) 1px,transparent 1px);background-size:34px 34px; }
-.story-art__sun { position:absolute;right:-60px;top:-60px;width:290px;height:290px;border-radius:50%;background:rgba(216,162,72,.22); }
+.story-art__sun { position:absolute;right:-70px;top:-70px;width:200px;height:200px;border-radius:50%;background:rgba(216,162,72,.18); }
 .story-art svg { position:absolute;inset:0;width:100%;height:100%;z-index:2; }
 .story-art svg * { vector-effect:non-scaling-stroke; }
 .story-art__land { fill:#9aa991;stroke:none;opacity:.58; }
-.story-art__house,.story-art__roof,.story-art__door,.story-art__orchard path,.story-art__botanical path { fill:none;stroke:var(--forest-2);stroke-width:1.4; }
-.story-art__orchard path:nth-child(even) { fill:rgba(95,127,101,.15); }
+.story-art__house,.story-art__orchard path,.story-art__foreground path { fill:none;stroke:var(--forest-2);stroke-width:1.4; }
+.story-art__sky { fill:none;stroke:rgba(23,54,45,.22);stroke-width:1.1; }
+.story-art__treeline { fill:rgba(95,127,101,.2);stroke:rgba(23,54,45,.4);stroke-width:1.1; }
+.story-art__shrub circle { fill:rgba(95,127,101,.28);stroke:rgba(23,54,45,.45);stroke-width:1.1; }
+.story-art__canopy { fill:rgba(95,127,101,.2);stroke:var(--forest-2);stroke-width:1.4; }
+.story-art__canopy-detail { fill:none;stroke:rgba(23,54,45,.4);stroke-width:1.1; }
+.story-art__fruit-dot { fill:rgba(85,45,66,.55);stroke:none; }
+.story-art__field path { fill:none;stroke:rgba(23,54,45,.3);stroke-width:1.1; }
+.story-art__eaves { stroke-width:2; }
+.story-art__smoke { fill:none;stroke:rgba(23,54,45,.45);stroke-width:1.2; }
+.story-art__blossom circle { fill:rgba(251,247,236,.85);stroke:var(--forest-2);stroke-width:1.1; }
+.story-art__blossom circle:nth-child(3n) { fill:rgba(216,162,72,.35); }
 .story-art__flight{fill:none;stroke:rgba(23,54,45,.25);stroke-width:1;stroke-dasharray:3 9}
 .story-art__bee{fill:var(--honey);stroke:var(--forest-2);stroke-width:1.2}
 .story-art__bee ellipse:nth-of-type(n+2){fill:rgba(255,255,255,.55)}
@@ -385,7 +408,18 @@ section[id] { scroll-margin-top: 72px; }
 .ingredient-card > span { float:right;margin-top:-73px;color:rgba(251,247,236,.35);font-size:.58rem;font-weight:800;letter-spacing:.1em; }
 .ingredient-card h3 { margin:0;font-family:var(--serif);font-size:1.62rem;font-weight:400; }
 .ingredient-card p { margin:9px 0 0;color:rgba(251,247,236,.55);font-size:.74rem;line-height:1.55; }
-.ingredient-card--1{left:3%;top:14%}.ingredient-card--2{left:35%;top:4%}.ingredient-card--3{right:3%;top:15%}.ingredient-card--4{right:0;top:56%}.ingredient-card--5{left:36%;bottom:0}.ingredient-card--6{left:2%;top:56%}.ingredient-card--7{right:26%;top:8%;width:220px}
+.ingredient-card--1{left:1%;top:8%}.ingredient-card--2{right:1%;top:8%}.ingredient-card--3{right:0;top:54%}.ingredient-card--4{left:33%;bottom:0}.ingredient-card--5{left:1%;top:56%}.ingredient-card--6{left:38%;top:0%;width:220px}.ingredient-card--7{right:30%;bottom:2%;width:220px}
+.ingredient-card--primary { width:280px; }
+.ingredient-card--primary .ingredient-card__icon { width:84px;height:84px; }
+.ingredient-card--primary h3 { font-size:1.9rem; }
+.ingredients-stage__center::before { content:"";position:absolute;inset:-14px;border:1px solid rgba(239,201,110,.2);border-radius:50%; }
+.ingredients-stage__flora { position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:rgba(239,201,110,.1);stroke-width:1.2; }
+.ingredients-stage__flora circle { fill:rgba(239,201,110,.14);stroke:none; }
+.orbit-dot { stroke:none; }
+.orbit-dot--honey { fill:rgba(239,201,110,.5); }
+.orbit-dot--berry { fill:rgba(146,100,125,.55); }
+.orbit-dot--sage { fill:rgba(126,147,121,.55); }
+.ingredient-card__icon svg > * { fill:rgba(239,201,110,.07); }
 
 /* Delivery */
 .delivery-section { padding: clamp(105px,12vw,165px) 0; }
@@ -399,7 +433,14 @@ section[id] { scroll-margin-top: 72px; }
 .delivery-map svg { position:absolute;inset:8%;width:84%;height:76%;overflow:visible; }
 .delivery-map__land { fill:rgba(148,162,136,.28);stroke:rgba(23,54,45,.28);stroke-width:1.2; }
 .delivery-map__river { fill:none;stroke:rgba(78,116,126,.45);stroke-width:3; }
-.delivery-map__route { fill:none;stroke:var(--honey-dark);stroke-width:2;stroke-dasharray:5 8; }
+.delivery-map__route { fill:none;stroke:var(--honey-dark);stroke-width:2;stroke-dasharray:5 8; animation: routeDrift 3.2s linear infinite; }
+@keyframes routeDrift { to { stroke-dashoffset: -13; } }
+.delivery-map__contour { fill:none;stroke:rgba(23,54,45,.18);stroke-width:1; }
+.delivery-map__water-label { fill:rgba(78,116,126,.8);font-family:var(--serif);font-style:italic;font-size:15px;letter-spacing:.06em; }
+.delivery-map__halo { fill:none;stroke:var(--forest);stroke-width:1;opacity:.5; }
+.delivery-map__sprig { fill:none;stroke:#607e68;stroke-width:1.4; }
+.delivery-map__sprig circle { fill:#7e9379;stroke:none; }
+.delivery-map__compass { fill:none;stroke:rgba(23,54,45,.55);stroke-width:1.4; }
 .delivery-map__point { fill:var(--honey);stroke:var(--forest);stroke-width:2; }
 .delivery-map__point--origin{fill:var(--forest)}
 .delivery-map__pulse{fill:none;stroke:rgba(23,54,45,.28);stroke-width:1;animation:mapPulse 2.4s ease-out infinite;transform-box:fill-box;transform-origin:center}
@@ -496,13 +537,13 @@ section[id] { scroll-margin-top: 72px; }
   .story-art { min-height:680px; }
   .ingredients-stage { height:820px; }
   .ingredient-card { width:215px; }
-  .ingredient-card--1{left:0}.ingredient-card--3{right:0}.ingredient-card--4{right:0}.ingredient-card--6{left:0}.ingredient-card--7{right:22%;top:6%}
+  .ingredient-card--primary { width:250px; }
+  .ingredient-card--1{left:0}.ingredient-card--3{right:0}.ingredient-card--4{right:0}.ingredient-card--6{left:0}.ingredient-card--7{right:22%;top:6%;bottom:auto}
   .delivery-layout { grid-template-columns:1fr 1.1fr;gap:52px; }
 }
 
 @media (max-width: 800px) {
-  :root { --shell: calc(100vw - 34px); }
-  .site-header__inner { height:72px; }
+  :root { --shell: calc(100vw - 34px); --header-height: 72px; }
   .order-button > span:first-child { display:none; }
   .order-button { padding-left:6px;border:0;background:transparent; }
   .hero-section { min-height:auto;padding:118px 0 70px; }
@@ -553,8 +594,7 @@ section[id] { scroll-margin-top: 72px; }
 }
 
 @media (max-width: 560px) {
-  :root { --shell: calc(100vw - 28px); }
-  .site-header__inner { height:68px; }
+  :root { --shell: calc(100vw - 28px); --header-height: 68px; }
   .brand-mark--compact .brand-mark__words span { display:none; }
   .hero-section { padding-top:106px; }
   .hero-copy h1 { font-size:clamp(2.75rem,14vw,5.4rem);line-height:.84; }
@@ -570,6 +610,8 @@ section[id] { scroll-margin-top: 72px; }
   .bee-journey__intro h2 { font-size:clamp(3rem,14vw,4.4rem); }
   .bee-journey__intro > p:last-child { font-size:.82rem; }
   .bee-scene { width:132vw;top:57%;transform:translate(-50%,-34%); }
+  .bee-journey__caption { top: 74px; max-width: 92vw; white-space: normal; text-align: center; justify-content: center; }
+  .bee-journey__caption p { font-size: .95rem; }
   .scene-ingredient--berry,.scene-ingredient--leaf { opacity:.72; }
   .bee-journey__outro { bottom:calc(25px + 70px);grid-template-columns:1fr;gap:8px; }
   .section-heading { padding-top:86px; }
@@ -917,15 +959,14 @@ body.has-overlay .page-bee { opacity: 0 !important; }
 .honey-flower__anchor { fill: none; }
 .honey-flower { transform-box: fill-box; transform-origin: 50% 92%; will-change: transform; }
 .honey-macro-bee { will-change: transform; }
-.honey-macro-bee path:first-child,
-.honey-macro-bee path:nth-child(2) { transform-box: fill-box; transform-origin: center; animation: macroWing .11s linear infinite alternate; }
-@keyframes macroWing { to { transform: rotateX(68deg) scaleY(.45); opacity: .65; } }
+/* Wing flap is driven per-frame from scroll progress (folded rest pose
+   while drinking); no CSS wing animation, so JS owns the layer alone. */
 .honey-drop { filter: drop-shadow(0 5px 6px rgba(99,56,4,.28)); transition: opacity .06s linear; }
 .honey-stream { fill: none; stroke: #7e4304; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 140; stroke-dashoffset: 140; filter: drop-shadow(0 4px 4px rgba(101,54,1,.25)); }
 .honeycomb-3d {
   position: absolute;
-  right: -40px;
-  bottom: -70px;
+  right: -24px;
+  bottom: -48px;
   width: min(590px, 55vw);
   height: 380px;
   will-change: transform;
@@ -1140,9 +1181,7 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .hero-art__bottles,
   .hero-art__ingredient,
   .hero-art__halo,
-  .hero-bottle__glass::after,
-  .honey-macro-bee path,
-  .honey-macro-bee ellipse { animation: none !important; }
+  .hero-bottle__glass::after { animation: none !important; }
   .honey-harvest { height: auto; min-height: 0; padding: 100px 0 80px; }
   .honey-harvest__sticky { position: relative; height: auto; min-height: 0; }
   .honey-harvest__copy { height: auto; }
@@ -1158,23 +1197,28 @@ body.has-overlay .page-bee { opacity: 0 !important; }
 .honeycomb-3d__cells > span:nth-child(n+22):nth-child(-n+28),
 .honeycomb-3d__cells > span:nth-child(n+36):nth-child(-n+42) { translate: 50% 0; }
 
-/* Global reveal choreography. Hierarchy: headings stronger, body subtle,
-   cards owned by the catalog. .is-initial marks above-fold nodes so the
-   first paint never flashes visible -> hidden. */
+/* Reveal choreography: primarily positional motion, never a fade from
+   complete invisibility for text. Order is per-section (see
+   MotionOrchestrator), delays capped tight. .is-initial marks above-fold
+   nodes so the first paint never flashes visible -> hidden. */
 .motion-ready .reveal-target {
-  opacity: 0;
   translate: 0 14px;
   transition:
-    opacity .6s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms),
-    translate .65s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms),
+    translate .7s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms),
 }
-.motion-ready .section-heading.reveal-target { translate: 0 18px; }
+.motion-ready .section-heading.reveal-target { translate: 0 20px; }
+.motion-ready .section-heading.reveal-target,
+.motion-ready .proof-quotes article.reveal-target { transition-duration: .8s; }
 .motion-ready .ingredient-card.reveal-target,
 .motion-ready .delivery-copy.reveal-target { translate: 0 10px; }
+.motion-ready .story-art.reveal-target,
+.motion-ready .delivery-map.reveal-target { scale: .985; transition:
+    translate .75s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms),
+    scale .75s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms); }
 .motion-ready .reveal-target.is-initial { transition: none; }
 .motion-ready .reveal-target.is-inview {
-  opacity: 1;
   translate: 0 0;
+  scale: 1;
 }
 /* Single fast catalog transition (250-450ms). Container fades once;
    only newly inserted cards stagger. */
@@ -1225,7 +1269,7 @@ body.has-overlay .page-bee { opacity: 0 !important; }
 
 @media (prefers-reduced-motion: reduce) {
   .motion-ready .reveal-target,
-  .motion-ready .reveal-target.is-inview { opacity:1;translate:none;transition:none; }
+  .motion-ready .reveal-target.is-inview { opacity:1;translate:none;scale:none;transition:none; }
   .product-grid.catalog-enter, .product-card--new { animation:none; }
 }
 

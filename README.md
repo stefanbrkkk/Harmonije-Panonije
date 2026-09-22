@@ -38,8 +38,9 @@ That performs, in order:
 3. TypeScript type checking (`npm run typecheck`),
 4. a real Next.js production build (`npm run build`),
 5. the Playwright behavioral suite against that production build
-   (`npm run test:e2e`, Chromium; needs `npx playwright install chromium`
-   once per machine).
+   (`npm run test:e2e`: full matrix on Chromium plus a WebKit/Firefox
+   smoke spec; browsers install via `npx playwright install --with-deps
+   chromium webkit firefox`).
 
 `npm run qa:static` runs steps 1–4 only. `npm run test:e2e` expects a
 production build to already exist (the `qa` chain builds exactly once).

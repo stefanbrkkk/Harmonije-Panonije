@@ -109,6 +109,13 @@ export function OrderDrawer() {
     };
   }, [isOpen, close]);
 
+  const copyTimerRef = useRef(0);
+
+  useEffect(() => {
+    const timer = copyTimerRef.current;
+    return () => window.clearTimeout(timer);
+  }, []);
+
   const copyMessage = async () => {
     try {
       if (navigator.clipboard?.writeText) {
@@ -127,7 +134,10 @@ export function OrderDrawer() {
       }
       setCopyState("copied");
       setCopyForMessage(message);
-      window.setTimeout(() => setCopyState("idle"), 1800);
+      // Owned timer: a second copy restarts the reset window instead of
+      // letting the first timer cut the newer feedback short.
+      window.clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = window.setTimeout(() => setCopyState("idle"), 1800);
     } catch {
       setCopyState("failed");
       setCopyForMessage(message);

@@ -2,7 +2,7 @@ import { contact } from "@/src/data/siteContent";
 
 export function FinalCTA() {
   return (
-    <section id="kontakt" className="final-cta section-honey">
+    <section id="kontakt" data-page-bee="hide" className="final-cta section-honey">
       <div className="final-cta__bee" aria-hidden="true">
         <svg viewBox="0 0 120 90"><ellipse cx="58" cy="47" rx="22" ry="14"/><path d="M42 44h32M47 35l10 24M63 34l9 21"/><ellipse cx="43" cy="25" rx="18" ry="9" transform="rotate(-27 43 25)"/><ellipse cx="71" cy="25" rx="18" ry="9" transform="rotate(27 71 25)"/><path d="M34 45c-16-13-25-5-26 6M82 44c15-14 24-7 25 4"/></svg>
       </div>

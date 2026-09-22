@@ -126,8 +126,13 @@ const tripwires = [
   ["tablet 6n reset", css.includes(".product-card:nth-child(6n) { grid-template-columns: none;")],
   // HP-03/05/09: camera-framed responsive scenes.
   ["scene camera", journey.includes("cameraShift(") && honey.includes("cameraShift(")],
-  // HP-04: complementary chapter weights.
-  ["chapter handoff windows", honey.includes("fade(copyARef.current, -0.05, 0.0, 0.33, 0.38)")],
+  // HP-04: complementary chapter weights aligned to visual actions.
+  ["chapter handoff windows", honey.includes("fade(copyARef.current, -0.05, 0.0, 0.24, 0.29)")],
+  // Discrete drink phase with holds (no overlapping collect/transfer).
+  ["drink phase timeline", honey.includes("DRINK .29–.44")],
+  ["page-bee exclusions", bee.includes('[data-page-bee="hide"]')],
+  ["journey stage captions", journey.includes("STAGE_WINDOWS")],
+  ["translate-only reveals", !css.includes("opacity .6s cubic-bezier(.22,.8,.24,1) var(--reveal-delay")],
   // HP-16/36/37/40: one controlled scheduler for the three scenes.
   ["shared scene loop", journey.includes("createSceneLoop(") && honey.includes("createSceneLoop(") && bee.includes("createSceneLoop(")],
   // HP-07: AA contrast tokens.
@@ -137,8 +142,12 @@ const tripwires = [
   // axe follow-ups: dialog on div, unlabelled brand mark.
   ["dialog semantics", !/<aside[^>]*role="dialog"/.test(drawer) && drawer.includes('role="dialog"')],
   ["brand mark naming", !read("src/components/BrandMark.tsx").includes("aria-label")],
-  // HP-30/42 + HP-41: button reset + anchor clearance.
-  ["text-link reset", css.includes("background: transparent;") && css.includes("section[id] { scroll-margin-top: 72px; }")],
+  // HP-30/42 + HP-41 + HP-R2-01: button reset + variable-driven clearance.
+  ["text-link reset", css.includes("background: transparent;") && css.includes("scroll-margin-top: calc(var(--header-height) + var(--anchor-clearance))")],
+  // HP-R2-03: fresh production-server ownership by default.
+  ["fresh test server default", read("playwright.config.ts").includes('process.env.PW_REUSE_EXISTING_SERVER === "1"')],
+  // HP-R2-05: CI enforces the QA chain without deploying.
+  ["qa CI workflow", fs.existsSync(path.join(root, ".github/workflows/qa.yml"))],
 ];
 for (const [label, ok] of tripwires) {
   if (!ok) errors.push(`Regression tripwire failed: ${label}.`);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { cameraShift, createSceneLoop, smoothstep } from "@/src/lib/scene";
+import { cameraShift, createSceneLoop, phaseProgress, smoothstep } from "@/src/lib/scene";
 
 // Pre-paint scene ownership without tripping the SSR useLayoutEffect warning.
 const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
@@ -21,6 +21,10 @@ export function HoneyHarvestSection() {
   const dropRef = useRef<SVGCircleElement>(null);
   const streamRef = useRef<SVGPathElement>(null);
   const beeRef = useRef<SVGGElement>(null);
+  const wingLRef = useRef<SVGGElement>(null);
+  const wingRRef = useRef<SVGGElement>(null);
+  const probRef = useRef<SVGPathElement>(null);
+  const shimmerRef = useRef<SVGCircleElement>(null);
   const flowerRef = useRef<SVGGElement>(null);
   const combRef = useRef<HTMLDivElement>(null);
   const copyARef = useRef<HTMLDivElement>(null);
@@ -46,29 +50,55 @@ export function HoneyHarvestSection() {
     };
 
     const paint = (progress: number) => {
-      // Phase windows: flower 0-0.22, collect 0.18-0.44, transfer 0.38-0.64,
-      // honey 0.58-0.82, final 0.78-1.0.
-      const collect = smoothstep((progress - 0.12) / 0.3);
-      const transfer = smoothstep((progress - 0.38) / 0.26);
-      const fill = smoothstep((progress - 0.58) / 0.24);
+      // Discrete cinematic timeline. Each segment lerps from the previous
+      // segment's exact endpoint, so forward/backward/fast/jump scrolling
+      // always resolves to the same valid composition:
+      // establish 0–.07, approach .07–.29, DRINK .29–.44, takeoff .44–.52,
+      // carry .52–.72, deposit .72–.88, settle .88–1.
+      const drinkHold =
+        phaseProgress(progress, 0.3, 0.345) * (1 - phaseProgress(progress, 0.435, 0.5));
+      const approach = phaseProgress(progress, 0.07, 0.29);
+      const takeoff = phaseProgress(progress, 0.44, 0.52);
+      const carry = phaseProgress(progress, 0.52, 0.72);
+      const deposit = phaseProgress(progress, 0.72, 0.88);
+      const fill = deposit;
+
+      const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+      // Bee keyframes (viewBox coords). HOLD puts the head inside the nectar.
+      const HOLD_X = FLOWER_X + 30;
+      const HOLD_Y = FLOWER_Y - 8;
+      const LIFT_X = 140;
+      const LIFT_Y = 214;
+      const COMB_X = 600;
+      const COMB_Y = 280;
+
+      let beeX = lerp(150, HOLD_X, approach);
+      let beeY = lerp(150, HOLD_Y, approach) - Math.sin(approach * Math.PI) * 20;
+      let beeR = -10 - 4 * approach;
+      beeX = lerp(beeX, LIFT_X, takeoff);
+      beeY = lerp(beeY, LIFT_Y, takeoff);
+      beeR = lerp(beeR, -6, takeoff);
+      beeX = lerp(beeX, COMB_X, carry);
+      beeY = lerp(beeY, COMB_Y, carry) - Math.sin(carry * Math.PI) * 18;
+      beeR = lerp(beeR, 3, carry);
+      // Drink breathing + final settle drift (smooth envelopes, no jumps).
+      beeY += Math.sin(progress * 120) * 1.2 * drinkHold;
+      const settle = phaseProgress(progress, 0.88, 1);
+      beeX += settle * 4;
+      beeY += settle * 4;
+
       section.style.setProperty("--honey-fill", fill.toFixed(4));
 
       if (beeRef.current) {
-        // The bee descends onto the actual flower head, holds through late
-        // collect, then carries across to the comb. The carry starts exactly
-        // where the approach ends, so transfer boundaries stay continuous.
-        const approachX = 150 - collect * (150 - FLOWER_X);
-        const approachY = 150 + collect * (FLOWER_Y - 150) - Math.sin(collect * Math.PI) * 20;
-        const carryX = approachX + transfer * (600 - FLOWER_X);
-        const carryY = approachY + transfer * (280 - FLOWER_Y) - Math.sin(transfer * Math.PI) * 14;
-        const rotate = -12 + collect * 4 + transfer * 18;
         beeRef.current.setAttribute(
           "transform",
-          `translate(${carryX.toFixed(1)} ${carryY.toFixed(1)}) rotate(${rotate.toFixed(1)}) scale(${(0.9 + transfer * 0.08).toFixed(3)})`,
+          `translate(${beeX.toFixed(1)} ${beeY.toFixed(1)}) rotate(${beeR.toFixed(1)}) scale(${(0.9 + carry * 0.08).toFixed(3)})`,
         );
-        // Narrow screens: pan the macro so the bee stays in frame.
+        // Narrow screens: stable phase shots instead of chasing the bee.
         if (macroRef.current && window.innerWidth < 720) {
-          const shift = cameraShift(carryX, 760, window.innerWidth, macroWidth);
+          const shot = 200 + 280 * smoothstep((progress - 0.55) / 0.2);
+          const shift = cameraShift(shot, 760, window.innerWidth, macroWidth);
           if (Math.abs(shift - lastShift) > 0.5) {
             macroRef.current.style.translate = `${shift.toFixed(1)}px 0`;
             lastShift = shift;
@@ -78,44 +108,62 @@ export function HoneyHarvestSection() {
           lastShift = 0;
         }
       }
-      if (flowerRef.current) {
-        // Rooted: ambient sway + tiny 2-3px / ~1.5deg collection reaction.
-        const ambient = Math.sin(progress * Math.PI * 2) * 1.2;
-        const y = ambient * (1 - collect * 0.5) + collect * 3;
-        const r = ambient * 0.3 + collect * -1.5;
-        flowerRef.current.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0) rotate(${r.toFixed(2)}deg)`;
-      }
-      if (dropRef.current) {
-        if (transfer <= 0.001 && collect > 0.7) {
-          // Nectar budding at the flower head while the bee collects.
-          const bud = smoothstep((collect - 0.7) / 0.3);
-          dropRef.current.setAttribute("cx", String(FLOWER_X));
-          dropRef.current.setAttribute("cy", String(FLOWER_Y));
-          dropRef.current.setAttribute("r", String(4 + bud * 3));
-          dropRef.current.style.opacity = bud.toFixed(3);
-        } else {
-          // Carried from the flower head to the stream origin.
-          const x = FLOWER_X + transfer * (STREAM_X - FLOWER_X);
-          const y = FLOWER_Y + transfer * (STREAM_Y - FLOWER_Y) - Math.sin(transfer * Math.PI) * 10;
-          dropRef.current.setAttribute("cx", x.toFixed(1));
-          dropRef.current.setAttribute("cy", y.toFixed(1));
-          dropRef.current.setAttribute("r", String(7 + transfer * 5));
-          dropRef.current.style.opacity = transfer > 0.02 && transfer < 0.98 ? "1" : "0";
-        }
-      }
-      if (streamRef.current) {
-        streamRef.current.style.opacity = fill > 0.04 ? Math.min(1, fill * 2).toFixed(3) : "0";
-        streamRef.current.style.strokeDashoffset = String(140 - fill * 140);
-      }
-      if (combRef.current) {
-        combRef.current.style.transform =
-          `perspective(900px) rotateX(${(58 - fill * 8).toFixed(2)}deg) ` +
-          `rotateZ(${(-10 + fill * 4).toFixed(2)}deg) translate3d(0, ${(18 - fill * 18).toFixed(1)}px, 0)`;
+
+      // Wings: flight beat folds down to a resting tremble while drinking;
+      // pure function of progress, no wall-clock involved.
+      const wingAmp = 26 - 20 * drinkHold;
+      const wingFold = -28 * drinkHold;
+      const flap = wingFold + Math.sin(progress * 140) * wingAmp;
+      if (wingLRef.current) wingLRef.current.setAttribute("transform", `rotate(${flap.toFixed(1)} -8 -5)`);
+      if (wingRRef.current) wingRRef.current.setAttribute("transform", `rotate(${(-flap * 0.85).toFixed(1)} 19 -7)`);
+      if (probRef.current) probRef.current.style.opacity = drinkHold.toFixed(3);
+      if (shimmerRef.current) {
+        shimmerRef.current.style.opacity = (drinkHold * (0.3 + 0.15 * Math.sin(progress * 160))).toFixed(3);
+        shimmerRef.current.setAttribute("r", String(30 + 10 * drinkHold));
       }
 
-      // Complementary chapter weights: exactly one dominant chapter outside
-      // the brief 0.05 handoff windows, so text is never caught in a
-      // dual-faint trough and never doubly readable for long.
+      if (flowerRef.current) {
+        // Rooted: ambient sway damped while drinking + tiny collection lean.
+        const ambient = Math.sin(progress * Math.PI * 2) * 1.2;
+        const y = ambient * (1 - drinkHold * 0.5) + drinkHold * 2.5;
+        const r = ambient * 0.3 + drinkHold * -1.2;
+        flowerRef.current.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0) rotate(${r.toFixed(2)}deg)`;
+      }
+
+      // Single deterministic nectar timeline: bud at the flower → attach
+      // under the bee through takeoff → carried → merge into the stream.
+      if (dropRef.current) {
+        const bud = phaseProgress(progress, 0.3, 0.4);
+        const attach = phaseProgress(progress, 0.46, 0.52);
+        const merge = phaseProgress(progress, 0.78, 0.84);
+        const carryX = beeX;
+        const carryY = beeY + 20;
+        const flow = phaseProgress(progress, 0.72, 0.8);
+        const x = lerp(lerp(FLOWER_X, carryX, attach), STREAM_X, flow);
+        const y = lerp(lerp(FLOWER_Y, carryY, attach), STREAM_Y, flow);
+        const visible = bud > 0 && merge < 1;
+        dropRef.current.setAttribute("cx", x.toFixed(1));
+        dropRef.current.setAttribute("cy", y.toFixed(1));
+        dropRef.current.setAttribute("r", String(4 + bud * 3 + carry * 3));
+        dropRef.current.style.opacity = visible ? (1 - merge).toFixed(3) : "0";
+      }
+      if (streamRef.current) {
+        const draw = phaseProgress(progress, 0.74, 0.86);
+        streamRef.current.style.opacity = draw > 0.02 ? Math.min(1, draw * 2).toFixed(3) : "0";
+        streamRef.current.style.strokeDashoffset = String(140 - draw * 140);
+      }
+      if (combRef.current) {
+        // The comb rises into its final framing as the deposit begins,
+        // instead of dominating the viewport from the start.
+        const intro = phaseProgress(progress, 0.58, 0.72);
+        combRef.current.style.opacity = (0.3 + 0.7 * intro).toFixed(3);
+        combRef.current.style.transform =
+          `perspective(900px) rotateX(${(58 - fill * 8).toFixed(2)}deg) ` +
+          `rotateZ(${(-10 + fill * 4).toFixed(2)}deg) translate3d(0, ${((18 - fill * 18) + (1 - intro) * 44).toFixed(1)}px, 0)`;
+      }
+
+      // Chapters aligned to visual actions: A flower/approach, B landing
+      // and nectar transformation, C honey and final flavor story.
       const fade = (node: HTMLDivElement | null, in0: number, in1: number, out0: number, out1: number) => {
         if (!node) return;
         const enter = smoothstep((progress - in0) / (in1 - in0));
@@ -125,22 +173,28 @@ export function HoneyHarvestSection() {
         node.style.transform = `translate3d(0, ${((1 - enter) * 14).toFixed(1)}px, 0)`;
         node.style.visibility = o <= 0.01 ? "hidden" : "visible";
       };
-      fade(copyARef.current, -0.05, 0.0, 0.33, 0.38);
-      fade(copyBRef.current, 0.33, 0.38, 0.61, 0.66);
-      fade(copyCRef.current, 0.61, 0.66, 1.02, 1.07);
+      fade(copyARef.current, -0.05, 0.0, 0.24, 0.29);
+      fade(copyBRef.current, 0.24, 0.29, 0.64, 0.69);
+      fade(copyCRef.current, 0.64, 0.69, 1.02, 1.07);
     };
 
     const paintStatic = () => {
       section.style.setProperty("--honey-fill", "1");
       beeRef.current?.setAttribute("transform", "translate(420 246) rotate(4) scale(.96)");
+      if (wingLRef.current) wingLRef.current.setAttribute("transform", "rotate(0 -8 -5)");
+      if (wingRRef.current) wingRRef.current.setAttribute("transform", "rotate(0 19 -7)");
+      if (probRef.current) probRef.current.style.opacity = "0";
+      if (shimmerRef.current) shimmerRef.current.style.opacity = "0";
       if (flowerRef.current) flowerRef.current.style.transform = "none";
       if (dropRef.current) dropRef.current.style.opacity = "0";
       if (streamRef.current) {
         streamRef.current.style.opacity = ".9";
         streamRef.current.style.strokeDashoffset = "0";
       }
-      if (combRef.current)
+      if (combRef.current) {
+        combRef.current.style.opacity = "1";
         combRef.current.style.transform = "perspective(900px) rotateX(50deg) rotateZ(-6deg) translate3d(0,0,0)";
+      }
       if (macroRef.current) macroRef.current.style.translate = "";
       [copyARef.current, copyBRef.current, copyCRef.current].forEach((node) => {
         if (node) {
@@ -220,16 +274,22 @@ export function HoneyHarvestSection() {
             </g>
 
             <g ref={beeRef} className="honey-macro-bee" transform="translate(150 150) rotate(-10)" filter="url(#macroShadow)">
-              <path d="M-8-5c-38-42-75-20-64 12 8 23 40 27 67 11Z" fill="url(#macroWing)" stroke="rgba(50,64,55,.28)"/>
-              <path d="M19-7c34-44 73-28 68 6-4 25-38 34-67 21Z" fill="url(#macroWing)" stroke="rgba(50,64,55,.28)"/>
-              <ellipse cx="4" cy="12" rx="36" ry="24" fill="#d9961e"/>
-              <path d="M-20-2c12 12 14 33 5 43M1-11c11 14 13 38 3 47M23-7c9 13 10 33 1 42" fill="none" stroke="#1d1b16" strokeWidth="9" strokeLinecap="round"/>
-              <ellipse cx="-30" cy="9" rx="20" ry="19" fill="#27231c"/>
-              <circle cx="-39" cy="5" r="3" fill="#f4dda1"/>
+              <g ref={wingLRef} transform="rotate(0 -8 -5)">
+                <path d="M-8-5c-38-42-75-20-64 12 8 23 40 27 67 11Z" fill="url(#macroWing)" stroke="rgba(50,64,55,.28)" />
+              </g>
+              <g ref={wingRRef} transform="rotate(0 19 -7)">
+                <path d="M19-7c34-44 73-28 68 6-4 25-38 34-67 21Z" fill="url(#macroWing)" stroke="rgba(50,64,55,.28)" />
+              </g>
+              <ellipse cx="4" cy="12" rx="36" ry="24" fill="#d9961e" stroke="#5a3a08" strokeWidth="2" />
+              <path d="M-20-2c12 12 14 33 5 43M1-11c11 14 13 38 3 47M23-7c9 13 10 33 1 42" fill="none" stroke="#14120d" strokeWidth="9" strokeLinecap="round" />
+              <ellipse cx="-30" cy="9" rx="20" ry="19" fill="#27231c" stroke="#14120d" strokeWidth="1.5" />
+              <circle cx="-39" cy="5" r="3" fill="#f4dda1" />
+              <path ref={probRef} d="M-36 13L-46 25" fill="none" stroke="#29251e" strokeWidth="3.5" strokeLinecap="round" opacity="0" className="honey-proboscis" />
               <path d="M-38-9c-10-18-23-12-27-3M-26-10c1-18 13-20 20-14M-25 28l-18 29M-4 34-7 66M24 31l14 27" fill="none" stroke="#29251e" strokeWidth="3" strokeLinecap="round"/>
             </g>
 
             <circle ref={dropRef} cx="320" cy="170" r="8" fill="url(#nectar)" className="honey-drop"/>
+            <circle ref={shimmerRef} cx="106" cy="242" r="30" fill="none" stroke="#fff0a8" strokeWidth="2.5" opacity="0" className="honey-shimmer"/>
             <path ref={streamRef} d="M556 325c7 33-10 60-7 96" className="honey-stream" pathLength="140"/>
           </svg>
 

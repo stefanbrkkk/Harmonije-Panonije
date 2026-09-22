@@ -75,18 +75,22 @@ export function ProductCatalog() {
 
   const toggleExpanded = () => {
     if (expanded) {
+      // Collapse: measure only after React commits the removal (double
+      // rAF). A single rAF can still see the 12-card layout, and any
+      // correction computed from it scrolls to a stale position. After a
+      // real collapse the toggle sits above the viewport (rows removed
+      // beneath the reading position), so bring it back to a useful
+      // visible position instead of stranding the user.
       setEnterIds([]);
       setExpanded(false);
-      // Return to a useful position without a smooth-scroll race: if the
-      // toggle fell outside the viewport after collapse, re-anchor instantly.
       requestAnimationFrame(() => {
-        const node = moreRef.current;
-        if (!node) return;
-        const rect = node.getBoundingClientRect();
-        if (rect.top < 0 || rect.bottom > window.innerHeight) {
-          const y = window.scrollY + rect.top - window.innerHeight * 0.4;
-          window.scrollTo({ top: Math.max(0, y), behavior: "instant" as ScrollBehavior });
-        }
+        requestAnimationFrame(() => {
+          const el = moreRef.current;
+          if (!el) return;
+          const r = el.getBoundingClientRect();
+          if (r.top >= 0 && r.bottom <= window.innerHeight) return;
+          window.scrollTo({ top: Math.max(0, window.scrollY + r.top - window.innerHeight * 0.4), behavior: "instant" as ScrollBehavior });
+        });
       });
     } else {
       setEnterIds(categoryProducts.slice(baseCount).map((product) => product.id));
