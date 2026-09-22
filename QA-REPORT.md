@@ -44,6 +44,42 @@ Deferred product scope (shareable filters, product URLs, extra headers,
 CSP) and unresolved business approvals (prices, availability, assets in
 `CLIENT-CONFIRMATION.md`) remain open by design.
 
+## Addendum — final engineering pass (branch `polish/hp-fixes`)
+
+Automated behavioral coverage now lives in the repository under `tests/`
+(Chromium, production server via `npm run start`):
+
+- `responsive.spec.ts` — 9 viewports, hero-local rect containment,
+  150%/200% text enlargement, catalog/header/drawer fit
+- `navigation.spec.ts` — routes, anchor offsets past the fixed header,
+  deep-link refresh, Back/Forward
+- `menu.spec.ts` — pointer/keyboard open, Escape, Tab wrap incl. close
+  toggle, short-landscape internal scroll, desktop reconcile, background
+  inertness, menu→drawer handoff
+- `catalog.spec.ts` — tab keyboard map, search matrix (incl. đ/dj and
+  whitespace), expansion DOM identity + viewport stability, tablet
+  sixth-card layout, id-stable artwork
+- `inquiry.spec.ts` — add/repeat/quantities/remove/clear, toast restart
+  and hover pause, drawer trap/Escape/backdrop, inert background, focus
+  restoration, draft fields, mailto href inspection (never navigated),
+  clipboard success/rejection stubs, mobile bar
+- `motion.spec.ts` — HoneyHarvest readability + geometry across progress,
+  mobile framing, BeeJourney end state, rapid/reverse scroll, mid-scene
+  resize, invalid-transform scan
+- `reduced-motion.spec.ts` — static content, idle scheduler silence
+- `no-js.spec.ts` — meaningful content without JavaScript
+- `accessibility.spec.ts` — axe scans (settled, hero entrance, menu and
+  drawer open, 320px) plus keyboard-only spot checks
+- `seo.spec.ts` — canonical/robots/OG/Twitter/sitemap/manifest/404,
+  social image dimensions, no unconfirmed prices, safe external links
+
+`npm run qa` = `verify` + `lint` (zero warnings) + `typecheck` + `build`
++ `test:e2e`, each exit-gated. Security headers (`nosniff`,
+`strict-origin-when-cross-origin`, `DENY`, camera/mic/geolocation/payment
+off) ship via `next.config.ts`; no enforcing CSP — documented as unsafe
+for Next.js hydration without a nonce architecture. `npm audit --omit=dev`
+clean at the time of this pass.
+
 ## Source and structure
 
 - project verification script: PASS

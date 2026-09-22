@@ -33,9 +33,16 @@ npm run qa
 
 That performs, in order:
 
-1. the project-specific verification script,
-2. TypeScript type checking,
-3. a real Next.js production build.
+1. the project-specific verification script (`npm run verify`),
+2. ESLint (`npm run lint`, zero warnings),
+3. TypeScript type checking (`npm run typecheck`),
+4. a real Next.js production build (`npm run build`),
+5. the Playwright behavioral suite against that production build
+   (`npm run test:e2e`, Chromium; needs `npx playwright install chromium`
+   once per machine).
+
+`npm run qa:static` runs steps 1–4 only. `npm run test:e2e` expects a
+production build to already exist (the `qa` chain builds exactly once).
 
 You can also run the stages separately:
 

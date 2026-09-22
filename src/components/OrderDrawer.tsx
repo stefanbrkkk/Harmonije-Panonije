@@ -5,10 +5,12 @@ import { contact } from "@/src/data/siteContent";
 import { useCart } from "./CartProvider";
 import { ProductVisual } from "./ProductVisual";
 import { restoreFocus } from "@/src/lib/focus";
+import { useOverlayIsolation } from "@/src/lib/overlay";
 
 export function OrderDrawer() {
   const { items, count, isOpen, close, add, decrement, remove, clear } = useCart();
   const dialogRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -38,6 +40,21 @@ export function OrderDrawer() {
   const mailto = useMemo(
     () => `mailto:${contact.email}?subject=${encodeURIComponent("Upit za porudžbinu — Harmonije Panonije")}&body=${encodeURIComponent(message)}`,
     [message],
+  );
+
+  // Declared before the scroll/focus effect so inertness lifts before focus
+  // is restored on close. The whole header goes inert for the drawer.
+  useOverlayIsolation(
+    isOpen,
+    [dialogRef, backdropRef],
+    [
+      ".site-header",
+      "main",
+      "footer.site-footer",
+      ".mobile-order-bar",
+      ".cart-toast",
+      "#mobile-menu",
+    ],
   );
 
   // Stale clipboard feedback must not survive draft changes: the feedback is
@@ -119,7 +136,7 @@ export function OrderDrawer() {
 
   return (
     <>
-      <button type="button" className={`drawer-backdrop ${isOpen ? "is-open" : ""}`} onClick={close} aria-label="Zatvori upit" tabIndex={isOpen ? 0 : -1} />
+      <button ref={backdropRef} type="button" className={`drawer-backdrop ${isOpen ? "is-open" : ""}`} onClick={close} aria-label="Zatvori upit" tabIndex={isOpen ? 0 : -1} />
       <div
         ref={dialogRef}
         className={`order-drawer ${isOpen ? "is-open" : ""}`}
