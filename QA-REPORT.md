@@ -202,3 +202,50 @@ honey sweep (0.05 steps, teleport bounds, drink geometry <70px,
 camera stillness, reverse recovery), journey captions, bee exclusions,
 idle scheduler silence, header-relative anchor clearance at 7 viewports,
 fresh-server default, QA CI workflow, 30+ verify tripwires.
+
+## Addendum — motion-stability / responsive-composition / readability pass
+
+Base: `86745f5` (verified HEAD == origin/main before editing). No push,
+no deploy, no claim/pricing/inquiry changes.
+
+Fixes (before → after, browser-measured):
+
+- Reveal: trailing comma invalidated generic transition (0s, abrupt).
+  Now `transition: translate .7s ... var(--reveal-delay,0ms)` → 0.7s.
+- Honey chapters: A/B 0.502/0.497 superimposed at 26.5%. Sequential
+  handoff (A out .27–.285, B in .285–.305; B out .60–.62, C in .62–.64)
+  with exit lift → A=1.0/B=0 at 26.5%; equal-opacity stacking impossible
+  outside single-point switches. Drink hold and phases untouched.
+- Landscape: active chapter top −39px (behind 82px header) at 844×390.
+  Short-landscape chapters now top-align below the header with no
+  translate centering → top 92px, bottom 264px at 844×390; verified at
+  844×390, 844×430, 768×390.
+- Stream→comb: 28px gap at 87.3% (1440×900), worse at lower vh
+  (bottom-anchored comb vs centered macro: −62px at 1280×720).
+  Stream extended to the comb, comb rises 8px in deposit, comb
+  top-anchored to the macro's 50% basis on desktop → gap exactly 0 at
+  1440×900, 1280×800, 1280×720. Mobile/landscape framing unchanged.
+- Ingredients 1024px: two overlap pairs confirmed. ≤1080px now uses a
+  3-column grid (was absolute) → zero overlaps; desktop constellation
+  (>1080px) and mobile grids untouched.
+- PageBee: `progress > 0.985` beat `excluded === 1` → bee 0.25 in
+  #kontakt at end. Exclusion now wins → 0. Footer fallback (0.25)
+  retained where no dedicated art exists.
+- Journey caption overlapped intro (108–137px vs 121–458px). Caption is
+  bottom-anchored (clear of intro and outro); SVG station labels
+  deduplicated to unique 01–04 (berry/leaf repeats removed).
+
+Verified intentional, unchanged: mobile flower framing (95% visible,
+7px edge bleed, bee fully visible — shot camera kept), product-bee
+path (crosses body copy at rest but clears search/tabs/controls, no
+overflow — brand motion kept), story frame labels (1.11:1 but
+aria-hidden decorative, exempt; note text 4.97:1 passes AA).
+
+Tests: 58/58 Chromium + 8/8 WebKit/Firefox smoke, axe clean,
+`verify`/`lint`/`typecheck`/`build` exit 0, `npm audit --omit=dev`
+clean, `git diff --check` clean. New: reveal duration, handoff
+non-equality (0.265/0.30/0.61/0.63), stream contact ±tolerance,
+landscape clearance ×3, caption clearance, kontakt-320 exclusion,
+mobile drink framing, bee-vs-controls, 1024 non-overlap, stored-pose
+reverse comparison (drink bee + chapters), comb in dense sweep,
+844×430 + 768×390 overflow.

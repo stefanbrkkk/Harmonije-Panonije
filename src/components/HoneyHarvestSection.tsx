@@ -154,28 +154,34 @@ export function HoneyHarvestSection() {
       }
       if (combRef.current) {
         // The comb rises into its final framing as the deposit begins,
-        // instead of dominating the viewport from the start.
+        // instead of dominating the viewport from the start — and lifts
+        // the final 8px to meet the honey stream at the deposit surface.
         const intro = phaseProgress(progress, 0.58, 0.72);
         combRef.current.style.opacity = (0.3 + 0.7 * intro).toFixed(3);
         combRef.current.style.transform =
           `perspective(900px) rotateX(${(58 - fill * 8).toFixed(2)}deg) ` +
-          `rotateZ(${(-10 + fill * 4).toFixed(2)}deg) translate3d(0, ${((18 - fill * 18) + (1 - intro) * 44).toFixed(1)}px, 0)`;
+          `rotateZ(${(-10 + fill * 4).toFixed(2)}deg) translate3d(0, ${((18 - fill * 18 - fill * 8) + (1 - intro) * 44).toFixed(1)}px, 0)`;
       }
 
       // Chapters aligned to visual actions: A flower/approach, B landing
       // and nectar transformation, C honey and final flavor story.
+      // Sequential handoff (never a symmetric crossfade): the outgoing
+      // chapter lifts away as it exits and the incoming rises only after
+      // the switch point, so two large headings never share coordinates
+      // at near-equal opacity. Single-point switch, pure function of
+      // progress — reverse/fast/jump scrolling resolves identically.
       const fade = (node: HTMLDivElement | null, in0: number, in1: number, out0: number, out1: number) => {
         if (!node) return;
         const enter = smoothstep((progress - in0) / (in1 - in0));
         const exit = smoothstep((out1 - progress) / (out1 - out0));
         const o = Math.min(enter, exit);
         node.style.opacity = o.toFixed(3);
-        node.style.transform = `translate3d(0, ${((1 - enter) * 14).toFixed(1)}px, 0)`;
+        node.style.transform = `translate3d(0, ${((1 - enter) * 14 - (1 - exit) * 22).toFixed(1)}px, 0)`;
         node.style.visibility = o <= 0.01 ? "hidden" : "visible";
       };
-      fade(copyARef.current, -0.05, 0.0, 0.24, 0.29);
-      fade(copyBRef.current, 0.24, 0.29, 0.64, 0.69);
-      fade(copyCRef.current, 0.64, 0.69, 1.02, 1.07);
+      fade(copyARef.current, -0.05, 0.0, 0.27, 0.285);
+      fade(copyBRef.current, 0.285, 0.305, 0.6, 0.62);
+      fade(copyCRef.current, 0.62, 0.64, 1.02, 1.07);
     };
 
     const paintStatic = () => {
@@ -193,7 +199,7 @@ export function HoneyHarvestSection() {
       }
       if (combRef.current) {
         combRef.current.style.opacity = "1";
-        combRef.current.style.transform = "perspective(900px) rotateX(50deg) rotateZ(-6deg) translate3d(0,0,0)";
+        combRef.current.style.transform = "perspective(900px) rotateX(50deg) rotateZ(-6deg) translate3d(0,-8px,0)";
       }
       if (macroRef.current) macroRef.current.style.translate = "";
       [copyARef.current, copyBRef.current, copyCRef.current].forEach((node) => {
@@ -290,7 +296,7 @@ export function HoneyHarvestSection() {
 
             <circle ref={dropRef} cx="320" cy="170" r="8" fill="url(#nectar)" className="honey-drop"/>
             <circle ref={shimmerRef} cx="106" cy="242" r="30" fill="none" stroke="#fff0a8" strokeWidth="2.5" opacity="0" className="honey-shimmer"/>
-            <path ref={streamRef} d="M556 325c7 33-10 60-7 96" className="honey-stream" pathLength="140"/>
+            <path ref={streamRef} d="M556 325c7 33-10 60-7 116" className="honey-stream" pathLength="140"/>
           </svg>
 
           <div ref={combRef} className="honeycomb-3d">

@@ -126,13 +126,22 @@ const tripwires = [
   ["tablet 6n reset", css.includes(".product-card:nth-child(6n) { grid-template-columns: none;")],
   // HP-03/05/09: camera-framed responsive scenes.
   ["scene camera", journey.includes("cameraShift(") && honey.includes("cameraShift(")],
-  // HP-04: complementary chapter weights aligned to visual actions.
-  ["chapter handoff windows", honey.includes("fade(copyARef.current, -0.05, 0.0, 0.24, 0.29)")],
+  // HP-04: sequential chapter handoff aligned to visual actions (never a
+  // symmetric crossfade sharing coordinates at equal opacity).
+  ["chapter handoff windows", honey.includes("fade(copyARef.current, -0.05, 0.0, 0.27, 0.285)")],
   // Discrete drink phase with holds (no overlapping collect/transfer).
   ["drink phase timeline", honey.includes("DRINK .29–.44")],
+  ["honey exit lift", honey.includes("(1 - exit) * 22")],
+  ["stream meets comb", honey.includes("M556 325c7 33-10 60-7 116") && honey.includes("fill * 8") && css.includes("min(760px, 75vw)")],
   ["page-bee exclusions", bee.includes('[data-page-bee="hide"]')],
+  ["exclusion beats end fallback", bee.indexOf("excluded === 1") < bee.indexOf("progress > 0.985")],
   ["journey stage captions", journey.includes("STAGE_WINDOWS")],
+  ["journey caption clears intro", css.includes(".bee-journey__caption { position: absolute; z-index: 4; top: auto;")],
+  ["journey unique stage labels", (journey.match(/<text className="scene-stage"/g) ?? []).length === 4],
   ["translate-only reveals", !css.includes("opacity .6s cubic-bezier(.22,.8,.24,1) var(--reveal-delay")],
+  ["valid reveal transition", css.includes("transition: translate .7s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms);")],
+  ["tablet ingredient grid", css.includes(".ingredients-stage { height:auto;margin-top:56px;display:grid;grid-template-columns:repeat(3,1fr);")],
+  ["landscape chapter clearance", css.includes(".honey-harvest__chapter { top: calc(var(--header-height) + 10px); translate: none;")],
   // HP-16/36/37/40: one controlled scheduler for the three scenes.
   ["shared scene loop", journey.includes("createSceneLoop(") && honey.includes("createSceneLoop(") && bee.includes("createSceneLoop(")],
   // HP-07: AA contrast tokens.

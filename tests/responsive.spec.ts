@@ -11,6 +11,8 @@ const viewports = [
   { width: 360, height: 800 },
   { width: 320, height: 568 },
   { width: 844, height: 390 },
+  { width: 844, height: 430 },
+  { width: 768, height: 390 },
 ];
 
 for (const viewport of viewports) {
@@ -73,5 +75,38 @@ test("catalog, header bar and drawer fit small viewports", async ({ page }) => {
     const box = await card.boundingBox();
     expect(box!.width).toBeLessThanOrEqual(360 + 1);
   }
+  assertClean();
+});
+
+test("ingredient cards do not overlap at 1024px", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.evaluate(() => {
+    const node = document.querySelector<HTMLElement>("#sastojci")!;
+    window.scrollTo({ top: node.offsetTop + 100, behavior: "instant" });
+  });
+  await page.waitForTimeout(1000);
+  const overlaps: Array<[string, string]> = await page.evaluate(() => {
+    const cards = [...document.querySelectorAll<HTMLElement>(".ingredient-card")].map((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        name: element.querySelector("h3")?.textContent ?? "?",
+        box: { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom },
+      };
+    });
+    const hits: Array<[string, string]> = [];
+    for (let i = 0; i < cards.length; i += 1) {
+      for (let j = i + 1; j < cards.length; j += 1) {
+        const a = cards[i].box;
+        const b = cards[j].box;
+        if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) {
+          hits.push([cards[i].name, cards[j].name]);
+        }
+      }
+    }
+    return hits;
+  });
+  expect(overlaps, "tablet ingredient layout without collisions").toEqual([]);
   assertClean();
 });

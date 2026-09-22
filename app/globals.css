@@ -249,7 +249,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .scene-ingredient--honey > path:first-child { fill: rgba(216,162,72,.14); }
 .scene-ingredient--bloom { color: #607e68; }
 .scene-ingredient--bloom .scene-ingredient__static { transform-box: fill-box; transform-origin: center; }
-.bee-journey__caption { position: absolute; z-index: 4; top: clamp(92px, 12vh, 116px); left: 50%; transform: translateX(-50%); display: flex; align-items: baseline; gap: 12px; pointer-events: none; white-space: nowrap; }
+.bee-journey__caption { position: absolute; z-index: 4; top: auto; bottom: clamp(170px, 22vh, 220px); left: 50%; transform: translateX(-50%); display: flex; align-items: baseline; gap: 12px; pointer-events: none; white-space: nowrap; }
 .bee-journey__caption-index { font-size: .68rem; font-weight: 800; letter-spacing: .14em; color: var(--honey-dark); }
 .bee-journey__caption p { margin: 0; font-family: var(--serif); font-size: clamp(1rem, 1.6vw, 1.35rem); font-style: italic; color: #4c5a51; }
 .bee-journey.is-live .bee-journey__caption { opacity: 0; }
@@ -535,10 +535,10 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .story-layout { grid-template-columns:1fr 1fr;gap:55px; }
   .story-copy__paragraphs { grid-template-columns:1fr; }
   .story-art { min-height:680px; }
-  .ingredients-stage { height:820px; }
-  .ingredient-card { width:215px; }
-  .ingredient-card--primary { width:250px; }
-  .ingredient-card--1{left:0}.ingredient-card--3{right:0}.ingredient-card--4{right:0}.ingredient-card--6{left:0}.ingredient-card--7{right:22%;top:6%;bottom:auto}
+  .ingredients-stage { height:auto;margin-top:56px;display:grid;grid-template-columns:repeat(3,1fr);gap:0 24px; }
+  .ingredients-stage__center,.ingredients-stage__orbit { display:none; }
+  .ingredient-card,.ingredient-card:nth-child(n) { position:relative;left:auto;right:auto;top:auto;bottom:auto;width:auto;min-height:200px;padding:20px 0; }
+  .ingredient-card--primary { width:auto; }
   .delivery-layout { grid-template-columns:1fr 1.1fr;gap:52px; }
 }
 
@@ -610,7 +610,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .bee-journey__intro h2 { font-size:clamp(3rem,14vw,4.4rem); }
   .bee-journey__intro > p:last-child { font-size:.82rem; }
   .bee-scene { width:132vw;top:57%;transform:translate(-50%,-34%); }
-  .bee-journey__caption { top: 74px; max-width: 92vw; white-space: normal; text-align: center; justify-content: center; }
+  .bee-journey__caption { top: auto; bottom: 260px; max-width: 92vw; white-space: normal; text-align: center; justify-content: center; }
   .bee-journey__caption p { font-size: .95rem; }
   .scene-ingredient--berry,.scene-ingredient--leaf { opacity:.72; }
   .bee-journey__outro { bottom:calc(25px + 70px);grid-template-columns:1fr;gap:8px; }
@@ -973,6 +973,14 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   transform-style: preserve-3d;
   filter: drop-shadow(0 44px 42px rgba(93,52,8,.26));
 }
+/* Deposit contact: the macro centers on 50% while a bottom-anchored comb
+   drifts with vh, so the stream/comb gap varies by viewport height.
+   Top-anchoring the comb to the same 50% basis (plus the macro-height
+   fraction where the stream terminates) keeps the transfer continuous
+   at every desktop viewport. Narrow screens keep bottom anchoring. */
+@media (min-width: 801px) {
+  .honeycomb-3d { top: calc(50% + min(760px, 75vw) * 0.246 - 73.2px); bottom: auto; }
+}
 .honeycomb-3d__rim {
   position: absolute;
   inset: -18px;
@@ -1164,13 +1172,16 @@ body.has-overlay .page-bee { opacity: 0 !important; }
 /* Short landscape: compact cinematic copy, same content, smaller type. */
 @media (max-height: 500px) and (orientation: landscape) {
   .bee-journey__intro { top: 78px; }
+  .bee-journey__caption { top: auto; bottom: 86px; }
   .bee-journey__intro h2 { font-size: clamp(2rem, 6vw, 3rem); }
   .bee-journey__intro > p:last-child { margin-top: 12px; font-size: .75rem; }
   .bee-scene { top: 62%; }
   .bee-journey__outro { bottom: 18px; }
   .bee-journey__outro p { font-size: .72rem; }
   .honey-harvest__sticky { min-height: 0; }
-  .honey-harvest__chapter { top: 12%; }
+  /* Short viewports: desktop translate:-50% centering would push the copy
+     behind the fixed header — top-align below the header instead. */
+  .honey-harvest__chapter { top: calc(var(--header-height) + 10px); translate: none; width: min(480px, 52vw); }
   .honey-harvest__chapter h2 { font-size: clamp(2.2rem, 7vw, 3.4rem); }
   .honey-harvest__chapter > p:last-child { margin-top: 12px; font-size: .72rem; }
   .honeycomb-3d { height: 190px; }
@@ -1203,8 +1214,7 @@ body.has-overlay .page-bee { opacity: 0 !important; }
    nodes so the first paint never flashes visible -> hidden. */
 .motion-ready .reveal-target {
   translate: 0 14px;
-  transition:
-    translate .7s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms),
+  transition: translate .7s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms);
 }
 .motion-ready .section-heading.reveal-target { translate: 0 20px; }
 .motion-ready .section-heading.reveal-target,

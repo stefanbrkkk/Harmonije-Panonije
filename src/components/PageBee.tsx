@@ -196,9 +196,12 @@ export function PageBee() {
       }
 
       let targetOpacity: number;
+      // Dedicated-artwork exclusion wins over every fallback (including the
+      // end-of-page state) so the global bee never competes with local art.
       if (progress < 0.012) targetOpacity = 0;
+      else if (excluded === 1) targetOpacity = 0.0;
+      else if (handoff === 1) targetOpacity = 0.0;
       else if (progress > 0.985) targetOpacity = 0.25;
-      else if (handoff === 1 || excluded === 1) targetOpacity = 0.0;
       else targetOpacity = 1;
       if (overlayOpen()) targetOpacity = 0;
       currentOpacity += (targetOpacity - currentOpacity) * (1 - Math.pow(1 - 0.12, dt));

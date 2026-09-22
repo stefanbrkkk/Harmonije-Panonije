@@ -287,7 +287,6 @@ export function BeeJourney() {
               <circle cx="-20" cy="10" r="17" /><circle cx="9" cy="1" r="18" /><circle cx="28" cy="24" r="15" /><circle cx="-4" cy="30" r="17" />
               <path d="M2-18c10-20 30-24 43-16M3-17c-8-19-26-23-39-15" />
             </g>
-            <text className="scene-stage" x="-70" y="-40">02</text>
           </g>
 
           <g transform="translate(665 335) scale(1.3)" className="scene-ingredient scene-ingredient--leaf">
@@ -297,7 +296,6 @@ export function BeeJourney() {
               <path d="M10 5c35-12 50-36 38-55-29 5-44 23-38 55Z" />
               <path d="M4 52c-31 0-50-16-48-34 27-5 46 7 48 34Z" />
             </g>
-            <text className="scene-stage" x="44" y="-64">03</text>
           </g>
 
           <g className="scene-ingredient scene-ingredient--honey" transform="translate(585 260) scale(1.3)">

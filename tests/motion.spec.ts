@@ -2,8 +2,9 @@ import { expect, test } from "@playwright/test";
 import { scrollToStickyProgress, trackErrors } from "./helpers";
 
 const honeyPoints: Array<[fraction: number, minDominant: number]> = [
-  // Resting positions: one fully dominant chapter (windows track actions:
-  // A flower/approach, B landing/nectar, C honey/flavor).
+  // Resting positions: one fully dominant chapter (sequential handoff —
+  // the outgoing lifts away before the incoming rises, so two large
+  // headings never share coordinates at near-equal opacity).
   [0, 0.9],
   [0.15, 0.9],
   [0.35, 0.9],
@@ -11,10 +12,9 @@ const honeyPoints: Array<[fraction: number, minDominant: number]> = [
   [0.8, 0.9],
   [0.95, 0.9],
   [1, 0.9],
-  // Handoff midpoints: brief symmetric crossfade (worst instant 0.5/0.5,
-  // never faint). The bar stays well above any near-zero trough.
-  [0.265, 0.45],
-  [0.665, 0.45],
+  // Former handoff midpoint: chapter A now fully dominant (B still hidden).
+  [0.265, 0.9],
+  [0.665, 0.9],
 ];
 
 test("HoneyHarvest chapters stay readable across progress", async ({ page }) => {
@@ -52,7 +52,7 @@ test("HoneyHarvest dense sweep: finite states, no teleports", async ({ page }) =
           const rect = document.querySelector(selector)!.getBoundingClientRect();
           return [rect.x + rect.width / 2, rect.y + rect.height / 2];
         };
-        const attrs = [...document.querySelectorAll(".honey-macro-bee, .honey-flower, .honey-drop, .honey-stream")]
+        const attrs = [...document.querySelectorAll(".honey-macro-bee, .honey-flower, .honey-drop, .honey-stream, .honeycomb-3d")]
           .map((node) => node.getAttribute("transform") ?? node.getAttribute("d") ?? (node as HTMLElement).style.transform ?? "")
           .join(" ");
         return {
@@ -118,14 +118,26 @@ test("HoneyHarvest drinking moment is a real held beat", async ({ page }) => {
   await page.waitForTimeout(600);
   const shiftB = await page.evaluate(() => document.querySelector<SVGSVGElement>(".honey-harvest__macro")!.style.translate);
   expect(shiftA, "camera still while drinking").toBe(shiftB);
-  // Reverse scroll recovers the identical pose.
+  // Reverse scroll recovers the identical pose: store the forward pose
+  // before reversing, then compare the recovered pose against it.
+  const fwd = await page.evaluate(() => document.querySelector(".honey-macro-bee")?.getAttribute("transform") ?? "");
+  const fwdChapters: number[] = await page.evaluate(() =>
+    [".honey-harvest__chapter--a", ".honey-harvest__chapter--b", ".honey-harvest__chapter--c"].map(
+      (selector) => parseFloat(document.querySelector<HTMLElement>(selector)?.style.opacity ?? "0"),
+    ),
+  );
   await scrollToStickyProgress(page, ".honey-harvest", 0.8);
   await page.waitForTimeout(900);
   await scrollToStickyProgress(page, ".honey-harvest", 0.365);
   await page.waitForTimeout(900);
   const back = await page.evaluate(() => document.querySelector(".honey-macro-bee")?.getAttribute("transform") ?? "");
-  const fwd = await page.evaluate(() => document.querySelector(".honey-macro-bee")?.getAttribute("transform") ?? "");
+  const backChapters: number[] = await page.evaluate(() =>
+    [".honey-harvest__chapter--a", ".honey-harvest__chapter--b", ".honey-harvest__chapter--c"].map(
+      (selector) => parseFloat(document.querySelector<HTMLElement>(selector)?.style.opacity ?? "0"),
+    ),
+  );
   expect(back, "reverse recovers drink pose").toBe(fwd);
+  expect(backChapters, "reverse recovers drink chapters").toEqual(fwdChapters);
   assertClean();
 });
 
@@ -237,5 +249,179 @@ test("rapid scroll, reverse and mid-scene resize stay valid", async ({ page }) =
     () => document.querySelector("#put-pcele .scene-bee")?.getAttribute("transform") ?? "",
   );
   expect(resized).toMatch(/translate\([-0-9.]+ [-0-9.]+\)/);
+  assertClean();
+});
+
+test("generic reveal targets animate with a nonzero transition", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.goto("/", { waitUntil: "networkidle" });
+  // A syntactically invalid transition declaration (e.g. a trailing comma)
+  // computes to a zero-second duration and reveals appear abruptly.
+  const reveal = await page.evaluate(() => {
+    const node = document.querySelector<HTMLElement>(".ingredient-card")!;
+    const style = getComputedStyle(node);
+    return { duration: style.transitionDuration, property: style.transitionProperty };
+  });
+  expect(reveal.property, "reveal animates translate").toContain("translate");
+  const seconds = reveal.duration.split(",").map((part) => parseFloat(part));
+  expect(Math.max(...seconds), "nonzero reveal duration").toBeGreaterThan(0);
+  assertClean();
+});
+
+test("honey handoff never stacks two equal headings", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.goto("/", { waitUntil: "networkidle" });
+  for (const fraction of [0.265, 0.30, 0.61, 0.63]) {
+    await scrollToStickyProgress(page, ".honey-harvest", fraction);
+    await page.waitForTimeout(900);
+    const chapters: number[] = await page.evaluate(() =>
+      [".honey-harvest__chapter--a", ".honey-harvest__chapter--b", ".honey-harvest__chapter--c"].map(
+        (selector) => parseFloat(document.querySelector<HTMLElement>(selector)?.style.opacity ?? "0"),
+      ),
+    );
+    const nearEqual = chapters.filter((value) => value > 0.35 && value < 0.65).length;
+    expect(nearEqual, `no equal-opacity stack at p=${fraction}`).toBeLessThan(2);
+    expect(Math.max(...chapters), `dominant chapter at p=${fraction}`).toBeGreaterThan(0.45);
+  }
+  assertClean();
+});
+
+test("honey stream meets the comb at the deposit state", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.goto("/", { waitUntil: "networkidle" });
+  await scrollToStickyProgress(page, ".honey-harvest", 0.873);
+  await page.waitForTimeout(900);
+  const gap = await page.evaluate(() => {
+    const stream = document.querySelector(".honey-stream")!.getBoundingClientRect();
+    const comb = document.querySelector(".honeycomb-3d")!.getBoundingClientRect();
+    return comb.top - stream.bottom;
+  });
+  // Continuous visual transfer: the stream terminates at the comb surface
+  // (small negative overlap reads as pouring in).
+  expect(gap, "stream-to-comb gap").toBeGreaterThan(-8);
+  expect(gap, "stream-to-comb gap").toBeLessThan(10);
+  assertClean();
+});
+
+test("landscape honey copy clears the fixed header", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  for (const viewport of [
+    { width: 844, height: 390 },
+    { width: 844, height: 430 },
+    { width: 768, height: 390 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/", { waitUntil: "networkidle" });
+    await scrollToStickyProgress(page, ".honey-harvest", 0.4);
+    await page.waitForTimeout(900);
+    const layout = await page.evaluate(() => {
+      const header = document.querySelector(".site-header")!.getBoundingClientRect();
+      const chapters = [".honey-harvest__chapter--a", ".honey-harvest__chapter--b", ".honey-harvest__chapter--c"].map(
+        (selector) => {
+          const node = document.querySelector<HTMLElement>(selector)!;
+          const rect = node.getBoundingClientRect();
+          return { opacity: parseFloat(node.style.opacity ?? "0"), top: rect.top, bottom: rect.bottom };
+        },
+      );
+      const active = chapters.find((chapter) => chapter.opacity > 0.5)!;
+      return { headerBottom: header.bottom, active, viewport: window.innerHeight };
+    });
+    expect(layout.active, `active chapter at ${viewport.width}x${viewport.height}`).toBeDefined();
+    expect(layout.active.top, `chapter clears header at ${viewport.width}x${viewport.height}`).toBeGreaterThanOrEqual(
+      layout.headerBottom - 1,
+    );
+    expect(layout.active.bottom, `chapter inside viewport at ${viewport.width}x${viewport.height}`).toBeLessThanOrEqual(
+      layout.viewport + 1,
+    );
+  }
+  assertClean();
+});
+
+test("journey caption never collides with the intro", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.goto("/", { waitUntil: "networkidle" });
+  await scrollToStickyProgress(page, "#put-pcele", 0.02);
+  await page.waitForTimeout(800);
+  const boxes = await page.evaluate(() => {
+    const rect = (selector: string) => document.querySelector(selector)!.getBoundingClientRect();
+    const caption = rect(".bee-journey__caption");
+    const intro = rect(".bee-journey__intro");
+    const outro = rect(".bee-journey__outro");
+    return {
+      captionTop: caption.top,
+      captionBottom: caption.bottom,
+      introBottom: intro.bottom,
+      outroTop: outro.top,
+    };
+  });
+  expect(boxes.captionTop, "caption below intro").toBeGreaterThanOrEqual(boxes.introBottom - 1);
+  expect(boxes.captionBottom, "caption above outro").toBeLessThanOrEqual(boxes.outroTop + 1);
+  assertClean();
+});
+
+test("global bee stays hidden in kontakt at small widths", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/", { waitUntil: "networkidle" });
+  // The prompt's failing state: kontakt under the viewport center with page
+  // progress above 0.985 — exclusion must win over the end fallback.
+  await page.evaluate(() => {
+    const node = document.querySelector<HTMLElement>("#kontakt")!;
+    window.scrollTo({ top: node.offsetTop + node.offsetHeight / 2 - window.innerHeight * 0.48, behavior: "instant" });
+  });
+  await expect
+    .poll(() => page.evaluate(() => parseFloat(getComputedStyle(document.querySelector(".page-bee")!).opacity)), {
+      message: "bee hidden in kontakt at 320px",
+      timeout: 4000,
+    })
+    .toBeLessThan(0.2);
+  assertClean();
+});
+
+test("mobile drink framing keeps flower and bee visible", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await scrollToStickyProgress(page, ".honey-harvest", 0.365);
+  await page.waitForTimeout(900);
+  const framing = await page.evaluate(() => {
+    const viewport = window.innerWidth;
+    const rect = (selector: string) => document.querySelector(selector)!.getBoundingClientRect();
+    const flower = rect(".honey-flower");
+    const bee = rect(".honey-macro-bee");
+    const share = (r: DOMRect) => (Math.min(r.right, viewport) - Math.max(r.left, 0)) / Math.max(1, r.width);
+    return { flowerLeft: flower.left, flowerShare: share(flower), beeShare: share(bee) };
+  });
+  // Shot-based framing: the flower stays essentially in frame (tiny edge
+  // bleed is intentional camera work) and the bee is fully visible.
+  expect(framing.flowerLeft, "flower at the left edge, not lost").toBeGreaterThanOrEqual(-12);
+  expect(framing.flowerShare, "flower visible share").toBeGreaterThan(0.9);
+  expect(framing.beeShare, "bee visible share").toBeGreaterThan(0.9);
+  assertClean();
+});
+
+test("global bee never covers product controls or search", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.evaluate(() => {
+    const node = document.querySelector<HTMLElement>(".catalog-panel__intro")!;
+    window.scrollTo({ top: node.offsetTop + node.offsetHeight / 2 - window.innerHeight / 2, behavior: "instant" });
+  });
+  await page.waitForTimeout(1200);
+  const collision = await page.evaluate(() => {
+    const bee = document.querySelector(".page-bee")!.getBoundingClientRect();
+    const overlap = (selector: string) => {
+      const node = document.querySelector(selector);
+      if (!node) return false;
+      const rect = node.getBoundingClientRect();
+      return bee.left < rect.right && rect.left < bee.right && bee.top < rect.bottom && rect.top < bee.bottom;
+    };
+    return {
+      search: overlap(".catalog-search input"),
+      tabs: overlap(".catalog-tabs"),
+    };
+  });
+  expect(collision.search, "bee off the search field").toBe(false);
+  expect(collision.tabs, "bee off the catalog tabs").toBe(false);
   assertClean();
 });
