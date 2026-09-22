@@ -249,3 +249,65 @@ landscape clearance ×3, caption clearance, kontakt-320 exclusion,
 mobile drink framing, bee-vs-controls, 1024 non-overlap, stored-pose
 reverse comparison (drink bee + chapters), comb in dense sweep,
 844×430 + 768×390 overflow.
+
+## Addendum — final motion-debugging + art-direction pass (HoneyHarvest root cause)
+
+Base: `472a279` (verified HEAD == origin/main, tree clean). No push,
+no deploy, no mailto/tel/social/press activation, no submissions,
+no claim/pricing/inquiry changes.
+
+ROOT CAUSE (Round 1 diagnostics, browser-measured): settled-state
+tests could not see it — all four defects are transient-only.
+(a) 37 wing sign-flips per 100 scroll steps: `sin(progress*140)`
+aliased into strobing at real scroll speeds. (b) Proboscis opacity
+1.0 at f=0.44–0.45 while takeoff already moved the bee (drinkHold
+ran to ~0.50, takeoff started 0.44). (c) Double smoothing: 42 comb
+cells showed fill 0.16 when scroll state demanded 0.43 (CSS
+transitions chasing the damped scheduler; `--honey-fill` itself
+lagged ~7 frames). (d) Frame jank p95 63.7ms / max 109ms through
+drink/deposit with zero JS longtasks (style/compositor cost).
+
+ARCHITECTURE (one owner per property): pose is a pure function of
+scroll progress (damped once by the scene scheduler); wing/shimmer
+flap PHASE is wall-time (flapT accumulator) so fast scroll cannot
+alias it; zero CSS transitions on any scroll-scrubbed value
+(comb cells, drop); bee/drop/stream/comb share viewBox units.
+
+TIMELINE (final): establish 0–.08, approach .08–.28, LAND .28–.31,
+DRINK .31–.40, RETRACT .40–.45, takeoff .45–.53, carry .53–.70,
+align .70–.77, pour+fill .77–.90, settle .90–1. Proboscis fully
+retracted exactly at takeoff start (parked mapping reads 0 at .45).
+
+COMB: 42 transition-chasing HTML cells → one SVG comb in-scene
+(static wood/hex/gloss + ONE animated gold rect). Deposit contact by
+construction (stream end (588,366) on surface line). Profile after:
+p50 16.7ms / p95 17.5ms / max 26.5ms, no longtasks. Desktop
+overflow camera pans flower→pour framing once per pass during
+align; scene edges get a soft mask so artwork never hard-clips.
+
+BEEJOURNEY: intro exits by 18% (no ghost); house floor 0.12→0.45;
+landmark scales rebalanced (1.35/1.3→1.15–1.22); foreground field
+band grounds the panorama; caption is rule+text only (landmark
+numbers are the single system), bottom-centered on desktop,
+bottom-left rail in short landscape, handed to outro at mobile end;
+mobile camera is 3 intentional shots (no bee-chasing).
+
+REVEALS: semantic role bases (heading 0 / lead 40 / copy 70 /
+media 100 / detail 150) + local order, capped 200ms, still
+translate-only. REDUCED MOTION: routeDrift explicitly disabled;
+perpetual-animation test added (wings/route/hero/halo all none).
+
+TESTS: new `tests/honey-transient.spec.ts` (fine 0.01 sweep, 0.005
+critical zones, parked slow-mapping with analytic bounds, retract
+proof incl. parked 0.45, exact parked reverse equality, jumps +
+mid-scene resize) separate from settled suites. Reverse equality
+required removing bee breathing (±1.2 units broke exactness) and
+parsing pose from attributes (bboxes include flapping wings).
+
+Full chain: `npm ci` 0, `npm run qa` 0 (67/67 Chromium, incl. all
+protected functionality), WebKit/Firefox 8/8, audit 0 vulns,
+`git diff --check` clean. Two full-suite runs each showed ONE
+flaky timing assertion in untouched `tests/inquiry.spec.ts`
+(different test each time; 10/10 green in isolation, 60/60 green
+without the transient spec, 12/12 transient+inquiry green) —
+environmental suite-load flakiness, no code overlap with this diff.

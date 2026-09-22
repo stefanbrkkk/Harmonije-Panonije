@@ -52,7 +52,7 @@ test("HoneyHarvest dense sweep: finite states, no teleports", async ({ page }) =
           const rect = document.querySelector(selector)!.getBoundingClientRect();
           return [rect.x + rect.width / 2, rect.y + rect.height / 2];
         };
-        const attrs = [...document.querySelectorAll(".honey-macro-bee, .honey-flower, .honey-drop, .honey-stream, .honeycomb-3d")]
+        const attrs = [...document.querySelectorAll(".honey-macro-bee, .honey-flower, .honey-drop, .honey-stream, .honey-comb")]
           .map((node) => node.getAttribute("transform") ?? node.getAttribute("d") ?? (node as HTMLElement).style.transform ?? "")
           .join(" ");
         return {
@@ -73,11 +73,13 @@ test("HoneyHarvest dense sweep: finite states, no teleports", async ({ page }) =
     const step = (a: number[], b: number[]) => Math.hypot(a[0] - b[0], a[1] - b[1]);
     // Flower is rooted: it may breathe, never travel.
     expect(step(samples[i].flower, samples[i - 1].flower), `flower rooted near p=${i / 20}`).toBeLessThan(24);
-    // Bee flight between adjacent 0.05 steps stays plausible; the carry is
-    // the fastest segment (~115px per step at 1440px).
-    expect(step(samples[i].bee, samples[i - 1].bee), `bee plausible near p=${i / 20}`).toBeLessThan(170);
-    // Nectar transfer is quick but continuous (flower → bee → stream).
-    expect(step(samples[i].drop, samples[i - 1].drop), `drop continuous near p=${i / 20}`).toBeLessThan(330);
+    // Bee flight between adjacent 0.05 steps stays plausible; the carry
+    // peaks at ~190 units per 0.05 step (452 units over 0.17 with
+    // smoothstep's 1.5x peak slope), so the bound is ~1.4x peak. Fine
+    // pacing is proven parked by the transient suite's slow mapping.
+    expect(step(samples[i].bee, samples[i - 1].bee), `bee plausible near p=${i / 20}`).toBeLessThan(270);
+    // The drop rides the bee through carry, sharing its peak velocity.
+    expect(step(samples[i].drop, samples[i - 1].drop), `drop continuous near p=${i / 20}`).toBeLessThan(270);
     // Always a readable chapter; at most one chapter may pass through the
     // faint band at a time (the other must dominate) — never dual-faint.
     const chapters = samples[i].chapters;
@@ -164,15 +166,22 @@ test("mobile honey keeps the action framed", async ({ page }) => {
 test("BeeJourney stage captions track progress", async ({ page }) => {
   const assertClean = trackErrors(page);
   await page.goto("/", { waitUntil: "networkidle" });
-  const expected = ["01", "02", "03", "04"];
+  // Single numbering system lives on the SVG landmarks; the caption carries
+  // the stage description only.
+  const expected = [
+    "Cvet i voće — početak puta",
+    "Med i bilje — darovi livade",
+    "Zlatna kap — craft u nastajanju",
+    "Panonija — dom sa etikete",
+  ];
   for (const [fraction, stage] of [[0.1, 0], [0.4, 1], [0.6, 2], [0.85, 3]] as Array<[number, number]>) {
     await scrollToStickyProgress(page, "#put-pcele", fraction);
     await page.waitForTimeout(800);
     const caption = await page.evaluate(() => ({
-      index: document.querySelector(".bee-journey__caption-index")?.textContent,
+      text: document.querySelector(".bee-journey__caption p")?.textContent,
       opacity: parseFloat(document.querySelector<HTMLElement>(".bee-journey__caption")?.style.opacity ?? "0"),
     }));
-    expect(caption.index, `stage at p=${fraction}`).toBe(expected[stage]);
+    expect(caption.text, `stage at p=${fraction}`).toBe(expected[stage]);
     expect(caption.opacity, `caption readable at p=${fraction}`).toBeGreaterThan(0.8);
   }
   assertClean();
@@ -289,17 +298,34 @@ test("honey handoff never stacks two equal headings", async ({ page }) => {
 test("honey stream meets the comb at the deposit state", async ({ page }) => {
   const assertClean = trackErrors(page);
   await page.goto("/", { waitUntil: "networkidle" });
-  await scrollToStickyProgress(page, ".honey-harvest", 0.873);
-  await page.waitForTimeout(900);
-  const gap = await page.evaluate(() => {
-    const stream = document.querySelector(".honey-stream")!.getBoundingClientRect();
-    const comb = document.querySelector(".honeycomb-3d")!.getBoundingClientRect();
-    return comb.top - stream.bottom;
-  });
-  // Continuous visual transfer: the stream terminates at the comb surface
-  // (small negative overlap reads as pouring in).
-  expect(gap, "stream-to-comb gap").toBeGreaterThan(-8);
-  expect(gap, "stream-to-comb gap").toBeLessThan(10);
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 1280, height: 720 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await scrollToStickyProgress(page, ".honey-harvest", 0.85);
+    await page.waitForTimeout(900);
+    // Canonical coordinates: project the stream endpoint (588,366) and
+    // the comb surface line through the same SVG CTM and compare.
+    const gap = await page.evaluate(() => {
+      const svg = document.querySelector<SVGSVGElement>(".honey-harvest__macro")!;
+      const matrix = svg.getScreenCTM()!;
+      const point = svg.createSVGPoint();
+      const project = (x: number, y: number) => {
+        point.x = x;
+        point.y = y;
+        return point.matrixTransform(matrix).y;
+      };
+      const streamEnd = project(588, 366);
+      // Surface line from (492,372) to (800,332).
+      const surface = project(588, 372 - ((588 - 492) * 40) / 308);
+      return streamEnd - surface;
+    });
+    // The stream terminates at/pours into the surface (small positive
+    // overlap reads as pouring in; drop-shadow adds a few px to rects).
+    expect(gap, `stream-to-surface at ${viewport.width}x${viewport.height}`).toBeGreaterThan(-4);
+    expect(gap, `stream-to-surface at ${viewport.width}x${viewport.height}`).toBeLessThan(14);
+  }
   assertClean();
 });
 
@@ -356,6 +382,27 @@ test("journey caption never collides with the intro", async ({ page }) => {
   });
   expect(boxes.captionTop, "caption below intro").toBeGreaterThanOrEqual(boxes.introBottom - 1);
   expect(boxes.captionBottom, "caption above outro").toBeLessThanOrEqual(boxes.outroTop + 1);
+  assertClean();
+});
+
+test("journey caption content clears artwork and outro", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.goto("/", { waitUntil: "networkidle" });
+  await scrollToStickyProgress(page, "#put-pcele", 1);
+  await page.waitForTimeout(800);
+  const boxes = await page.evaluate(() => {
+    const rect = (selector: string) => document.querySelector(selector)!.getBoundingClientRect();
+    const caption = rect(".bee-journey__caption p");
+    const flower = rect(".scene-ingredient--bloom");
+    const outro = rect(".bee-journey__outro");
+    const overlaps = (a: DOMRect, b: DOMRect) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+    return {
+      captionFlower: overlaps(caption, flower),
+      captionOutro: overlaps(caption, outro),
+    };
+  });
+  expect(boxes.captionFlower, "caption off the flower artwork").toBe(false);
+  expect(boxes.captionOutro, "caption off the outro").toBe(false);
   assertClean();
 });
 

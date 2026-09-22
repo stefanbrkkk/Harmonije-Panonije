@@ -93,8 +93,7 @@ export function BeeJourney() {
     };
 
     const paint = (progress: number) => {
-      const eased = smoothstep(progress);
-      const distance = length * Math.min(0.985, Math.max(0, eased));
+      const eased = smoothstep(progress);      const distance = length * Math.min(0.985, Math.max(0, eased));
       try {
         const p = path.getPointAtLength(distance);
         const p2 = path.getPointAtLength(Math.min(length, distance + 2));
@@ -111,10 +110,12 @@ export function BeeJourney() {
           "transform",
           `translate(${(p.x + ox).toFixed(1)} ${(p.y + oy).toFixed(1)}) rotate(${angle.toFixed(1)})`,
         );
-        // Narrow screens: pan the scene so the bee (and nearby landmarks)
-        // stay in frame instead of showing an arbitrary cropped slice.
+        // Narrow screens: intentional phase shots (flower/lemon →
+        // berry/honey/herbs → house) instead of chasing the bee.
         if (scene && window.innerWidth < 720) {
-          const shift = cameraShift(p.x + ox, 1000, window.innerWidth, sceneWidth);
+          const lerpShot = (a: number, b: number, t: number) => a + (b - a) * t;
+          const shot = lerpShot(lerpShot(180, 570, smoothstep((progress - 0.3) / 0.08)), 800, smoothstep((progress - 0.62) / 0.08));
+          const shift = cameraShift(shot, 1000, window.innerWidth, sceneWidth);
           if (Math.abs(shift - lastShift) > 0.5) {
             scene.style.translate = `${shift.toFixed(1)}px 0`;
             lastShift = shift;
@@ -128,7 +129,9 @@ export function BeeJourney() {
       }
 
       if (introRef.current) {
-        const o = 1 - smoothstep(progress / 0.32);
+        // Intro reads fully, then exits cleanly early: never a pale ghost
+        // sitting behind the scene.
+        const o = 1 - smoothstep((progress - 0.1) / 0.08);
         introRef.current.style.opacity = o.toFixed(3);
         introRef.current.style.transform = `translateX(-50%) translateY(${((1 - o) * -12).toFixed(1)}px)`;
       }
@@ -138,8 +141,10 @@ export function BeeJourney() {
         outroRef.current.style.transform = `translate(-50%, ${((1 - o) * 18).toFixed(1)}px)`;
       }
       if (houseRef.current) {
+        // The destination anchors the right side early (never a ghost),
+        // resolving to full presence at the final stage.
         const o = smoothstep((progress - 0.56) / 0.28);
-        const opacity = 0.12 + o * 0.88;
+        const opacity = 0.45 + o * 0.55;
         houseRef.current.style.opacity = opacity.toFixed(3);
         houseRef.current.style.transform = `scale(${(0.94 + o * 0.06).toFixed(3)})`;
       }
@@ -174,12 +179,13 @@ export function BeeJourney() {
         }
         if (best !== stageIndex) {
           stageIndex = best;
-          const index = captionRef.current.querySelector(".bee-journey__caption-index");
           const label = captionRef.current.querySelector("p");
-          if (index) index.textContent = STAGES[best].index;
           if (label) label.textContent = STAGES[best].text;
         }
-        captionRef.current.style.opacity = bestWeight.toFixed(3);
+        // Small screens hand the ending to the house + outro: the caption
+        // would collide with the centered house label at the final stage.
+        const endFade = window.innerWidth < 720 ? 1 - smoothstep((progress - 0.88) / 0.07) : 1;
+        captionRef.current.style.opacity = (bestWeight * endFade).toFixed(3);
       }
     };
 
@@ -225,7 +231,6 @@ export function BeeJourney() {
           <p>Put vodi od cveta i voća, preko meda i bilja, do prepoznatljive vojvođanske kućice sa etiketa.</p>
         </div>
         <div ref={captionRef} className="bee-journey__caption shell" aria-live="off">
-          <span className="bee-journey__caption-index">01</span>
           <p>Cvet i voće — početak puta</p>
         </div>
 
@@ -258,6 +263,14 @@ export function BeeJourney() {
           <path className="bee-scene__contour" d="M-50 440 C130 395 240 488 375 420 C535 339 621 194 786 172 C899 158 974 206 1065 134" />
           <path ref={pathRef} className="bee-scene__path" d="M75 400 C150 300 220 430 310 330 C390 242 440 138 545 172 C650 206 640 338 735 312 C815 290 830 228 880 202" />
 
+          {/* Foreground field band: grounds the panorama so landmarks read
+              as one editorial illustration instead of isolated icons. */}
+          <g className="bee-scene__foreground" aria-hidden="true">
+            <path d="M-20 508 C150 472 300 502 450 480 C600 460 750 492 1020 464" />
+            <path d="M-20 532 C160 500 320 526 470 506 C620 488 770 514 1020 494" />
+            <path d="M150 502c8-22 12-40 14-58M690 484c-6-20-8-38-8-56M880 476c8-18 12-34 14-50" />
+          </g>
+
           <g transform="translate(112 442)" className="scene-ingredient scene-ingredient--bloom">
             <g className="scene-ingredient__static">
               <path d="M0 40C2 10 4-12 6-34" />
@@ -273,7 +286,7 @@ export function BeeJourney() {
             <text className="scene-stage" x="-58" y="-72">01</text>
           </g>
 
-          <g transform="translate(250 330) scale(1.35)" className="scene-ingredient scene-ingredient--lemon">
+          <g transform="translate(250 330) scale(1.2)" className="scene-ingredient scene-ingredient--lemon">
             <g ref={lemonRef} className="scene-ingredient__motion">
               <ellipse cx="0" cy="0" rx="47" ry="36" transform="rotate(-18)" />
               <path d="M-10 -31c10-26 35-21 40-5" />
@@ -282,14 +295,14 @@ export function BeeJourney() {
             <text className="scene-stage" x="-64" y="-52">02</text>
           </g>
 
-          <g transform="translate(470 178) scale(1.35)" className="scene-ingredient scene-ingredient--berry">
+          <g transform="translate(470 178) scale(1.2)" className="scene-ingredient scene-ingredient--berry">
             <g ref={berryRef} className="scene-ingredient__motion">
               <circle cx="-20" cy="10" r="17" /><circle cx="9" cy="1" r="18" /><circle cx="28" cy="24" r="15" /><circle cx="-4" cy="30" r="17" />
               <path d="M2-18c10-20 30-24 43-16M3-17c-8-19-26-23-39-15" />
             </g>
           </g>
 
-          <g transform="translate(665 335) scale(1.3)" className="scene-ingredient scene-ingredient--leaf">
+          <g transform="translate(665 335) scale(1.18)" className="scene-ingredient scene-ingredient--leaf">
             <g ref={leafRef} className="scene-ingredient__motion">
               <path d="M0 68C4 27 6-10 11-62" />
               <path d="M7 30c-38-10-54-35-44-55 31 2 49 20 44 55Z" />
@@ -298,13 +311,13 @@ export function BeeJourney() {
             </g>
           </g>
 
-          <g className="scene-ingredient scene-ingredient--honey" transform="translate(585 260) scale(1.3)">
+          <g className="scene-ingredient scene-ingredient--honey" transform="translate(585 260) scale(1.15)">
             <path d="M0-34c22 27 33 44 33 63A33 33 0 1 1-33 29C-33 10-22-7 0-34Z" />
             <ellipse cx="0" cy="16" rx="49" ry="49" fill="url(#honeyGlow)" stroke="none" />
             <text className="scene-stage" x="-72" y="-48">03</text>
           </g>
 
-          <g transform="translate(760 235) scale(1.12)" className="scene-house__anchor">
+          <g transform="translate(760 235) scale(1.22)" className="scene-house__anchor">
             <g ref={houseRef} className="scene-house">
               <path d="M0 76V-5L108-77 216-5v81H0Z" />
               <path d="M40 76V6h55v70M125 12h52v38h-52z" />

@@ -39,3 +39,29 @@ test("reduced motion performs no perpetual scheduler work", async ({ page }) => 
   expect(second - first, "idle rAF churn under reduced motion").toBeLessThanOrEqual(4);
   assertClean();
 });
+
+test("reduced motion disables perpetual decorative animation", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.goto("/", { waitUntil: "networkidle" });
+  const animated = await page.evaluate(() => {
+    const names = (selector: string) => {
+      const node = document.querySelector(selector);
+      if (!node) return [];
+      return getComputedStyle(node)
+        .animationName.split(",")
+        .map((name) => name.trim())
+        .filter((name) => name && name !== "none");
+    };
+    return {
+      wings: names(".scene-bee__wing"),
+      route: names(".delivery-map__route"),
+      heroFloat: names(".hero-art__ingredient--lemon"),
+      halo: names(".hero-art__halo"),
+    };
+  });
+  expect(animated.wings, "no perpetual wing flap").toEqual([]);
+  expect(animated.route, "no perpetual route drift").toEqual([]);
+  expect(animated.heroFloat, "no perpetual hero float").toEqual([]);
+  expect(animated.halo, "no perpetual halo pulse").toEqual([]);
+  assertClean();
+});

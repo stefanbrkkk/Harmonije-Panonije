@@ -39,10 +39,21 @@ export function MotionOrchestrator() {
         node.classList.add("reveal-target");
         // Local semantic order: position within the nearest section, never
         // the global document index, capped so cascades stay tight.
+        // Role base keeps the editorial hierarchy: headings lead, lead copy
+        // follows, media complements, metadata closes.
         const scope = node.closest("section, footer") ?? document.body;
         const localIndex = scopeCounts.get(scope) ?? 0;
         scopeCounts.set(scope, localIndex + 1);
-        node.style.setProperty("--reveal-delay", `${Math.min(180, localIndex * 60)}ms`);
+        const roleBase = node.matches(".section-heading")
+          ? 0
+          : node.matches(".catalog-panel__intro, .proof-intro, .catalog-toolbar")
+            ? 40
+            : node.matches(".story-art, .delivery-map, .ingredient-card")
+              ? 100
+              : node.matches(".proof-press")
+                ? 150
+                : 70;
+        node.style.setProperty("--reveal-delay", `${Math.min(200, roleBase + localIndex * 20)}ms`);
         if (reduced.matches || inViewport(node)) {
           // Above-the-fold content becomes visible in the same pre-paint
           // frame: never visible -> hidden -> visible.

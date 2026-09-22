@@ -128,17 +128,24 @@ const tripwires = [
   ["scene camera", journey.includes("cameraShift(") && honey.includes("cameraShift(")],
   // HP-04: sequential chapter handoff aligned to visual actions (never a
   // symmetric crossfade sharing coordinates at equal opacity).
-  ["chapter handoff windows", honey.includes("fade(copyARef.current, -0.05, 0.0, 0.27, 0.285)")],
-  // Discrete drink phase with holds (no overlapping collect/transfer).
-  ["drink phase timeline", honey.includes("DRINK .29–.44")],
+  ["chapter handoff windows", honey.includes("fade(copyARef.current, -0.05, 0.0, 0.3, 0.325)")],
+  // Sequential phase beats with an explicit retract before takeoff.
+  ["drink phase timeline", honey.includes("RETRACT .40–.45") && honey.includes("1 - phaseProgress(progress, 0.4, 0.45)")],
   ["honey exit lift", honey.includes("(1 - exit) * 22")],
-  ["stream meets comb", honey.includes("M556 325c7 33-10 60-7 116") && honey.includes("fill * 8") && css.includes("min(760px, 75vw)")],
+  // One coordinate system: bee, drop, stream and comb share viewBox units;
+  // a single fill rect replaces 42 transition-chasing cells.
+  ["shared pour geometry", honey.includes("POUR_X = 592") && honey.includes("STREAM_BOT_Y = 366")],
+  ["single comb fill", honey.includes("honey-fill-level") && !honey.includes("honeycomb-3d") && !css.includes(".honeycomb-3d")],
+  ["no scrubbed transitions", !css.includes("transition: transform .05s") && !css.includes("transition: opacity .06s")],
+  ["time-clocked flap", honey.includes("flapT") && honey.includes("Math.sin(flapT * 0.35)")],
   ["page-bee exclusions", bee.includes('[data-page-bee="hide"]')],
   ["exclusion beats end fallback", bee.indexOf("excluded === 1") < bee.indexOf("progress > 0.985")],
   ["journey stage captions", journey.includes("STAGE_WINDOWS")],
   ["journey caption clears intro", css.includes(".bee-journey__caption { position: absolute; z-index: 4; top: auto;")],
   ["journey unique stage labels", (journey.match(/<text className="scene-stage"/g) ?? []).length === 4],
   ["translate-only reveals", !css.includes("opacity .6s cubic-bezier(.22,.8,.24,1) var(--reveal-delay")],
+  ["semantic reveal roles", read("src/components/MotionOrchestrator.tsx").includes("roleBase")],
+  ["reduced route drift", css.includes(".delivery-map__route { animation: none !important; }")],
   ["valid reveal transition", css.includes("transition: translate .7s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms);")],
   ["tablet ingredient grid", css.includes(".ingredients-stage { height:auto;margin-top:56px;display:grid;grid-template-columns:repeat(3,1fr);")],
   ["landscape chapter clearance", css.includes(".honey-harvest__chapter { top: calc(var(--header-height) + 10px); translate: none;")],

@@ -238,6 +238,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .scene-ingredient .scene-stage,
 .scene-house__anchor .scene-stage { fill: rgba(28,47,40,.48); stroke: none; font-family: var(--sans); font-size: 13px; font-weight: 800; letter-spacing: 2px; }
 .bee-scene__contour { fill: none; stroke: rgba(23,54,45,.13); stroke-width: 1; stroke-dasharray: 3 8; }
+.bee-scene__foreground { fill: none; stroke: rgba(23,54,45,.3); stroke-width: 1.4; }
 .bee-scene__path { fill: none; stroke: rgba(23,54,45,.2); stroke-width: 1; stroke-dasharray: 2 12; stroke-linecap: round; }
 .scene-ingredient { transform-box: fill-box; transform-origin: center; }
 .scene-ingredient__motion { transform-box: fill-box; transform-origin: center; will-change: transform; }
@@ -249,9 +250,9 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .scene-ingredient--honey > path:first-child { fill: rgba(216,162,72,.14); }
 .scene-ingredient--bloom { color: #607e68; }
 .scene-ingredient--bloom .scene-ingredient__static { transform-box: fill-box; transform-origin: center; }
-.bee-journey__caption { position: absolute; z-index: 4; top: auto; bottom: clamp(170px, 22vh, 220px); left: 50%; transform: translateX(-50%); display: flex; align-items: baseline; gap: 12px; pointer-events: none; white-space: nowrap; }
-.bee-journey__caption-index { font-size: .68rem; font-weight: 800; letter-spacing: .14em; color: var(--honey-dark); }
+.bee-journey__caption { position: absolute; z-index: 4; top: auto; bottom: clamp(170px, 22vh, 220px); left: 50%; transform: translateX(-50%); display: flex; align-items: baseline; justify-content: center; gap: 12px; pointer-events: none; white-space: nowrap; }
 .bee-journey__caption p { margin: 0; font-family: var(--serif); font-size: clamp(1rem, 1.6vw, 1.35rem); font-style: italic; color: #4c5a51; }
+.bee-journey__caption::before { content: ""; width: 30px; height: 1px; background: var(--honey-dark); opacity: .7; align-self: center; }
 .bee-journey.is-live .bee-journey__caption { opacity: 0; }
 .scene-house__anchor { fill: none; }
 .scene-house { fill: none; stroke: var(--forest-2); stroke-width: 1.6; opacity: .12; transform-box: fill-box; transform-origin: center; will-change: transform, opacity; }
@@ -663,6 +664,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .hero-bottle--small:first-child,.hero-bottle--small:last-child { transform:none; }
   .bee-journey { height:100vh;min-height:760px; }
   .scene-bee__wing { animation:none !important; }
+  .delivery-map__route { animation: none !important; }
   .delivery-map__pulse { display:none; }
   .scroll-cue { display:none; }
 }
@@ -879,7 +881,6 @@ body.has-overlay .page-bee { opacity: 0 !important; }
 
 /* Honey harvest: scroll-driven pseudo-3D macro sequence */
 .honey-harvest {
-  --honey-fill: 0;
   position: relative;
   height: 255vh;
   min-height: 1700px;
@@ -936,6 +937,10 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   z-index: 2;
   inset: 0 0 0 38%;
   overflow: hidden;
+  /* The macro pans inside this column on smaller desktops; dissolve the
+     column edges so artwork never hits a hard clip mid-viewport. */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 72px, #000 calc(100% - 24px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 72px, #000 calc(100% - 24px), transparent 100%);
 }
 .honey-harvest__atmosphere {
   position: absolute;
@@ -959,87 +964,17 @@ body.has-overlay .page-bee { opacity: 0 !important; }
 .honey-flower__anchor { fill: none; }
 .honey-flower { transform-box: fill-box; transform-origin: 50% 92%; will-change: transform; }
 .honey-macro-bee { will-change: transform; }
-/* Wing flap is driven per-frame from scroll progress (folded rest pose
-   while drinking); no CSS wing animation, so JS owns the layer alone. */
-.honey-drop { filter: drop-shadow(0 5px 6px rgba(99,56,4,.28)); transition: opacity .06s linear; }
+/* Wing flap: fold amount is scroll state, flap phase is wall time (see
+   HoneyHarvestSection); no CSS wing animation, so JS owns the layer alone. */
+.honey-drop { filter: drop-shadow(0 5px 6px rgba(99,56,4,.28)); transition: none; }
 .honey-stream { fill: none; stroke: #7e4304; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 140; stroke-dashoffset: 140; filter: drop-shadow(0 4px 4px rgba(101,54,1,.25)); }
-.honeycomb-3d {
-  position: absolute;
-  right: -24px;
-  bottom: -48px;
-  width: min(590px, 55vw);
-  height: 380px;
-  will-change: transform;
-  transform-style: preserve-3d;
-  filter: drop-shadow(0 44px 42px rgba(93,52,8,.26));
-}
-/* Deposit contact: the macro centers on 50% while a bottom-anchored comb
-   drifts with vh, so the stream/comb gap varies by viewport height.
-   Top-anchoring the comb to the same 50% basis (plus the macro-height
-   fraction where the stream terminates) keeps the transfer continuous
-   at every desktop viewport. Narrow screens keep bottom anchoring. */
-@media (min-width: 801px) {
-  .honeycomb-3d { top: calc(50% + min(760px, 75vw) * 0.246 - 73.2px); bottom: auto; }
-}
-.honeycomb-3d__rim {
-  position: absolute;
-  inset: -18px;
-  border: 16px solid #603f1f;
-  background: linear-gradient(145deg,#9b6d34,#56371b);
-  box-shadow: inset 0 0 0 2px rgba(255,225,164,.14), inset 0 18px 24px rgba(255,233,182,.12);
-}
-.honeycomb-3d__cells {
-  position: absolute;
-  inset: 5px;
-  display: grid;
-  grid-template-columns: repeat(7,1fr);
-  gap: 4px;
-  overflow: hidden;
-  background: #93631f;
-  padding: 8px;
-}
-.honeycomb-3d__cells > span {
-  --cell-index: 0;
-  position: relative;
-  min-height: 54px;
-  clip-path: polygon(25% 6.7%,75% 6.7%,100% 50%,75% 93.3%,25% 93.3%,0 50%);
-  background: linear-gradient(145deg,#5f3c12,#bd842d 42%,#6a4213);
-  box-shadow: inset 0 0 20px rgba(49,27,4,.7);
-  overflow: hidden;
-}
-.honeycomb-3d__cells > span::before {
-  content: "";
-  position: absolute;
-  inset: 6px;
-  clip-path: inherit;
-  background: linear-gradient(180deg, rgba(255,239,174,.24), rgba(98,53,5,.38));
-  box-shadow: inset 0 0 18px rgba(62,33,3,.48);
-}
-.honeycomb-3d__cells > span i {
-  position: absolute;
-  z-index: 3;
-  left: 5px;
-  right: 5px;
-  bottom: 5px;
-  height: 88%;
-  transform: scaleY(clamp(0, var(--honey-fill), 1));
-  transform-origin: bottom;
-  clip-path: inherit;
-  background:
-    radial-gradient(circle at 34% 16%, rgba(255,248,190,.78) 0 4%, transparent 17%),
-    linear-gradient(180deg,#f0bf45 0%,#d98e13 48%,#934d04 100%);
-  opacity: clamp(0, var(--honey-fill), 1);
-  transition: transform .05s linear, opacity .05s linear;
-  box-shadow: inset 0 7px 9px rgba(255,243,179,.24);
-}
-.honeycomb-3d__gloss {
-  position: absolute;
-  z-index: 6;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(112deg, transparent 10%, rgba(255,247,206,.22) 32%, transparent 47% 100%);
-  mix-blend-mode: screen;
-}
+/* Honeycomb lives in the same SVG viewBox as bee, drop and stream, so the
+   deposit transfer is correct by construction at every viewport. Only the
+   single gold fill rect is animated per frame; everything else is static.
+   No CSS transitions on scroll-scrubbed values: the scene scheduler is
+   the one smoothing layer. */
+.honey-comb { will-change: opacity; }
+.honey-comb * { transition: none !important; }
 
 /* Order drawer UX */
 .order-contact-form {
@@ -1125,8 +1060,6 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .honey-harvest__chapter > p:last-child { max-width: 540px; }
   .honey-harvest__scene { inset: 34% -8% -3% 0; }
   .honey-harvest__macro { left: -8%; top: 42%; width: 96vw; }
-  .honeycomb-3d { right: -6%; bottom: -4%; width: 66vw; height: 300px; }
-  .honeycomb-3d__cells > span { min-height: 43px; }
 }
 
 @media (max-width: 560px) {
@@ -1150,10 +1083,6 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .honey-harvest__chapter > p:last-child { margin-top: 18px; font-size: .76rem; line-height: 1.58; }
   .honey-harvest__scene { inset: 38% 0 -8% 0; }
   .honey-harvest__macro { width: 130vw; left: 0; top: 36%; }
-  .honeycomb-3d { right: 0; bottom: calc(1% + 78px); width: 78vw; height: 245px; }
-  .honeycomb-3d__rim { border-width: 10px; inset: -11px; }
-  .honeycomb-3d__cells { gap: 3px; padding: 5px; }
-  .honeycomb-3d__cells > span { min-height: 33px; }
   .order-contact-form { grid-template-columns: 1fr; }
   .order-contact-form__intro,
   .order-contact-form__full { grid-column: auto; }
@@ -1172,7 +1101,10 @@ body.has-overlay .page-bee { opacity: 0 !important; }
 /* Short landscape: compact cinematic copy, same content, smaller type. */
 @media (max-height: 500px) and (orientation: landscape) {
   .bee-journey__intro { top: 78px; }
-  .bee-journey__caption { top: auto; bottom: 86px; }
+  /* Bottom-left rail: centered captions would cross the central artwork
+     in short viewports; the left rail stays on quiet background. */
+  .bee-journey__caption { top: auto; bottom: 22px; justify-content: flex-start; }
+  .bee-journey__caption p { font-size: .8rem; }
   .bee-journey__intro h2 { font-size: clamp(2rem, 6vw, 3rem); }
   .bee-journey__intro > p:last-child { margin-top: 12px; font-size: .75rem; }
   .bee-scene { top: 62%; }
@@ -1184,7 +1116,6 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .honey-harvest__chapter { top: calc(var(--header-height) + 10px); translate: none; width: min(480px, 52vw); }
   .honey-harvest__chapter h2 { font-size: clamp(2.2rem, 7vw, 3.4rem); }
   .honey-harvest__chapter > p:last-child { margin-top: 12px; font-size: .72rem; }
-  .honeycomb-3d { height: 190px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1201,12 +1132,7 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .honey-harvest__scene { position: relative; inset: auto; height: 440px; margin-top: 10px; overflow: hidden; }
   .honey-harvest__atmosphere { left: 30%; top: 46%; width: 420px; height: 420px; }
   .honey-harvest__macro { left: 0; top: 0; width: min(560px, 92vw); transform: none; }
-  .honeycomb-3d { right: 0; bottom: 0; width: min(420px, 72vw); height: 250px; }
-  .honeycomb-3d__cells > span { min-height: 36px; }
 }
-.honeycomb-3d__cells > span:nth-child(n+8):nth-child(-n+14),
-.honeycomb-3d__cells > span:nth-child(n+22):nth-child(-n+28),
-.honeycomb-3d__cells > span:nth-child(n+36):nth-child(-n+42) { translate: 50% 0; }
 
 /* Reveal choreography: primarily positional motion, never a fade from
    complete invisibility for text. Order is per-section (see
