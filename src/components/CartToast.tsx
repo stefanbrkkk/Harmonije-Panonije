@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { useCart } from "./CartProvider";
+import { restoreFocus } from "@/src/lib/focus";
 
 const NOTICE_MS = 3600;
 
@@ -9,6 +10,9 @@ export function CartToast() {
   const { notice, dismissNotice, open } = useCart();
   const timerRef = useRef(0);
   const pausedRef = useRef(false);
+  // Where keyboard focus came from before entering the toast, so dismissing
+  // it never strands focus on a control inside an aria-hidden container.
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   const schedule = useCallback(() => {
     window.clearTimeout(timerRef.current);
@@ -32,21 +36,45 @@ export function CartToast() {
     [schedule],
   );
 
+  const onFocus = (event: React.FocusEvent<HTMLDivElement>) => {
+    setPaused(true);
+    const from = event.relatedTarget;
+    if (from instanceof HTMLElement && !event.currentTarget.contains(from)) returnFocusRef.current = from;
+  };
+
+  const dismiss = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const hadFocus = event.currentTarget === document.activeElement;
+    dismissNotice();
+    if (hadFocus) {
+      restoreFocus([
+        returnFocusRef.current,
+        document.querySelector<HTMLElement>("#proizvodi-heading"),
+        document.querySelector<HTMLElement>(".site-header__logo"),
+      ]);
+    }
+  };
+
   const onBlur = (event: React.FocusEvent<HTMLDivElement>) => {
     // Only resume when focus truly leaves the toast, not between its buttons.
     if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setPaused(false);
   };
 
+  const announcement = notice
+    ? `Dodato u upit: ${notice.product.name}${notice.quantity > 1 ? `, ${notice.quantity} komada` : ""}.`
+    : "";
+
   return (
+    <>
+    {/* Permanent live region: it exists before any notice, so the first
+        addition is announced (a region that un-hides in the same render as
+        its text change is often skipped by screen readers). */}
+    <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{announcement}</p>
     <div
       className={`cart-toast ${notice ? "is-visible" : ""}`}
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
       aria-hidden={!notice}
       onPointerEnter={() => setPaused(true)}
       onPointerLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
+      onFocus={onFocus}
       onBlur={onBlur}
     >
       <div className="cart-toast__mark" aria-hidden="true">✓</div>
@@ -55,7 +83,8 @@ export function CartToast() {
         <strong title={notice?.product.name ?? "Proizvod"}>{notice?.product.name ?? "Proizvod"}</strong>
       </div>
       <button type="button" onClick={open} tabIndex={notice ? 0 : -1}>Pogledaj upit</button>
-      <button type="button" className="cart-toast__close" onClick={dismissNotice} aria-label="Zatvori obaveštenje" tabIndex={notice ? 0 : -1}>×</button>
+      <button type="button" className="cart-toast__close" onClick={dismiss} aria-label="Zatvori obaveštenje" tabIndex={notice ? 0 : -1}>×</button>
     </div>
+    </>
   );
 }

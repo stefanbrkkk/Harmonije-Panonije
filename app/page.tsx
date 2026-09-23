@@ -27,7 +27,7 @@ export default function HomePage() {
         "@type": "Organization",
         "@id": `${siteUrl}/#organization`,
         name: brand.name,
-        brand: brand.productLine,
+        brand: { "@type": "Brand", name: brand.productLine },
         description: "Craft proizvodnja Immuno Craft sirupa, sokova i bustera iz Novog Sada.",
         foundingDate: "2022",
         founder: [

@@ -13,7 +13,7 @@ export function Footer() {
         <div>
           <a href={contact.instagramUrl} target="_blank" rel="noreferrer">Instagram</a>
           <a href={contact.facebookUrl} target="_blank" rel="noreferrer">Facebook</a>
-          <a href={`mailto:${contact.email}`}>Email</a>
+          <a href={`mailto:${contact.email}`}>Mejl</a>
         </div>
         <a href="#vrh">Nazad na vrh ↑</a>
       </div>

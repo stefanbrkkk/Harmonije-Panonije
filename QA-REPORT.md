@@ -399,3 +399,73 @@ responsive overrides, ghost overflow, phone seal stacking.
 Validation: `npm run qa` 0 (68/68 Chromium), WebKit/Firefox 8/8,
 audit 0 vulns, `git diff --check` clean. ~40 further screenshots
 across 3 journey + 3 ingredient visual iterations.
+
+## Addendum — ground-up redesign of BeeJourney + Ingredients, full-site audit (23 September 2026)
+
+Scope: the two rejected sections were rebuilt from scratch (new concept,
+markup, artwork, CSS, choreography); every other section was audited and
+only concrete, reproduced defects were fixed.
+
+BEEJOURNEY — "Put pčele": four chapters on one Panonian horizon. Each
+chapter is a finished plate (lead + monumental word lock-up, one engraved
+illustration standing on the horizon rule, which is also the progress
+bar; four-step index beneath). Chapter selection from scroll with
+hysteresis (±0.012), time-based swaps (mask-slide word, plate
+cross-fade), interruptible arc flight for the local bee. Dedicated
+portrait (text on top, plate on the horizon) and short-landscape layouts.
+No-JS / reduced motion: one static, non-pinned frame (final plate + full
+index) via `@media (scripting: none), (prefers-reduced-motion: reduce)`.
+
+INGREDIENTS — one apothecary still-life plate (honey jar with the house
+label, comb chunk, dipper, lemon branch, cut and whole lemon) captioned
+with the two foundations under specimen ticks, plus a typographic
+herbarium index of the five flavour layers (genus names in the order of
+each Serbian list). Server component; fits one viewport at 1440×900,
+1280×800 and 1024×768.
+
+Shared: `Botanical.tsx` drawing primitives (one engraved language:
+hairline, opaque muted fills, hatch shading via SVG pattern + mask),
+`typography.ts` (Serbian short-word / dash / separator binding),
+`plural.ts` (Serbian count agreement for screen-reader labels).
+
+Full-site audit fixes (each reproduced first):
+- inquiry drawer focus trap leaked to <body>/skip link (closed <details>
+  textarea counted as last stop; summary missing) and stuck on Shift+Tab;
+  focus now rescued after "Obriši sve" / removing the last item; double
+  scrollbar compensation (7.5px shift) removed; copy-timer cleanup bug
+- mobile menu close icon was cream-on-cream at page top; inert header
+  "Poruči" hidden while the menu is open; menu links in a <nav>; compact
+  landscape menu
+- HoneyHarvest: inactive chapters were `visibility:hidden` (unreachable
+  for screen readers) → opacity only; chapter measure now derived from
+  the gap to the macro column, so headings no longer run into the flower
+  (was 21–52px at 1440×900, worse at 1920)
+- persistent page bee sat on product titles, intro copy and proof
+  headings → margin route + occlusion fade against cached content boxes;
+  no per-frame layout reads; no pre-JS flash; no end-of-page smudge
+- focus indicator contrast (1.2–1.4:1 on light grounds) → two-tone ring;
+  search/drawer inputs got strong focus cues; tabs use an inset ring;
+  focus scrolling clears the fixed header and the phone order bar
+- `--shell` used 100vw (with scrollbar-gutter: stable → ~10px gutters on
+  classic-scrollbar desktops) → 100%
+- hero bottle group overflowed to one side at ≤390px (third bottle
+  cropped at 320/360) → grid-item min-width fix
+- 200% text: rem-based display minimums clipped/split words (hero, final
+  CTA, journey word) → vw caps
+- drawer unusable on landscape phones → single scrolling sheet ≤600px
+  tall; header legible without JavaScript; story caption was invisible
+- a11y copy: distinct "Dodaj … u upit" names, correct Serbian plurals,
+  permanent live region for the add-to-inquiry toast, focus restored
+  when the toast is dismissed by keyboard, search empty state quotes the
+  visitor's own text and returns focus to the field
+- SEO: typed Brand in JSON-LD, apple-touch icon, NEXT_PUBLIC_SITE_URL
+  normalised (a value without protocol previously crashed the build)
+- lint now enforces zero warnings as documented
+
+Tests: new `journey.spec.ts` (checkpoints, reverse/jumps/interrupted
+flights, hysteresis, 9-viewport collision geometry, mid-scene resize,
+deep link) and `ingredients.spec.ts` (hierarchy, one-viewport fit,
+9 viewports × 100/150/200% text); strengthened drawer-trap, keyboard
+journey, SEO, catalog, menu and page-bee occlusion tests; cross-engine
+smoke extended to both redesigned sections. Selector-bound tests of the
+removed markup were replaced by behaviour-level equivalents.

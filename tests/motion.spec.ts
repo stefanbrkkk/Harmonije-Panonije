@@ -180,17 +180,19 @@ test("persistent bee yields to dedicated-artwork sections", async ({ page }) => 
       )
       .toBeLessThan(0.2);
   }
-  // …while connective sections keep the motif.
-  await page.evaluate(() => {
+  // …while connective sections keep the motif wherever free space allows
+  // (the bee fades over text, so presence is sampled across the catalog).
+  const seen = await page.evaluate(async () => {
     const node = document.querySelector<HTMLElement>("#proizvodi")!;
-    window.scrollTo({ top: node.offsetTop + node.offsetHeight / 2 - window.innerHeight / 2, behavior: "instant" });
+    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    for (let y = node.offsetTop; y < node.offsetTop + node.offsetHeight; y += window.innerHeight * 0.4) {
+      window.scrollTo({ top: y, behavior: "instant" });
+      await wait(700);
+      if (parseFloat(getComputedStyle(document.querySelector(".page-bee")!).opacity) > 0.5) return true;
+    }
+    return false;
   });
-  await expect
-    .poll(
-      () => page.evaluate(() => parseFloat(getComputedStyle(document.querySelector(".page-bee")!).opacity)),
-      { message: "bee present between scenes", timeout: 4000 },
-    )
-    .toBeGreaterThan(0.5);
+  expect(seen, "bee present between scenes").toBe(true);
   assertClean();
 });
 
@@ -385,5 +387,32 @@ test("global bee never covers product controls or search", async ({ page }) => {
   });
   expect(collision.search, "bee off the search field").toBe(false);
   expect(collision.tabs, "bee off the catalog tabs").toBe(false);
+  assertClean();
+});
+
+test("global bee never sits on text or controls", async ({ page }) => {
+  test.setTimeout(180_000);
+  const assertClean = trackErrors(page);
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }, { width: 844, height: 390 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/", { waitUntil: "networkidle" });
+    const height = await page.evaluate(() => document.documentElement.scrollHeight);
+    for (let y = 0; y < height - viewport.height; y += Math.round(viewport.height * 0.45)) {
+      await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), y);
+      await page.waitForTimeout(650);
+      const hits = await page.evaluate(() => {
+        const bee = document.querySelector<HTMLElement>(".page-bee")!;
+        if (parseFloat(getComputedStyle(bee).opacity) <= 0.3) return [];
+        const b = bee.querySelector("svg")!.getBoundingClientRect();
+        return [...document.querySelectorAll<HTMLElement>("main :is(h1, h2, h3, h4, p, li, a, button, input, label, blockquote, figcaption, summary)")]
+          .filter((node) => {
+            const r = node.getBoundingClientRect();
+            return r.width > 0 && r.height > 0 && b.left < r.right && r.left < b.right && b.top < r.bottom && r.top < b.bottom;
+          })
+          .map((node) => `${node.tagName}: ${(node.textContent ?? "").trim().slice(0, 30)}`);
+      });
+      expect(hits, `${viewport.width}x${viewport.height} at y=${y}`).toEqual([]);
+    }
+  }
   assertClean();
 });

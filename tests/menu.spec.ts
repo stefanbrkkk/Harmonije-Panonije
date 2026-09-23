@@ -12,6 +12,14 @@ async function openMenu(page: Page) {
 test("pointer open, close toggle and Escape", async ({ page }) => {
   const assertClean = trackErrors(page);
   await openMenu(page);
+  // At page top the header is transparent over the dark hero; over the cream
+  // menu it must take its solid colours so the close control stays visible.
+  await expect(page.locator(".site-header")).toHaveClass(/site-header--scrolled/);
+  await expect
+    .poll(() => page.locator(".menu-button span").first().evaluate((node) => getComputedStyle(node).backgroundColor), {
+      message: "close icon settles on dark ink",
+    })
+    .toBe("rgb(28, 47, 40)");
   // Toggle stays above the panel and remains clickable.
   await page.locator(".menu-button").click();
   await expect(page.locator("#mobile-menu")).not.toHaveClass(/mobile-menu--open/);

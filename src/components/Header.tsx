@@ -5,6 +5,7 @@ import { BrandMark } from "./BrandMark";
 import { navigation } from "@/src/data/siteContent";
 import { useCart } from "./CartProvider";
 import { useOverlayIsolation } from "@/src/lib/overlay";
+import { itemsLabel } from "@/src/lib/plural";
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -19,6 +20,7 @@ export function Header() {
     menuOpen,
     [menuRef, menuButtonRef],
     [
+      ".skip-link",
       ".site-header__logo",
       ".site-nav",
       ".order-button",
@@ -108,7 +110,9 @@ export function Header() {
 
   return (
     <>
-    <header className={`site-header ${scrolled ? "site-header--scrolled" : ""}`}>
+    {/* While the cream menu panel is open the header takes its solid
+        (scrolled) colours, so the close control stays visible at page top. */}
+    <header className={`site-header ${scrolled || menuOpen ? "site-header--scrolled" : ""} ${menuOpen ? "site-header--menu-open" : ""}`}>
       <div className="site-header__inner shell">
         <a href="#vrh" className="site-header__logo" aria-label="Harmonije Panonije — početna">
           <BrandMark compact />
@@ -121,7 +125,7 @@ export function Header() {
         </nav>
 
         <div className="site-header__actions">
-          <button className="order-button" type="button" onClick={open} aria-label={`Otvori upit za porudžbinu. ${count} stavki`}>
+          <button className="order-button" type="button" onClick={open} aria-label={`Otvori upit za porudžbinu. ${itemsLabel(count)}`}>
             <span>Poruči</span>
             <span className="order-button__count" aria-hidden="true">{count}</span>
           </button>
@@ -154,12 +158,14 @@ export function Header() {
       inert={!menuOpen}
     >
       <div className="mobile-menu__inner shell">
-        <p className="eyebrow">Meni</p>
-        {navigation.map((item, index) => (
-          <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>
-            <span>{String(index + 1).padStart(2, "0")}</span>{item.label}
-          </a>
-        ))}
+        <p className="eyebrow" aria-hidden="true">Meni</p>
+        <nav className="mobile-menu__nav" aria-label="Meni">
+          {navigation.map((item, index) => (
+            <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>
+              <span>{String(index + 1).padStart(2, "0")}</span>{item.label}
+            </a>
+          ))}
+        </nav>
         <button type="button" className="button button--honey" onClick={() => { setMenuOpen(false); open(); }}>
           Započni upit
         </button>

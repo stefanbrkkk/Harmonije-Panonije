@@ -67,3 +67,55 @@ test("honey scene reaches a valid mid-state", async ({ page }) => {
   expect(Math.max(...state.chapter)).toBeGreaterThan(0.9);
   assertClean();
 });
+
+test("journey settles one chapter per position, forward and back", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/", { waitUntil: "networkidle" });
+  for (const [fraction, chapter] of [[0.1, 0], [0.62, 2], [0.95, 3], [0.38, 1]] as Array<[number, number]>) {
+    await page.evaluate((f) => {
+      const node = document.querySelector<HTMLElement>("#put-pcele")!;
+      window.scrollTo({ top: node.offsetTop + f * (node.offsetHeight - window.innerHeight), behavior: "instant" });
+    }, fraction);
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const section = document.querySelector<HTMLElement>("#put-pcele")!;
+            const active = [...section.querySelectorAll("[data-chapter]")].flatMap((n, i) => (n.classList.contains("is-active") ? [i] : []));
+            const plates = [...section.querySelectorAll("[data-plate]")].map((n) => parseFloat(getComputedStyle(n).opacity));
+            return JSON.stringify({ active, plate: plates.map((o) => (o > 0.98 ? 1 : o < 0.02 ? 0 : -1)) });
+          }),
+        { timeout: 5000, message: `chapter ${chapter + 1} at p=${fraction}` },
+      )
+      .toBe(JSON.stringify({ active: [chapter], plate: [0, 1, 2, 3].map((i) => (i === chapter ? 1 : 0)) }));
+  }
+  assertClean();
+});
+
+test("ingredient spread renders its plate, captions and index", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/", { waitUntil: "networkidle" });
+  const state = await page.evaluate(() => {
+    const section = document.querySelector<HTMLElement>("#sastojci")!;
+    // Deterministic jump to the anchor position (header + clearance).
+    const header = document.querySelector(".site-header")!.getBoundingClientRect().height;
+    window.scrollTo({ top: section.offsetTop - header - 6, behavior: "instant" });
+    const art = section.querySelector("svg.ingredients-plate__art")!.getBoundingClientRect();
+    const captions = [...section.querySelectorAll(".ingredients-base")].map((n) => n.getBoundingClientRect());
+    return {
+      art: art.width > 400 && art.height > 300,
+      captionsBelowArt: captions.every((r) => r.top >= art.bottom - 1),
+      captionsSideBySide: captions.length === 2 && captions[0].right <= captions[1].left + 1,
+      index: section.querySelectorAll(".ingredients-index li").length,
+      bottom: Math.max(...[...section.querySelectorAll(".ingredients-plate, .ingredients-index")].map((n) => n.getBoundingClientRect().bottom)),
+    };
+  });
+  expect(state.art).toBe(true);
+  expect(state.captionsBelowArt).toBe(true);
+  expect(state.captionsSideBySide).toBe(true);
+  expect(state.index).toBe(5);
+  expect(state.bottom).toBeLessThanOrEqual(900);
+  assertClean();
+});

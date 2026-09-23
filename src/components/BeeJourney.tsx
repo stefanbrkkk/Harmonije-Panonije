@@ -252,7 +252,6 @@ export function BeeJourney() {
       if (next === active) return;
       const previous = active;
       active = next;
-      section.dataset.chapter = String(next);
       chapters.forEach((node, i) => {
         node.classList.toggle("is-active", i === next);
         node.classList.toggle("is-before", i < next);
@@ -311,7 +310,6 @@ export function BeeJourney() {
       flight = 0;
       section.classList.remove("is-live");
       active = -1;
-      delete section.dataset.chapter;
       chapters.forEach((node) => {
         node.classList.remove("is-active", "is-before");
       });

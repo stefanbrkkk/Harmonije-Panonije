@@ -16,7 +16,7 @@ export function FinalCTA() {
         </div>
         <div className="final-cta__contacts">
           <a href={`tel:${contact.phoneHref}`}><span>Telefon</span><strong>{contact.phoneDisplay}</strong></a>
-          <a href={`mailto:${contact.email}`}><span>Email</span><strong>{contact.email}</strong></a>
+          <a href={`mailto:${contact.email}`}><span>Mejl</span><strong>{contact.email}</strong></a>
           <a href={contact.instagramUrl} target="_blank" rel="noreferrer"><span>Instagram</span><strong>{contact.instagramHandle}</strong></a>
         </div>
       </div>

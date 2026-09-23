@@ -185,7 +185,7 @@ export const products: Product[] = [
 ];
 
 export const delivery = {
-  title: "Od Novog Sada do vaše trpeze.",
+  title: "Od Novog\u00a0Sada do vaše trpeze.",
   visibleCopy: "Za dostavu i preuzimanje kontaktirajte nas — dogovorićemo najjednostavniju opciju.",
   legacyRule: [
     "Istorijski: besplatna dostava u Novom Sadu za dva ili više proizvoda.",
