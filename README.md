@@ -78,6 +78,8 @@ This is optional, but it makes canonical/structured-data URLs explicit before th
 
 Preview/local environments are configured not to invite search-engine indexing; production enables normal indexing.
 
+Indexing switches on automatically for the Vercel production deployment (`VERCEL_ENV=production`). On any other host, set both `NEXT_PUBLIC_SITE_URL` and `SITE_INDEXABLE=1` for the production build; without them the site stays `noindex` and canonical URLs fall back to localhost.
+
 ### Vercel CLI alternative
 
 ```bash

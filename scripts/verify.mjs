@@ -60,8 +60,16 @@ const navSource = fs.readFileSync(path.join(root, "src/data/siteContent.ts"), "u
 const pageSource = sourceFiles.filter((file) => file.endsWith(".tsx")).map((file) => fs.readFileSync(file, "utf8")).join("\n");
 const hrefTargets = [...navSource.matchAll(/href:\s*["']#([^"']+)["']/g)].map((match) => match[1]);
 const ids = new Set([...pageSource.matchAll(/id=["']([^"']+)["']/g)].map((match) => match[1]));
-for (const target of hrefTargets) {
-  if (!ids.has(target)) errors.push(`Navigation target #${target} has no matching static id.`);
+// Hard-coded in-page links in components (skip link, logo, CTAs) too.
+hrefTargets.push(...[...pageSource.matchAll(/href=["']#([^"']+)["']/g)].map((match) => match[1]));
+for (const target of new Set(hrefTargets)) {
+  if (!ids.has(target)) errors.push(`In-page link #${target} has no matching static id.`);
+}
+
+// Regex lookbehind is a parse-time SyntaxError before Safari 16.4: one
+// occurrence takes down every client chunk that imports the module.
+for (const file of sourceFiles.filter((name) => /\.(ts|tsx)$/.test(name) && name.includes(`${path.sep}src${path.sep}`))) {
+  if (/\(\?<[=!]/.test(fs.readFileSync(file, "utf8"))) errors.push(`Regex lookbehind in ${path.relative(root, file)} (breaks Safari < 16.4).`);
 }
 
 const productMatches = navSource.match(/legacy\(\{/g)?.length ?? 0;
@@ -106,6 +114,7 @@ const tripwires = [
   // HP-08/20: reduced motion keeps all chapters; base state reads without JS.
   ["reduced chapters kept", !css.includes("chapter--c { display: none")],
   ["is-live chapter gating", css.includes(".honey-harvest.is-live .honey-harvest__chapter")],
+  ["honey static fallback without JS", /@media \(scripting: none\), \(prefers-reduced-motion: reduce\) \{\s*\.honey-harvest \{ height: auto/.test(css)],
   // Journey static fallback: no-JS and reduced motion get one complete frame.
   ["journey static fallback", css.includes("@media (scripting: none), (prefers-reduced-motion: reduce)") && css.includes('.journey:not(.is-live) .journey__plate[data-plate="3"]')],
   // HP-08: static bee poses for no-JS first paint.

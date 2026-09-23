@@ -2,11 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { contact } from "@/src/data/siteContent";
-import { useCart } from "./CartProvider";
+import { MAX_QUANTITY, useCart } from "./CartProvider";
 import { ProductVisual } from "./ProductVisual";
 import { restoreFocus } from "@/src/lib/focus";
 import { useOverlayIsolation } from "@/src/lib/overlay";
+import { productLabel } from "@/src/lib/plural";
 import { bindSeparators } from "@/src/lib/typography";
+
+// Conservative ceiling for mailto URLs across desktop mail handlers.
+const MAILTO_LIMIT = 1900;
 
 export function OrderDrawer() {
   const { items, count, isOpen, close, add, decrement, remove, clear } = useCart();
@@ -26,10 +30,10 @@ export function OrderDrawer() {
       "",
       name ? `Ime: ${name}` : "",
       phone ? `Telefon: ${phone}` : "",
-      name || phone ? "" : "",
+      "",
       "Zanima me dostupnost sledećih proizvoda:",
       ...(lines.length ? lines : ["- Želeo/la bih preporuku proizvoda."]),
-      note ? "" : "",
+      "",
       note ? `Napomena: ${note}` : "",
       "",
       "Molim Vas javite aktuelne cene, dostupnost i opciju dostave/preuzimanja.",
@@ -38,10 +42,13 @@ export function OrderDrawer() {
     ].filter((line, index, all) => !(line === "" && all[index - 1] === "")).join("\n");
   }, [items, name, phone, note]);
 
-  const mailto = useMemo(
-    () => `mailto:${contact.email}?subject=${encodeURIComponent("Upit za porudžbinu — Harmonije Panonije")}&body=${encodeURIComponent(message)}`,
-    [message],
-  );
+  // RFC 6068 line breaks. Mail handlers (notably on Windows/Outlook)
+  // truncate or refuse very long mailto URLs: past a safe length the body
+  // is left out and the visitor is pointed to "Kopiraj tekst upita".
+  const mailtoBase = `mailto:${contact.email}?subject=${encodeURIComponent("Upit za porudžbinu — Harmonije Panonije")}`;
+  const mailtoFull = `${mailtoBase}&body=${encodeURIComponent(message.replace(/\n/g, "\r\n"))}`;
+  const mailtoTooLong = mailtoFull.length > MAILTO_LIMIT;
+  const mailto = mailtoTooLong ? mailtoBase : mailtoFull;
 
   // Declared before the scroll/focus effect so inertness lifts before focus
   // is restored on close. The whole header goes inert for the drawer.
@@ -138,21 +145,38 @@ export function OrderDrawer() {
       if (dialog && !dialog.contains(document.activeElement)) closeRef.current?.focus();
     });
 
+  // Legacy copy path for in-app browsers, iframes and denied permissions.
+  // Mounted inside the dialog so the focus trap and inert background do
+  // not block the selection.
+  const legacyCopy = () => {
+    const field = document.createElement("textarea");
+    field.value = message;
+    field.setAttribute("readonly", "");
+    field.style.position = "fixed";
+    field.style.top = "0";
+    field.style.opacity = "0";
+    const host = dialogRef.current ?? document.body;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    host.appendChild(field);
+    field.focus({ preventScroll: true });
+    field.setSelectionRange(0, message.length);
+    let copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } finally {
+      field.remove();
+      previousFocus?.focus({ preventScroll: true });
+    }
+    if (!copied) throw new Error("Copy command failed");
+  };
+
   const copyMessage = async () => {
     try {
-      if (navigator.clipboard?.writeText) {
+      try {
+        if (!navigator.clipboard?.writeText) throw new Error("Clipboard API unavailable");
         await navigator.clipboard.writeText(message);
-      } else {
-        const field = document.createElement("textarea");
-        field.value = message;
-        field.setAttribute("readonly", "");
-        field.style.position = "fixed";
-        field.style.opacity = "0";
-        document.body.appendChild(field);
-        field.select();
-        const copied = document.execCommand("copy");
-        field.remove();
-        if (!copied) throw new Error("Copy command failed");
+      } catch {
+        legacyCopy();
       }
       setCopyState("copied");
       setCopyForMessage(message);
@@ -212,13 +236,13 @@ export function OrderDrawer() {
                     <div className="order-item__info">
                       <span>{item.product.volume}</span>
                       <h3>{bindSeparators(item.product.name)}</h3>
-                      <div className="order-item__controls" role="group" aria-label={`Količina za ${item.product.name}`}>
-                        <button type="button" onClick={() => { decrement(item.product.id); rescueFocus(); }} aria-label={`Smanji količinu za ${item.product.name}`}>−</button>
+                      <div className="order-item__controls" role="group" aria-label={`Količina za ${productLabel(item.product)}`}>
+                        <button type="button" onClick={() => { decrement(item.product.id); rescueFocus(); }} aria-label={`Smanji količinu za ${productLabel(item.product)}`}>−</button>
                         <span aria-live="polite">{item.quantity}</span>
-                        <button type="button" onClick={() => add(item.product, { notify: false })} aria-label={`Povećaj količinu za ${item.product.name}`}>+</button>
+                        <button type="button" onClick={() => add(item.product, { notify: false })} disabled={item.quantity >= MAX_QUANTITY} aria-label={`Povećaj količinu za ${productLabel(item.product)}`}>+</button>
                       </div>
                     </div>
-                    <button type="button" className="order-item__remove" onClick={() => { remove(item.product.id); rescueFocus(); }} aria-label={`Ukloni ${item.product.name}`}>×</button>
+                    <button type="button" className="order-item__remove" onClick={() => { remove(item.product.id); rescueFocus(); }} aria-label={`Ukloni ${productLabel(item.product)}`}>×</button>
                   </article>
                 ))}
               </div>
@@ -240,6 +264,9 @@ export function OrderDrawer() {
         <div className="order-drawer__foot">
           <div className="order-drawer__summary"><span>Ukupno izabranih komada</span><strong>{count}</strong></div>
           <a className="button button--honey button--full" href={mailto}>Otvori pripremljen mejl</a>
+          {mailtoTooLong && (
+            <p className="order-drawer__notice">Upit je predugačak za automatsko popunjavanje mejla — kopirajte tekst upita i nalepite ga u poruku.</p>
+          )}
           <div className="order-drawer__alternatives">
             <button type="button" className="text-link" onClick={copyMessage}>{shownCopyState === "copied" ? "Upit kopiran ✓" : shownCopyState === "failed" ? "Kopiranje nije uspelo" : "Kopiraj tekst upita"}<span aria-hidden="true">↗</span></button>
             <a className="text-link" href={`tel:${contact.phoneHref}`}>Pozovi {contact.phoneDisplay}<span aria-hidden="true">↗</span></a>

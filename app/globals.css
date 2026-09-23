@@ -122,6 +122,9 @@ button { color: inherit; }
   font-weight: 760;
   color: inherit;
 }
+/* Sections focused programmatically (menu navigation) show no ring: the
+   focus only sets the reading position for the next Tab. */
+section[tabindex="-1"]:focus { outline: none; }
 /* Fixed-header clearance for anchor navigation. */
 section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-clearance)); }
 /* Keyboard focus scrolling keeps controls clear of the fixed header. */
@@ -152,7 +155,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   transition: background-color .45s ease, color .35s ease, box-shadow .45s ease;
 }
 .site-header::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: rgba(255,255,255,.1); transition: background-color .45s ease; }
-.site-header--scrolled { color: var(--ink); background: rgba(243,237,223,.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 8px 30px rgba(19,45,37,.08); }
+.site-header--scrolled { color: var(--ink); background: rgba(243,237,223,.92); backdrop-filter: blur(12px); box-shadow: 0 8px 30px rgba(19,45,37,.08); }
 .site-header--scrolled::after { background: rgba(28,47,40,.12); }
 .site-header__inner { height: var(--header-height); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
 .site-header__logo { justify-self: start; }
@@ -370,6 +373,10 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .journey.is-live .journey__plate { opacity: 0; transform: translateY(22px); transition: opacity .35s ease, transform .8s cubic-bezier(.2,.75,.15,1); }
 .journey.is-live .journey__plate.is-before { transform: translateY(-22px); }
 .journey.is-live .journey__plate.is-active { opacity: 1; transform: none; transition: opacity .75s ease .2s, transform 1.05s cubic-bezier(.2,.75,.15,1) .12s; }
+/* A chapter skipped by a jump changes side instantly (see setActive). */
+.journey.is-live .is-snap,
+.journey.is-live .is-snap .journey__word > span,
+.journey.is-live .is-snap .journey__lead { transition: none !important; }
 
 /* Portrait (phones, tablets): the plate leads, the word anchors below it. */
 @media (orientation: portrait) {
@@ -390,7 +397,8 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .journey__frame { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
   .journey__index { padding-top: 14px; }
   .journey__index li::before { top: -19px; }
-  .journey__index strong { font-size: .92rem; }
+  .journey__index strong { font-size: min(.92rem, 3.9vw); }
+  .journey__index span { font-size: min(.62rem, 2.6vw); }
   .journey__index em { display: none; }
 }
 /* Short landscape (phones on their side, very short windows). */
@@ -442,6 +450,12 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .catalog-panel__intro h3 { margin: 0; max-width: 420px; text-wrap: balance; font-family: var(--serif); font-size: clamp(2rem,3.4vw,3.8rem); font-weight: 400; line-height: .95; letter-spacing: -.04em; }
 .catalog-panel__intro > p:last-child { margin: 3px 0 0; color: var(--muted); line-height: 1.68; font-size: .86rem; max-width: 500px; justify-self: end; }
 .catalog-count { margin: 0 0 18px; color: var(--muted); font-size: .68rem; font-weight: 700; letter-spacing: .04em; }
+/* Same query, other categories: quiet inline switches that keep the query. */
+.catalog-elsewhere { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: inherit; gap: 6px 14px; margin: -8px 0 18px; color: var(--muted); font-size: .72rem; }
+.catalog-empty .catalog-elsewhere { justify-content: center; margin: 12px 0 22px; font-size: .8rem; }
+.catalog-elsewhere__link { border: 0; border-bottom: 1px solid rgba(28,47,40,.3); padding: 0 0 2px; background: none; color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+.catalog-elsewhere__link span { color: var(--muted); font-weight: 400; }
+.catalog-elsewhere__link:hover { border-bottom-color: var(--ink); }
 .product-grid { display: grid; grid-template-columns: repeat(12,1fr); gap: 18px; }
 /* The panel owns layout shifts from expand/collapse/filter: opting the whole
    panel out of scroll anchoring keeps the viewport stable instead of chasing
@@ -732,7 +746,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 /* Drawer */
 .drawer-backdrop { position:fixed;z-index:94;inset:0;border:0;background:rgba(5,18,14,.58);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s ease, visibility 0s linear .3s; visibility: hidden; }
 .drawer-backdrop.is-open { opacity:1;pointer-events:auto; transition:opacity .3s ease; visibility: visible; }
-.order-drawer { position:fixed;z-index:95;top:0;right:0;width:min(520px,100vw);height:100dvh;display:grid;grid-template-rows:auto 1fr auto;background:var(--paper);transform:translateX(101%);transition:transform .42s cubic-bezier(.22,.8,.24,1), visibility 0s linear .42s;visibility:hidden;box-shadow:-30px 0 80px rgba(7,22,17,.25); }
+.order-drawer { position:fixed;z-index:95;top:0;right:0;width:min(520px,100%);height:100dvh;display:grid;grid-template-rows:auto 1fr auto;background:var(--paper);transform:translateX(101%);transition:transform .42s cubic-bezier(.22,.8,.24,1), visibility 0s linear .42s;visibility:hidden;box-shadow:-30px 0 80px rgba(7,22,17,.25); }
 .order-drawer.is-open { transform:translateX(0); transition:transform .42s cubic-bezier(.22,.8,.24,1); visibility: visible; }
 .order-drawer__head { min-height:105px;display:flex;align-items:center;justify-content:space-between;padding:24px 26px;border-bottom:1px solid var(--line); }
 .order-drawer__head .eyebrow { margin-bottom:6px; }
@@ -757,6 +771,8 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .order-drawer__summary { display:flex;justify-content:space-between;margin-bottom:14px;color:var(--muted);font-size:.72rem; }.order-drawer__summary strong{color:var(--ink)}
 .order-drawer__foot .text-link { margin-top:17px; }
 .order-drawer__foot > p { margin:15px 0 0;color:var(--muted);font-size:.61rem;line-height:1.5; }
+.order-drawer__foot > p.order-drawer__notice { margin:10px 0 0;color:var(--ink);font-size:.7rem; }
+.order-item__controls button:disabled { opacity:.35; cursor:not-allowed; }
 .mobile-order-bar { display:none; }
 
 /* Responsive */
@@ -808,7 +824,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .story-layout { grid-template-columns:1fr; }
   .story-copy__paragraphs { grid-template-columns:1fr 1fr; }
   .story-art { min-height:720px; }
-  .delivery-layout { grid-template-columns:1fr; }
+  .delivery-layout { grid-template-columns:minmax(0,1fr); }
   .delivery-map { min-height:520px; }
   .proof-layout { grid-template-columns:1fr;row-gap:48px; }
   .proof-quotes { grid-template-columns:1fr 1fr; }
@@ -839,8 +855,14 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .product-section { padding-bottom:90px; }
   .catalog-tabs { margin-top:46px;margin-inline:-14px;padding-left:14px; }
   .catalog-tabs button { min-height:66px;font-size:.95rem; }
+  /* All four categories stay visible: a 2×2 grid instead of a strip that
+     silently scrolls its last tab off-screen. */
+  #proizvodi .catalog-toolbar .catalog-tabs { overflow-x:visible;grid-template-columns:repeat(2,minmax(0,1fr));margin-inline:0;padding-left:0; }
+  .catalog-toolbar .catalog-tabs button { min-height:58px; }
+  .catalog-toolbar .catalog-tabs button:nth-child(2n) { border-right:0; }
+  .catalog-toolbar .catalog-tabs button:nth-child(-n+2) { border-bottom:1px solid var(--line); }
   .catalog-panel { padding-top:42px; }
-  .product-grid { grid-template-columns:1fr;gap:14px; }
+  .product-grid { grid-template-columns:1fr;gap:14px;container-type:inline-size; }
   .product-card,.product-card:nth-child(n) { min-height:auto;grid-template-columns:39% 61%;grid-template-rows:auto; }
   .product-card__visual { border-bottom:0;border-right:1px solid rgba(28,47,40,.1); }
   .product-card__body { padding:20px 18px; }
@@ -854,7 +876,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .story-art { min-height:560px; }
   .story-art__note { grid-template-columns:1fr;gap:7px; }
   .delivery-section { padding:90px 0; }
-  .delivery-copy h2 { font-size:clamp(3.5rem,14vw,5.2rem); }
+  .delivery-copy h2 { font-size:min(clamp(3.5rem,14vw,5.2rem),14.5vw); }
   .delivery-actions { align-items:flex-start;flex-direction:column;gap:20px; }
   .delivery-map { min-height:410px; }
   .delivery-map svg { inset:8% 3% auto;width:94%;height:72%; }
@@ -869,6 +891,11 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .final-cta__contacts { margin-top:62px; }
   .site-footer { padding-bottom:92px; }
   .site-footer__bottom { grid-template-columns:1fr; }.site-footer__bottom div{grid-column:auto;grid-row:auto;flex-wrap:wrap}.site-footer__bottom span,.site-footer__bottom>a:last-child{grid-row:auto;justify-self:start}
+  /* The fixed order bar covers the bottom 70px: scroll-padding shrinks the
+     viewport's "visible" region, so keyboard focus that lands behind the
+     bar scrolls the control clear of it (scroll-margin alone only applies
+     when the browser decides to scroll at all). */
+  html { scroll-padding-bottom: 84px; }
   :is(a, button, input, textarea, summary):focus-visible { scroll-margin-bottom: 92px; }
   .mobile-order-bar { position:fixed;z-index:70;left:14px;right:14px;bottom:14px;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 9px 0 21px;border:1px solid rgba(239,201,110,.35);border-radius:999px;background:rgba(15,40,33,.94);backdrop-filter:blur(14px);color:var(--white);box-shadow:0 16px 40px rgba(5,20,15,.24);font-size:.78rem;font-weight:800;cursor:pointer; }
   .mobile-order-bar i { min-width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:var(--honey);color:var(--forest);font-style:normal; }
@@ -1260,7 +1287,9 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .story-signature > div,
   .story-signature > div:not(:first-child) { padding: 12px 0; border-right: 0; border-bottom: 1px solid var(--line); }
   .story-signature > div:last-child { border-bottom: 0; }
-  .honey-harvest__chapter { width: min(480px, 48vw); }
+  /* The copy measure ends before the scene column (43% of the viewport,
+     minus the shell gutter) so headings never run into the flower. */
+  .honey-harvest__chapter { width: min(480px, calc(43vw - 44px)); }
   .honey-harvest__scene { left: 43%; }
 }
 
@@ -1346,8 +1375,8 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .honey-harvest__sticky { min-height: 0; }
   /* Short viewports: desktop translate:-50% centering would push the copy
      behind the fixed header — top-align below the header instead. */
-  .honey-harvest__chapter { top: calc(var(--header-height) + 10px); translate: none; width: min(480px, 52vw); }
-  .honey-harvest__chapter h2 { font-size: clamp(2.2rem, 7vw, 3.4rem); }
+  .honey-harvest__chapter { top: calc(var(--header-height) + 10px); translate: none; width: min(480px, calc(43vw - 30px)); }
+  .honey-harvest__chapter h2 { font-size: clamp(2rem, 5.6vw, 3rem); }
   .honey-harvest__chapter > p:last-child { margin-top: 12px; font-size: .72rem; }
 }
 
@@ -1357,6 +1386,12 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .hero-art__ingredient,
   .hero-art__halo,
   .hero-bottle__glass::after { animation: none !important; }
+}
+
+/* Honey sequence without its scroll driver (no JavaScript, or reduced
+   motion): the three chapters stack as one readable static layout instead
+   of overlapping in the pinned frame. */
+@media (scripting: none), (prefers-reduced-motion: reduce) {
   .honey-harvest { height: auto; min-height: 0; padding: 100px 0 80px; }
   .honey-harvest__sticky { position: relative; height: auto; min-height: 0; }
   .honey-harvest__copy { height: auto; }
@@ -1389,11 +1424,9 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   translate: 0 0;
   scale: 1;
 }
-/* Single fast catalog transition (250-450ms). Container fades once;
-   only newly inserted cards stagger. */
-.product-grid.catalog-enter { animation: catalogEnter .32s cubic-bezier(.22,.8,.24,1) both; }
+/* Single fast catalog transition (250-450ms): only newly inserted cards
+   stagger in. */
 .product-card--new { animation: catalogCardEnter .34s cubic-bezier(.22,.8,.24,1) both; }
-@keyframes catalogEnter { from { opacity:.4; translate:0 10px; } to { opacity:1; translate:0 0; } }
 @keyframes catalogCardEnter { from { opacity: 0; translate: 0 12px; } to { opacity: 1; translate: 0 0; } }
 .product-grid { animation: none; }
 
@@ -1403,7 +1436,7 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   z-index: 86;
   right: 22px;
   bottom: 22px;
-  width: min(420px, calc(100vw - 44px));
+  width: min(420px, calc(100% - 44px));
   min-height: 76px;
   display: grid;
   grid-template-columns: 38px minmax(0,1fr) auto 24px;
@@ -1439,7 +1472,16 @@ body.has-overlay .page-bee { opacity: 0 !important; }
 @media (prefers-reduced-motion: reduce) {
   .motion-ready .reveal-target,
   .motion-ready .reveal-target.is-inview { opacity:1;translate:none;scale:none;transition:none; }
-  .product-grid.catalog-enter, .product-card--new { animation:none; }
+  .product-card--new { animation:none; }
+}
+
+/* Enlarged text on phones: once the grid is narrower than ~18em (text at
+   roughly 125% and up), the side-by-side card leaves the body column too
+   narrow for names and labels — stack the art above the copy instead. */
+@container (max-width: 18em) {
+  .product-card,.product-card:nth-child(n) { grid-template-columns:minmax(0,1fr);grid-template-rows:200px auto; }
+  .product-card .product-card__visual { border-right:0;border-bottom:1px solid rgba(28,47,40,.1); }
+  .product-card h4 { overflow-wrap:break-word;hyphens:auto; }
 }
 
 /* Keyboard entry point */

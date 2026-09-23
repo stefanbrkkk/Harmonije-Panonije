@@ -56,11 +56,17 @@ test("axe clean with menu and drawer open at 320px", async ({ page }) => {
   await page.keyboard.press("Escape");
   await page.locator(".order-button").first().click();
   await expect(page.locator(".order-drawer")).toHaveClass(/is-open/);
+  // Slide-in finished, and the panel fits the viewport exactly (a 100vw
+  // width overflowed by the reserved scrollbar gutter at narrow widths).
   await page.waitForFunction(() => {
     const drawer = document.querySelector<HTMLElement>(".order-drawer")!;
-    const rect = drawer.getBoundingClientRect();
-    return Math.abs(rect.right - window.innerWidth) < 1;
+    return drawer.getAnimations().length === 0 && getComputedStyle(drawer).transform === "matrix(1, 0, 0, 1, 0, 0)";
   });
+  const fit = await page.locator(".order-drawer").evaluate((drawer) => {
+    const rect = drawer.getBoundingClientRect();
+    return { left: rect.left, width: rect.width };
+  });
+  expect(fit.left, "drawer starts inside the viewport").toBeGreaterThanOrEqual(-0.5);
   results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
   expect(results.violations).toEqual([]);
   assertClean();
@@ -93,6 +99,35 @@ test("keyboard-only journey reaches catalog and inquiry", async ({ page }) => {
   expect(box.top, "focused control clears the fixed header").toBeGreaterThanOrEqual(box.header);
   await page.keyboard.press("Enter");
   await expect(page.locator(".order-button__count")).toHaveText("1");
-  await expect(page.locator(".order-button")).toHaveAttribute("aria-label", /1 stavka$/);
+  await expect(page.locator(".order-button")).toHaveAttribute("aria-label", /1 komad$/);
+  assertClean();
+});
+
+test("phone: keyboard focus never hides behind the fixed order bar", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/#proizvodi", { waitUntil: "networkidle" });
+  await page.locator(".catalog-search input").focus();
+  const bar = await page.locator(".mobile-order-bar").boundingBox();
+  expect(bar).not.toBeNull();
+  let checked = 0;
+  for (let i = 0; i < 40 && checked < 6; i += 1) {
+    await page.keyboard.press("Tab");
+    const box = await page.evaluate(() => {
+      const node = document.activeElement as HTMLElement | null;
+      if (!node?.matches(".product-card__add")) return null;
+      const rect = node.getBoundingClientRect();
+      return { top: rect.top, bottom: rect.bottom };
+    });
+    if (!box) continue;
+    checked += 1;
+    // Focus scrolling may be smooth: wait for it to settle.
+    await expect
+      .poll(() => page.evaluate(() => (document.activeElement as HTMLElement).getBoundingClientRect().bottom), {
+        message: "focused add button clears the order bar",
+      })
+      .toBeLessThanOrEqual(bar!.y);
+  }
+  expect(checked).toBeGreaterThan(3);
   assertClean();
 });

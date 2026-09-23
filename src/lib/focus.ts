@@ -16,7 +16,9 @@ export function isVisibleTarget(node: HTMLElement | null): node is HTMLElement {
 export function restoreFocus(candidates: Array<HTMLElement | null>) {
   for (const candidate of candidates) {
     if (isVisibleTarget(candidate)) {
-      candidate.focus();
+      // Never scroll: a fallback target (catalog heading, logo) may be far
+      // from where the visitor is reading.
+      candidate.focus({ preventScroll: true });
       return true;
     }
   }

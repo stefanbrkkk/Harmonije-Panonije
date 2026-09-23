@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { getSiteUrl } from "@/src/lib/siteUrl";
+import { getSiteUrl, isIndexable } from "@/src/lib/siteUrl";
 import "./globals.css";
 
 const description = "Ručno pravljeni Immuno Craft proizvodi iz Novog Sada — sirupi, sokovi i busteri sa livadskim medom, ceđenim limunom, voćem i biljem.";
 const siteUrl = getSiteUrl();
 // Indexing policy depends ONLY on the deployment environment (HP-24):
-// previews stay noindex/disallow even when NEXT_PUBLIC_SITE_URL is set.
+// previews stay noindex/disallow even when NEXT_PUBLIC_SITE_URL is set;
+// hosts other than Vercel opt in with SITE_INDEXABLE=1.
 // The site URL variable only controls canonical/OG URL wording.
-const shouldIndex = process.env.VERCEL_ENV === "production";
+const shouldIndex = isIndexable();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

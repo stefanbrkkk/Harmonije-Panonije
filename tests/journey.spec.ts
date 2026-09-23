@@ -118,6 +118,69 @@ test("reverse, jumps and interrupted flights settle on the mapped chapter", asyn
   assertClean();
 });
 
+test("jumps and sweeps never flash the skipped chapters' words", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/", { waitUntil: "networkidle" });
+  const to = (fraction: number) =>
+    page.evaluate((f) => {
+      const section = document.querySelector<HTMLElement>("#put-pcele")!;
+      window.scrollTo({ top: section.offsetTop + f * (section.offsetHeight - window.innerHeight), behavior: "instant" });
+    }, fraction);
+  // Per frame, how much of each word's slot its glyphs cover.
+  const record = () =>
+    page.evaluate(() => {
+      const w = window as unknown as { wordPeak: number[]; wordDone: boolean; crowded: number };
+      w.wordPeak = [0, 0, 0, 0];
+      w.wordDone = false;
+      w.crowded = 0;
+      const words = [...document.querySelectorAll<HTMLElement>("#put-pcele .journey__word")];
+      const start = performance.now();
+      const tick = () => {
+        let inSlot = 0;
+        words.forEach((word, i) => {
+          const slot = word.getBoundingClientRect();
+          const glyphs = word.firstElementChild!.getBoundingClientRect();
+          const cover = Math.max(0, Math.min(slot.bottom, glyphs.bottom) - Math.max(slot.top, glyphs.top)) / slot.height;
+          w.wordPeak[i] = Math.max(w.wordPeak[i], cover);
+          if (cover > 0.3) inSlot += 1;
+        });
+        if (inSlot > 1) w.crowded += 1;
+        if (performance.now() - start < 2400) requestAnimationFrame(tick);
+        else w.wordDone = true;
+      };
+      requestAnimationFrame(tick);
+    });
+  const peaks = async () => {
+    await page.waitForFunction(() => (window as unknown as { wordDone: boolean }).wordDone);
+    return page.evaluate(() => (window as unknown as { wordPeak: number[] }).wordPeak);
+  };
+
+  // Instant jump across two chapters, forward and back.
+  await to(0.02);
+  await expectChapter(page, 0, "start at Priroda");
+  await record();
+  await to(0.9);
+  expect((await peaks()).slice(1, 3), "Sastojci/Craft stay out of the slot on 0→3").toEqual([0, 0]);
+  await record();
+  await to(0.02);
+  expect((await peaks()).slice(1, 3), "Sastojci/Craft stay out of the slot on 3→0").toEqual([0, 0]);
+
+  // Scrollbar-drag sweep: many instant steps, one per frame.
+  await expectChapter(page, 0, "back at Priroda");
+  await record();
+  for (let i = 1; i <= 30; i += 1) {
+    await to(i / 30);
+    await page.waitForTimeout(16);
+  }
+  // Chapters active for a moment may show their word; two words may never
+  // share the slot (the stacked, unreadable type of a flash-through).
+  await peaks();
+  expect(await page.evaluate(() => (window as unknown as { crowded: number }).crowded), "frames with two words in the slot").toBe(0);
+  await expectChapter(page, 3, "sweep settles on Panonija");
+  assertClean();
+});
+
 test("hysteresis: boundary jitter never toggles chapters", async ({ page }) => {
   const assertClean = trackErrors(page);
   await page.setViewportSize({ width: 1440, height: 900 });

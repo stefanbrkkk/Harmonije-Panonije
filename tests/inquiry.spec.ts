@@ -110,6 +110,8 @@ test("inquiry draft: fields, mailto inspection, clipboard stubs", async ({ page 
   expect(mailto?.startsWith("mailto:")).toBe(true);
   expect(decodeURIComponent(mailto ?? "")).toContain("Test Ime");
   expect(decodeURIComponent(mailto ?? "")).toContain("060123456");
+  expect(mailto, "RFC 6068 line breaks").toContain("%0D%0A");
+  await expect(page.locator(".order-drawer__notice")).toHaveCount(0);
   // Clipboard success stub (simulated: never sends anything).
   await page.evaluate(() => {
     Object.defineProperty(navigator, "clipboard", {
@@ -141,12 +143,64 @@ test("inquiry draft: fields, mailto inspection, clipboard stubs", async ({ page 
       configurable: true,
     });
   });
+  // A rejected Clipboard API (in-app browsers, denied permission) falls
+  // back to the legacy copy command, which carries the whole draft.
+  await page.evaluate(() => {
+    const w = window as unknown as { copied?: string };
+    document.execCommand = ((command: string) => {
+      if (command !== "copy") return false;
+      const field = document.activeElement as HTMLTextAreaElement | null;
+      w.copied = field?.value.slice(field.selectionStart, field.selectionEnd);
+      return true;
+    }) as typeof document.execCommand;
+  });
   await page.locator('.order-contact-form input[autocomplete="name"]').fill("Test Ime 2");
+  await page.locator(".order-drawer__alternatives button.text-link").click();
+  await expect(page.locator(".order-drawer__alternatives button.text-link")).toContainText(/kopiran/i);
+  expect(await page.evaluate(() => (window as unknown as { copied?: string }).copied)).toContain("Test Ime 2");
+  await expect(page.locator(".order-drawer__alternatives button.text-link"), "focus returns after the legacy copy").toBeFocused();
+  // Both paths failing reports the failure.
+  await page.evaluate(() => {
+    document.execCommand = (() => false) as typeof document.execCommand;
+  });
+  await page.locator('.order-contact-form input[autocomplete="name"]').fill("Test Ime 5");
   await page.locator(".order-drawer__alternatives button.text-link").click();
   await expect(page.locator(".order-drawer__alternatives button.text-link")).toContainText(/nije uspelo/i);
   // Selectable fallback carries the draft.
   const draft = await page.locator(".order-draft textarea").inputValue();
   expect(draft).toMatch(/^Dobar dan/);
+  assertClean();
+});
+
+test("an over-long inquiry opens a bare mail and asks to paste the copied text", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.locator("#proizvodi").scrollIntoViewIfNeeded();
+  for (const tab of ["#tab-sirupi", "#tab-djumbir", "#tab-sokovi"]) {
+    await page.locator(tab).click();
+    if (await page.locator(".catalog-more button").count()) await page.locator(".catalog-more button").click();
+    const adds = page.locator(".product-card__add");
+    for (let i = 0; i < (await adds.count()); i += 1) await adds.nth(i).click();
+  }
+  await page.locator(".order-button").first().click();
+  await page.locator(".order-contact-form__full textarea").first().fill("Pitanje o ukusu, dostavi i preuzimanju. ".repeat(12));
+  const mailto = (await page.locator(".order-drawer__foot a.button").getAttribute("href")) ?? "";
+  expect(mailto.length, "stays under the mail-handler limit").toBeLessThanOrEqual(1900);
+  expect(mailto).not.toContain("body=");
+  await expect(page.locator(".order-drawer__notice")).toBeVisible();
+  assertClean();
+});
+
+test("the quantity cap disables + and adds nothing more", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.locator("#proizvodi").scrollIntoViewIfNeeded();
+  await page.locator(".product-card__add").first().click();
+  await page.locator(".order-button").first().click();
+  const plus = page.locator(".order-item__controls button").last();
+  for (let i = 1; i < 99; i += 1) await plus.click();
+  await expect(page.locator(".order-drawer__summary strong")).toHaveText("99");
+  await expect(plus).toBeDisabled();
   assertClean();
 });
 

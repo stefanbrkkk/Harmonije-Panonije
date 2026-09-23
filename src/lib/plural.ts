@@ -10,9 +10,12 @@ export function pluralSr(count: number, one: string, few: string, many: string) 
   return many;
 }
 
-/** "1 stavka", "3 stavke", "12 stavki". */
-export const itemsLabel = (count: number) => `${count} ${pluralSr(count, "stavka", "stavke", "stavki")}`;
+/** Cart counts are pieces (sum of quantities): "1 komad", "3 komada". */
+export const itemsLabel = (count: number) => `${count} ${pluralSr(count, "komad", "komada", "komada")}`;
 
-/** "1 izabrana stavka", "3 izabrane stavke", "12 izabranih stavki". */
+/** "1 izabran komad", "3 izabrana komada", "12 izabranih komada". */
 export const selectedItemsLabel = (count: number) =>
-  `${count} ${pluralSr(count, "izabrana stavka", "izabrane stavke", "izabranih stavki")}`;
+  `${count} ${pluralSr(count, "izabran komad", "izabrana komada", "izabranih komada")}`;
+
+/** Product name as announced: syrups and juices share some names. */
+export const productLabel = (product: { name: string; volume: string }) => `${product.name} (${product.volume})`;

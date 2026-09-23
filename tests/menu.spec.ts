@@ -46,6 +46,22 @@ test("Tab wraps across panel and close toggle", async ({ page }) => {
   assertClean();
 });
 
+test("choosing a menu link continues focus at its destination", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await openMenu(page);
+  await page.locator("#mobile-menu a", { hasText: "Sastojci" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#mobile-menu")).not.toHaveClass(/mobile-menu--open/);
+  await expect(page.locator("#sastojci"), "focus moves to the chosen section").toBeFocused();
+  await expect(page.locator("#sastojci h2")).toBeInViewport();
+  // The next Tab continues inside that section, not back at the header.
+  await page.keyboard.press("Tab");
+  const inside = await page.evaluate(() => document.querySelector("#sastojci")!.contains(document.activeElement) ||
+    document.querySelector("#sastojci")!.compareDocumentPosition(document.activeElement!) & Node.DOCUMENT_POSITION_FOLLOWING);
+  expect(Boolean(inside), "next Tab moves forward from the section").toBe(true);
+  assertClean();
+});
+
 test("background is inert while open, restored after close", async ({ page }) => {
   const assertClean = trackErrors(page);
   await openMenu(page);

@@ -54,6 +54,8 @@ const PERCHES: Array<[number, number, 1 | -1]> = [
 ];
 
 const FLIGHT_MS = 1150;
+// A chapter active for less than this was only swept past, not read.
+const PASS_THROUGH_MS = 450;
 
 function chapterFor(progress: number, current: number) {
   let next = 0;
@@ -220,6 +222,8 @@ export function BeeJourney() {
     const indexItems = Array.from(section.querySelectorAll<HTMLElement>("[data-index]"));
 
     let active = -1;
+
+    let activeSince = -Infinity;
     let beeX = PERCHES[0][0];
     let beeY = PERCHES[0][1];
     let flight = 0;
@@ -244,14 +248,32 @@ export function BeeJourney() {
       if (next === active) return;
       const previous = active;
       active = next;
-      chapters.forEach((node, i) => {
+      // Skipped chapters (a jump across several) change side without
+      // travelling: animated, their words would slide through the visible
+      // slot on the way and stack over the arriving word. The same holds for
+      // a chapter that was only passed through (a fast sweep or scrollbar
+      // drag): its word had not arrived yet, so it leaves without a trip.
+      const now = performance.now();
+      const passedThrough = now - activeSince < PASS_THROUGH_MS;
+      activeSince = now;
+      const skipped = (i: number) => i !== next && (i !== previous || passedThrough);
+      const snapped: Element[] = [];
+      const place = (node: Element, i: number) => {
+        const before = i < next;
+        if (skipped(i) && node.classList.contains("is-before") !== before) {
+          node.classList.add("is-snap");
+          snapped.push(node);
+        }
         node.classList.toggle("is-active", i === next);
-        node.classList.toggle("is-before", i < next);
-      });
-      plates.forEach((node, i) => {
-        node.classList.toggle("is-active", i === next);
-        node.classList.toggle("is-before", i < next);
-      });
+        node.classList.toggle("is-before", before);
+      };
+      chapters.forEach(place);
+      plates.forEach(place);
+      if (snapped.length) {
+        // Commit the untransitioned position, then restore transitions.
+        void (snapped[0] as HTMLElement | SVGElement).getBoundingClientRect();
+        requestAnimationFrame(() => snapped.forEach((node) => node.classList.remove("is-snap")));
+      }
       indexItems.forEach((node, i) => {
         node.classList.toggle("is-active", i === next);
         node.classList.toggle("is-done", i < next);

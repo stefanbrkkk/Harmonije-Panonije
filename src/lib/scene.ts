@@ -39,6 +39,11 @@ export type SceneLoopHandlers = {
   advance: (current: number, target: number, blend: number) => number;
   /** One-shot static composition for reduced motion. */
   paintStatic: () => void;
+  /**
+   * Optional: true while the scene still animates on its own at a settled
+   * progress (e.g. a fade in flight). The loop does not park meanwhile.
+   */
+  busy?: () => boolean;
 };
 
 /**
@@ -84,6 +89,7 @@ export function createSceneLoop(
       }
     }
     handlers.paint(current, dt);
+    if (handlers.busy?.()) stillFrames = 0;
     // Park after ~1s of stillness; scroll/resize/visibility wakes the loop.
     if (stillFrames > 60) {
       stillFrames = 0;
@@ -105,7 +111,23 @@ export function createSceneLoop(
     handlers.paintStatic();
   };
 
-  const wake = () => kick(false);
+  // IntersectionObserver reports asynchronously, after the first frames at
+  // a new position have painted: a jump from far away would show the
+  // stale state and then swoop. While out of view, check proximity
+  // directly on scroll and snap straight to the new progress.
+  const near = () => {
+    const rect = section.getBoundingClientRect();
+    const margin = window.innerHeight * 0.6;
+    return rect.bottom > -margin && rect.top < window.innerHeight + margin;
+  };
+  const wake = () => {
+    if (!inView && mounted && near()) {
+      inView = true;
+      kick(true);
+      return;
+    }
+    kick(false);
+  };
 
   const io =
     typeof IntersectionObserver !== "undefined"
