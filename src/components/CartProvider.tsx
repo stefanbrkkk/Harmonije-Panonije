@@ -10,7 +10,7 @@ type AddOptions = { notify?: boolean; openDrawer?: boolean };
 export type CartNotice = { seq: number; product: Product; quantity: number };
 
 /** Upper bound keeps quantities (and the generated draft) reasonable. */
-const MAX_QUANTITY = 99;
+export const MAX_QUANTITY = 99;
 
 type CartContextValue = {
   items: CartItem[];
@@ -46,7 +46,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const add = useCallback((product: Product, options: AddOptions = {}) => {
     const found = itemsRef.current.find((item) => item.product.id === product.id);
-    const quantity = found ? Math.min(MAX_QUANTITY, found.quantity + 1) : 1;
+    // At the cap nothing changes, so nothing is announced either.
+    if (found && found.quantity >= MAX_QUANTITY) return;
+    const quantity = found ? found.quantity + 1 : 1;
     setItems((current) => {
       const existing = current.find((item) => item.product.id === product.id);
       if (existing) {

@@ -276,9 +276,11 @@ export function PageBee() {
     const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(scheduleMeasure) : null;
     if (resizeObserver) resizeObserver.observe(document.body);
     // Catalog expand / search / tab changes alter document height and anchor
-    // offsets; re-measure without moving the bee.
+    // offsets; re-measure without moving the bee. Only page content counts:
+    // overlays (toast, drawer, menu) live outside <main> and must not cost
+    // a full-page layout read on every cart addition.
     const mutations = new MutationObserver(scheduleMeasure);
-    mutations.observe(document.body, { childList: true, subtree: true });
+    mutations.observe(document.querySelector("main") ?? document.body, { childList: true, subtree: true });
 
     // The shared loop owns scroll wakeups, viewport gating (body is always
     // in view), hidden-document pauses and reduced-motion static state.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { pluralSr } from "@/src/lib/plural";
 import { bindSeparators } from "@/src/lib/typography";
 import { categoryCopy, products, publishedPrice, type ProductCategory } from "@/src/data/siteContent";
 import { ProductVisual } from "./ProductVisual";
@@ -14,7 +15,8 @@ const BASE_COUNT = 6;
  * fold diacritics (š→s, ž→z, ć→c, č→c) with đ→dj so "djumbir" and "đumbir"
  * match identically. Applied to BOTH the query and the searchable text, and
  * the same normalized value drives filtering and UI state (empty vs active).
- * Scope is the active category only.
+ * Results come from the active category; matches in the other categories
+ * are offered as one-click tab switches that keep the query.
  */
 function normalizeQuery(value: string) {
   return value
@@ -25,10 +27,13 @@ function normalizeQuery(value: string) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+function matchesQuery(product: (typeof products)[number], normalized: string) {
+  return normalizeQuery([product.name, product.description, ...product.ingredients].join(" ")).includes(normalized);
+}
+
 function resultCountText(count: number, total: number, searching: boolean) {
-  if (count === 0) return "Nema rezultata.";
-  const noun = count % 10 === 1 && count % 100 !== 11 ? "rezultat" : count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 12 || count % 100 > 14) ? "rezultata" : "rezultata";
-  if (searching) return `${count} ${noun} pretrage.`;
+  if (count === 0) return "Nema rezultata u ovoj kategoriji.";
+  if (searching) return `${count} ${pluralSr(count, "rezultat", "rezultata", "rezultata")} pretrage.`;
   return count >= total ? `Prikazano svih ${total}.` : `Prikazano ${count} od ${total}.`;
 }
 
@@ -52,8 +57,20 @@ export function ProductCatalog() {
     return products.filter((product) => {
       if (product.category !== active) return false;
       if (!searching) return true;
-      return normalizeQuery([product.name, product.description, ...product.ingredients].join(" ")).includes(normalized);
+      return matchesQuery(product, normalized);
     });
+  }, [active, normalized, searching]);
+
+  // While searching, the same query's matches in the other categories.
+  const elsewhere = useMemo(() => {
+    if (!searching) return [];
+    return categories
+      .filter((category) => category !== active)
+      .map((category) => ({
+        category,
+        count: products.filter((product) => product.category === category && matchesQuery(product, normalized)).length,
+      }))
+      .filter((entry) => entry.count > 0);
   }, [active, normalized, searching]);
 
   const visible = expanded || searching ? categoryProducts : categoryProducts.slice(0, BASE_COUNT);
@@ -67,13 +84,26 @@ export function ProductCatalog() {
     return () => window.clearTimeout(timer);
   }, [enterIds]);
 
-  const switchCategory = (category: ProductCategory) => {
+  const switchCategory = (category: ProductCategory, keepQuery = false) => {
     if (category === active) return;
     setEnterIds([]);
     setActive(category);
     setExpanded(false);
-    setQuery("");
+    if (!keepQuery) setQuery("");
   };
+
+  // Jump to another category's matches; focus follows to its tab so the
+  // triggering button (which unmounts) never drops focus to <body>.
+  const showElsewhere = (category: ProductCategory) => {
+    switchCategory(category, true);
+    tabRefs.current[categories.indexOf(category)]?.focus();
+  };
+
+  const elsewhereLinks = elsewhere.map(({ category, count }) => (
+    <button key={category} type="button" className="catalog-elsewhere__link" onClick={() => showElsewhere(category)}>
+      {categoryCopy[category].label} <span>({count})</span>
+    </button>
+  ));
 
   const toggleExpanded = () => {
     if (expanded) {
@@ -164,6 +194,9 @@ export function ProductCatalog() {
           </div>
 
           <p className="catalog-count" role="status">{resultCountText(visible.length, categoryProducts.length, searching)}</p>
+          {visible.length > 0 && elsewhere.length > 0 && (
+            <p className="catalog-elsewhere">Još poklapanja: {elsewhereLinks}</p>
+          )}
 
           {visible.length > 0 ? (
             <div className="product-grid" key={active}>
@@ -206,8 +239,12 @@ export function ProductCatalog() {
             </div>
           ) : (
             <div className="catalog-empty">
-              <strong>Nema poklapanja za „{query.trim()}“.</strong>
-              <p>Probajte drugi sastojak ili otvorite neku od ostalih kategorija.</p>
+              <strong>Nema poklapanja za „{query.trim()}“ u ovoj kategoriji.</strong>
+              {elsewhere.length > 0 ? (
+                <p className="catalog-elsewhere">Pronađeno u: {elsewhereLinks}</p>
+              ) : (
+                <p>Probajte drugi sastojak ili otvorite neku od ostalih kategorija.</p>
+              )}
               <button
                 type="button"
                 className="text-link"

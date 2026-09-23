@@ -93,6 +93,6 @@ test("keyboard-only journey reaches catalog and inquiry", async ({ page }) => {
   expect(box.top, "focused control clears the fixed header").toBeGreaterThanOrEqual(box.header);
   await page.keyboard.press("Enter");
   await expect(page.locator(".order-button__count")).toHaveText("1");
-  await expect(page.locator(".order-button")).toHaveAttribute("aria-label", /1 stavka$/);
+  await expect(page.locator(".order-button")).toHaveAttribute("aria-label", /1 komad$/);
   assertClean();
 });

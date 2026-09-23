@@ -5,10 +5,15 @@
  * Deterministic, so server and client markup match.
  */
 const NBSP = "\u00a0";
-const SHORT = /(?<=^|[\s\u00a0])(a|i|o|u|s|k|uz|sa|za|od|do|na|po|iz|ka|je|se)\s/giu;
+// No lookbehind (unsupported before Safari 16.4, where it would be a parse
+// error for every client chunk importing this module): the preceding
+// boundary is captured instead, and a second pass binds adjacent short
+// words ("i u …") whose boundary the first match consumed.
+const SHORT = /(^|[\s\u00a0])(a|i|o|u|s|k|uz|sa|za|od|do|na|po|iz|ka|je|se)[ \t]/giu;
 
 export function bindShortWords(text: string) {
-  return text.replace(SHORT, `$1${NBSP}`).replace(/ —/g, `${NBSP}—`);
+  const bind = (value: string) => value.replace(SHORT, `$1$2${NBSP}`);
+  return bind(bind(text)).replace(/ —/g, `${NBSP}—`);
 }
 
 /** Product names like "Cvekla · šargarepa · jabuka": a line never starts with "·". */

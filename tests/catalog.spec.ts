@@ -41,10 +41,32 @@ test("search: terms, whitespace, diacritics, empty state", async ({ page }) => {
   await search.fill("  Šljiva Đ ");
   await expect(page.locator(".catalog-empty")).toBeVisible();
   // The empty state quotes what the visitor typed, not the folded query.
-  await expect(page.locator(".catalog-empty strong")).toHaveText("Nema poklapanja za „Šljiva Đ“.");
+  await expect(page.locator(".catalog-empty strong")).toHaveText("Nema poklapanja za „Šljiva Đ“ u ovoj kategoriji.");
   await page.locator(".catalog-empty .text-link").click();
   expect(await cards.count()).toBeGreaterThan(0);
   await expect(search, "focus returns to the search field").toBeFocused();
+  assertClean();
+});
+
+test("search offers matches from the other categories and keeps the query", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.goto("/#proizvodi", { waitUntil: "networkidle" });
+  const search = page.locator(".catalog-search input");
+  await expect(page.locator("#tab-sirupi")).toHaveAttribute("aria-selected", "true");
+  // The placeholder's own example: ginger lives in its own category.
+  await search.fill("đumbir");
+  const link = page.locator(".catalog-elsewhere__link", { hasText: "Đumbir" });
+  await expect(link).toBeVisible();
+  const promised = Number((await link.locator("span").textContent())?.replace(/\D/g, ""));
+  expect(promised).toBeGreaterThan(0);
+  await link.click();
+  await expect(page.locator("#tab-djumbir")).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator("#tab-djumbir"), "focus follows to the new tab").toBeFocused();
+  await expect(search).toHaveValue("đumbir");
+  await expect(page.locator(".product-card")).toHaveCount(promised);
+  // Ordinary tab switching still starts a fresh browse.
+  await page.locator("#tab-sokovi").click();
+  await expect(search).toHaveValue("");
   assertClean();
 });
 

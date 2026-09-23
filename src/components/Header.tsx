@@ -13,6 +13,8 @@ export function Header() {
   const { count, open } = useCart();
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  // Destination of a menu link, read once when the menu closes.
+  const navTargetRef = useRef<string | null>(null);
 
   // Declared first so inertness lifts before focus is restored on close.
   // The toggle stays live: only unrelated header controls are isolated.
@@ -92,6 +94,15 @@ export function Header() {
       // Restore focus to a visible control: the toggle may be display:none
       // after a breakpoint change, so fall back to the logo link.
       const visible = (node: HTMLElement | null) => (node && node.offsetParent !== null ? node : null);
+      // A menu link was chosen: continue from its destination instead of
+      // sending keyboard and screen-reader users back to the header.
+      const target = navTargetRef.current ? document.querySelector<HTMLElement>(navTargetRef.current) : null;
+      navTargetRef.current = null;
+      if (target) {
+        if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+        target.focus({ preventScroll: true });
+        return;
+      }
       const logo = document.querySelector<HTMLElement>(".site-header__logo");
       (visible(previousFocus) ?? visible(toggleNode) ?? logo)?.focus();
     };
@@ -161,7 +172,14 @@ export function Header() {
         <p className="eyebrow" aria-hidden="true">Meni</p>
         <nav className="mobile-menu__nav" aria-label="Meni">
           {navigation.map((item, index) => (
-            <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>
+            <a
+              key={item.href}
+              href={item.href}
+              onClick={() => {
+                navTargetRef.current = item.href;
+                setMenuOpen(false);
+              }}
+            >
               <span>{String(index + 1).padStart(2, "0")}</span>{item.label}
             </a>
           ))}

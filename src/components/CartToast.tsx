@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useCart } from "./CartProvider";
 import { restoreFocus } from "@/src/lib/focus";
+import { itemsLabel, productLabel } from "@/src/lib/plural";
 
 const NOTICE_MS = 3600;
 
@@ -60,7 +61,7 @@ export function CartToast() {
   };
 
   const announcement = notice
-    ? `Dodato u upit: ${notice.product.name}${notice.quantity > 1 ? `, ${notice.quantity} komada` : ""}.`
+    ? `Dodato u upit: ${productLabel(notice.product)}${notice.quantity > 1 ? `, ukupno ${itemsLabel(notice.quantity)}` : ""}.`
     : "";
 
   return (

@@ -10,6 +10,17 @@ test("meaningful content is visible without JavaScript", async ({ browser }) => 
   for (const suffix of ["a", "b", "c"]) {
     await expect(page.locator(`.honey-harvest__chapter--${suffix}`)).toBeVisible();
   }
+  // The three honey chapters stack as readable blocks instead of sharing
+  // one absolutely positioned box in the pinned frame.
+  const honeyBoxes = await page.locator(".honey-harvest__chapter").evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const rect = node.getBoundingClientRect();
+      return { top: rect.top, bottom: rect.bottom };
+    }),
+  );
+  for (let i = 1; i < honeyBoxes.length; i += 1) {
+    expect(honeyBoxes[i].top, `honey chapter ${i + 1} starts below chapter ${i}`).toBeGreaterThanOrEqual(honeyBoxes[i - 1].bottom - 1);
+  }
   // Journey without JavaScript: one static, complete frame — the final plate
   // plus the full four-step index (opacity, not just box visibility).
   const journey = await page.evaluate(() => {

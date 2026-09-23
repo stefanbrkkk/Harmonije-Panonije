@@ -122,6 +122,9 @@ button { color: inherit; }
   font-weight: 760;
   color: inherit;
 }
+/* Sections focused programmatically (menu navigation) show no ring: the
+   focus only sets the reading position for the next Tab. */
+section[tabindex="-1"]:focus { outline: none; }
 /* Fixed-header clearance for anchor navigation. */
 section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-clearance)); }
 /* Keyboard focus scrolling keeps controls clear of the fixed header. */
@@ -442,6 +445,12 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .catalog-panel__intro h3 { margin: 0; max-width: 420px; text-wrap: balance; font-family: var(--serif); font-size: clamp(2rem,3.4vw,3.8rem); font-weight: 400; line-height: .95; letter-spacing: -.04em; }
 .catalog-panel__intro > p:last-child { margin: 3px 0 0; color: var(--muted); line-height: 1.68; font-size: .86rem; max-width: 500px; justify-self: end; }
 .catalog-count { margin: 0 0 18px; color: var(--muted); font-size: .68rem; font-weight: 700; letter-spacing: .04em; }
+/* Same query, other categories: quiet inline switches that keep the query. */
+.catalog-elsewhere { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: inherit; gap: 6px 14px; margin: -8px 0 18px; color: var(--muted); font-size: .72rem; }
+.catalog-empty .catalog-elsewhere { justify-content: center; margin: 12px 0 22px; font-size: .8rem; }
+.catalog-elsewhere__link { border: 0; border-bottom: 1px solid rgba(28,47,40,.3); padding: 0 0 2px; background: none; color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+.catalog-elsewhere__link span { color: var(--muted); font-weight: 400; }
+.catalog-elsewhere__link:hover { border-bottom-color: var(--ink); }
 .product-grid { display: grid; grid-template-columns: repeat(12,1fr); gap: 18px; }
 /* The panel owns layout shifts from expand/collapse/filter: opting the whole
    panel out of scroll anchoring keeps the viewport stable instead of chasing
@@ -757,6 +766,8 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .order-drawer__summary { display:flex;justify-content:space-between;margin-bottom:14px;color:var(--muted);font-size:.72rem; }.order-drawer__summary strong{color:var(--ink)}
 .order-drawer__foot .text-link { margin-top:17px; }
 .order-drawer__foot > p { margin:15px 0 0;color:var(--muted);font-size:.61rem;line-height:1.5; }
+.order-drawer__foot > p.order-drawer__notice { margin:10px 0 0;color:var(--ink);font-size:.7rem; }
+.order-item__controls button:disabled { opacity:.35; cursor:not-allowed; }
 .mobile-order-bar { display:none; }
 
 /* Responsive */
@@ -1357,6 +1368,12 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .hero-art__ingredient,
   .hero-art__halo,
   .hero-bottle__glass::after { animation: none !important; }
+}
+
+/* Honey sequence without its scroll driver (no JavaScript, or reduced
+   motion): the three chapters stack as one readable static layout instead
+   of overlapping in the pinned frame. */
+@media (scripting: none), (prefers-reduced-motion: reduce) {
   .honey-harvest { height: auto; min-height: 0; padding: 100px 0 80px; }
   .honey-harvest__sticky { position: relative; height: auto; min-height: 0; }
   .honey-harvest__copy { height: auto; }
@@ -1389,11 +1406,9 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   translate: 0 0;
   scale: 1;
 }
-/* Single fast catalog transition (250-450ms). Container fades once;
-   only newly inserted cards stagger. */
-.product-grid.catalog-enter { animation: catalogEnter .32s cubic-bezier(.22,.8,.24,1) both; }
+/* Single fast catalog transition (250-450ms): only newly inserted cards
+   stagger in. */
 .product-card--new { animation: catalogCardEnter .34s cubic-bezier(.22,.8,.24,1) both; }
-@keyframes catalogEnter { from { opacity:.4; translate:0 10px; } to { opacity:1; translate:0 0; } }
 @keyframes catalogCardEnter { from { opacity: 0; translate: 0 12px; } to { opacity: 1; translate: 0 0; } }
 .product-grid { animation: none; }
 
@@ -1439,7 +1454,7 @@ body.has-overlay .page-bee { opacity: 0 !important; }
 @media (prefers-reduced-motion: reduce) {
   .motion-ready .reveal-target,
   .motion-ready .reveal-target.is-inview { opacity:1;translate:none;scale:none;transition:none; }
-  .product-grid.catalog-enter, .product-card--new { animation:none; }
+  .product-card--new { animation:none; }
 }
 
 /* Keyboard entry point */

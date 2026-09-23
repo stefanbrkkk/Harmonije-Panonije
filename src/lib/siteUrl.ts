@@ -19,3 +19,12 @@ export function getSiteUrl() {
 
   return "http://localhost:3000";
 }
+
+/**
+ * Indexing policy: only the production deployment invites search engines.
+ * Vercel marks it with VERCEL_ENV=production; any other host opts in
+ * explicitly with SITE_INDEXABLE=1. Previews and local builds stay noindex.
+ */
+export function isIndexable() {
+  return process.env.VERCEL_ENV === "production" || process.env.SITE_INDEXABLE === "1";
+}
