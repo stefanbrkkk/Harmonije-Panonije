@@ -81,7 +81,17 @@ test("no collisions or overflow at any viewport, incl. 150% and 200% text", asyn
         document.documentElement.style.fontSize = value;
         document.querySelector("#sastojci")!.scrollIntoView({ block: "start", behavior: "instant" });
       }, scale);
-      await page.waitForTimeout(300);
+      // Let entrance reveals (a short translate) finish before measuring.
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () =>
+              document
+                .getAnimations()
+                .filter((animation) => (animation.effect as KeyframeEffect | null)?.target?.closest?.("#sastojci")).length,
+          ),
+        )
+        .toBe(0);
       const problems = await page.evaluate(() => {
         const section = document.querySelector("#sastojci")!;
         const vw = document.documentElement.clientWidth;
@@ -89,13 +99,14 @@ test("no collisions or overflow at any viewport, incl. 150% and 200% text", asyn
         const boxes = [
           ...section.querySelectorAll<HTMLElement>(".ingredients-head, .ingredients-base, .ingredients-plate__kicker, .ingredients-index li"),
         ].map((el) => ({ el, r: el.getBoundingClientRect() }));
+        const name = (el: HTMLElement) => el.querySelector("h2, h3")?.textContent ?? el.className.split(" ")[0];
         for (let i = 0; i < boxes.length; i += 1) {
           const { el, r } = boxes[i];
-          if (r.left < -1 || r.right > vw + 1) found.push(`off-screen: ${el.className}`);
+          if (r.left < -1 || r.right > vw + 1) found.push(`off-screen: ${name(el)}`);
           for (let j = i + 1; j < boxes.length; j += 1) {
             const o = boxes[j].r;
             if (r.left < o.right - 1 && o.left < r.right - 1 && r.top < o.bottom - 1 && o.top < r.bottom - 1) {
-              found.push(`overlap: ${el.className} × ${boxes[j].el.className}`);
+              found.push(`overlap: ${name(el)} × ${name(boxes[j].el)}`);
             }
           }
         }

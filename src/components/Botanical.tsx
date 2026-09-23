@@ -13,11 +13,36 @@ export function leafPath(length: number, width: number) {
   return `M0 0C${l * 0.28} ${-w} ${l * 0.72} ${-w} ${l} 0C${l * 0.72} ${w} ${l * 0.28} ${w} 0 0Z`;
 }
 
-export function Leaf({ at, angle, length, width, className = "jart-leaf" }: { at: Pt; angle: number; length: number; width: number; className?: string }) {
+export function Leaf({
+  at,
+  angle,
+  length,
+  width,
+  className = "jart-leaf",
+  petiole = 0,
+  shade,
+}: {
+  at: Pt;
+  angle: number;
+  length: number;
+  width: number;
+  className?: string;
+  /** Short leaf stalk joining the blade to the stem. */
+  petiole?: number;
+  shade?: Shade;
+}) {
+  const d = leafPath(length, width);
   return (
     <g transform={`translate(${at[0]} ${at[1]}) rotate(${angle})`} className={className}>
-      <path d={leafPath(length, width)} />
-      <path d={`M${length * 0.08} 0L${length * 0.86} 0`} className="jart-rib" />
+      {petiole ? <path className="jart-petiole" d={`M0 0L${petiole} 0`} /> : null}
+      <g transform={petiole ? `translate(${petiole} 0)` : undefined}>
+        <path d={d} />
+        {/* Engraving convention: the shaded half of the blade is hatched. */}
+        {shade ? (
+          <path className="jart-shade" d={`M0 0C${length * 0.28} ${width} ${length * 0.72} ${width} ${length} 0Z`} fill={shade.fill} />
+        ) : null}
+        <path d={`M${length * 0.08} 0L${length * 0.86} 0`} className="jart-rib" />
+      </g>
     </g>
   );
 }
@@ -65,7 +90,17 @@ export function Umbel({ base, rays }: { base: Pt; rays: Pt[] }) {
         <path key={i} className="jart-stem jart-stem--fine" d={`M${base[0]} ${base[1]}Q${(base[0] + x) / 2} ${y + 14} ${x} ${y}`} />
       ))}
       {florets.map(([x, y], i) => (
-        <circle key={i} className="jart-floret" cx={x} cy={y} r={4.2} />
+        <g key={i} className="jart-floret">
+          {[0, 72, 144, 216, 288].map((a) => (
+            <circle
+              key={a}
+              cx={(x + Math.cos(((a + i * 17) * Math.PI) / 180) * 2.6).toFixed(1)}
+              cy={(y + Math.sin(((a + i * 17) * Math.PI) / 180) * 2.6).toFixed(1)}
+              r={1.9}
+            />
+          ))}
+          <circle className="jart-floret__eye" cx={x} cy={y} r={1.1} />
+        </g>
       ))}
     </g>
   );
@@ -150,7 +185,7 @@ export function PinnateLeaf({ at, angle, length, className = "jart-leaf" }: { at
   const l = length * 0.3;
   return (
     <g transform={`translate(${at[0]} ${at[1]}) rotate(${angle})`} className={className}>
-      <path className="jart-rib" d={`M0 0L${length * 0.78} 0`} />
+      <path className="jart-rachis" d={`M0 0L${length * 0.78} 0`} />
       {pairs.map((t) => (
         <g key={t}>
           <path d={leafPath(l, w)} transform={`translate(${length * t} 0) rotate(-52)`} />
@@ -166,9 +201,9 @@ export function PinnateLeaf({ at, angle, length, className = "jart-leaf" }: { at
 export function Hip({ at, angle = 0, size = 1 }: { at: Pt; angle?: number; size?: number }) {
   return (
     <g transform={`translate(${at[0]} ${at[1]}) rotate(${angle}) scale(${size})`}>
-      <path className="jart-stem jart-stem--fine" d="M0 0v10" />
-      <path className="jart-hip" d="M0 10c-9 0-12 10-12 18 0 10 6 16 12 16s12-6 12-16c0-8-3-18-12-18Z" />
-      <path className="jart-sepal" d="M0 44l-6 7M0 44l0 9M0 44l6 7M0 44l-9 3M0 44l9 3" />
+      <path className="jart-stem jart-stem--fine" d="M0 0v6" />
+      <path className="jart-hip" d="M0 6c-9 0-12 10-12 18 0 10 6 16 12 16s12-6 12-16c0-8-3-18-12-18Z" />
+      <path className="jart-sepal-crown" d="M0 38.5l-5 4.5 3 .6-4 3.2 4.4-.8 1.6 3.6.8-4.4 1.2 4.4 1.8-3.6 4.2.8-4-3.2 3-.6Z" />
     </g>
   );
 }
@@ -184,6 +219,20 @@ export function Poplar({ x, base, height, width, shade }: { x: number; base: num
       <path className="jart-poplar" d={d} />
       {shade ? <path className="jart-shade" d={d} fill={shade.fill} mask={shade.mask} /> : null}
       <path className="jart-rib" d={`M${x} ${top + 14}V${bottom - 8}`} />
+    </g>
+  );
+}
+
+/** Grass tuft: several blades fanning from one root point. */
+export function Tuft({ at, height, lean = 0 }: { at: Pt; height: number; lean?: number }) {
+  const blades = [-0.9, -0.45, 0, 0.4, 0.85];
+  return (
+    <g className="jart-grass">
+      {blades.map((b, i) => {
+        const h = height * (0.62 + ((i * 37) % 5) * 0.09);
+        const tipX = at[0] + (b * height * 0.42) + lean;
+        return <path key={i} d={`M${at[0]} ${at[1]}C${at[0] + b * 3} ${at[1] - h * 0.5} ${tipX - b * 4} ${at[1] - h * 0.85} ${tipX.toFixed(1)} ${(at[1] - h).toFixed(1)}`} />;
+      })}
     </g>
   );
 }

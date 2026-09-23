@@ -259,7 +259,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .journey__chapters { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; }
 .journey__chapter { position: absolute; inset: 0; display: grid; grid-template-rows: 1fr auto auto; justify-items: start; }
 .journey__lead { grid-row: 2; max-width: 21ch; margin: 0 0 clamp(14px, 2.6vh, 28px); color: #34443c; font-family: var(--serif); font-size: clamp(1.2rem, min(1.95vw, 3.3svh), 2rem); line-height: 1.22; letter-spacing: -.012em; text-wrap: balance; }
-.journey__word { grid-row: 3; position: relative; z-index: 1; margin: 0 0 -.02em; overflow: hidden; padding: .06em .04em .2em 0; font-family: var(--serif); font-size: min(clamp(3.4rem, min(11.2vw, 18svh), 11.6rem), 12.5vw); font-weight: 400; line-height: .8; letter-spacing: -.05em; white-space: nowrap; }
+.journey__word { grid-row: 3; position: relative; z-index: 1; margin: 0 0 .09em; overflow: hidden; padding: .06em .04em .2em 0; font-family: var(--serif); font-size: min(clamp(3.4rem, min(11.2vw, 18svh), 11.6rem), 12.5vw); font-weight: 400; line-height: .8; letter-spacing: -.05em; white-space: nowrap; }
 .journey__word > span { display: block; }
 .journey__art { position: absolute; z-index: 2; right: 0; bottom: 0; height: 100%; max-width: 60%; aspect-ratio: 600 / 520; overflow: visible; }
 .journey__plate * { vector-effect: non-scaling-stroke; }
@@ -286,7 +286,17 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .jart-petal { fill: #fbf7ec; stroke: var(--forest-2); stroke-width: 1.2; }
 .jart-disk { fill: var(--honey); stroke: var(--forest-2); stroke-width: 1.3; }
 .jart-seed { fill: var(--honey-dark); stroke: none; opacity: .75; }
-.jart-floret { fill: #fbf7ec; stroke: var(--forest-2); stroke-width: 1; }
+.jart-floret { fill: #fbf7ec; stroke: var(--forest-2); stroke-width: .8; }
+.jart-floret .jart-floret__eye { fill: var(--honey); stroke: none; }
+.jart-petiole, .jart-rachis { fill: none; stroke: var(--forest-2); stroke-width: 1.1; }
+.jart-sepal-crown { fill: #4d5a3e; stroke: none; }
+.jart-pool { fill: var(--honey); stroke: none; opacity: .85; }
+.jart-juice { fill: rgba(233, 205, 110, .75); stroke: none; }
+.jart-reamer-rib { fill: none; stroke: rgba(15, 40, 33, .55); stroke-width: 1; }
+.jart-house .jart-chimney { fill: #f3eddf; }
+.jart-house .jart-roof-band { fill: #e3d5b6; }
+.jart-house .jart-vent { fill: #f3eddf; }
+.jart-tag-script { fill: var(--forest-2); font-family: var(--serif); font-size: 11px; font-style: italic; }
 .jart-bud { fill: #fbf7ec; stroke: var(--forest-2); stroke-width: 1.3; }
 .jart-sepal { fill: none; stroke: var(--forest-2); stroke-width: 1.1; }
 .jart-lemon { fill: #e4c35e; stroke: var(--forest-2); stroke-width: 1.3; }
@@ -364,12 +374,14 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 /* Portrait (phones, tablets): the plate leads, the word anchors below it. */
 @media (orientation: portrait) {
   .journey__frame { padding-top: calc(var(--header-height) + clamp(18px, 3vh, 34px)); }
-  .journey__chapter { grid-template-rows: auto auto 1fr; }
-  .journey__lead { grid-row: 1; max-width: 26ch; margin: clamp(4px, 1.4vh, 16px) 0 clamp(10px, 1.6vh, 16px); font-size: clamp(1.08rem, 4.4vw, 1.7rem); }
-  .journey__word { grid-row: 2; font-size: min(clamp(3.2rem, 17vw, 8.4rem), 18vw); letter-spacing: -.035em; }
-  /* The plate takes the height the text leaves: ~2.6 lead lines + one word
-     line + margins, from the same vw-based sizes as the type above. */
-  .journey__art { top: auto; bottom: 0; left: 0; right: 0; width: 100%; max-width: none; height: max(44%, calc(100% - min(13.95vw, 86px) - min(18vw, 142px) - 60px)); aspect-ratio: auto; }
+  /* The plate stands on the horizon at the size the stage allows (width-
+     or height-limited); the lead + word lock-up sits directly above it, so
+     text and plate read as one unit and the air collects at the top. */
+  .journey__stage { container-type: size; --plate-h: min(max(40cqh, calc(100cqh - min(13.95vw, 86px) - min(18vw, 142px) - 60px)), 86.67cqw); }
+  .journey__chapter { grid-template-rows: 1fr auto auto; padding-bottom: calc(var(--plate-h) + clamp(14px, 2.4vh, 26px)); }
+  .journey__lead { grid-row: 2; max-width: 26ch; margin: 0 0 clamp(10px, 1.6vh, 16px); font-size: clamp(1.08rem, 4.4vw, 1.7rem); }
+  .journey__word { grid-row: 3; margin-bottom: 0; font-size: min(clamp(3.2rem, 17vw, 8.4rem), 18vw); letter-spacing: -.035em; }
+  .journey__art { top: auto; bottom: 0; left: 0; right: 0; width: 100%; max-width: none; height: var(--plate-h); aspect-ratio: auto; }
   .journey__index li { grid-template-columns: 1fr; padding-right: 8px; }
   .journey__index span { margin-bottom: 3px; }
   .journey__index em { grid-column: 1; }
@@ -563,10 +575,10 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .ingredients-index { grid-area: index; margin-top: clamp(28px, 4.4vh, 46px); }
 .ingredients-index__kicker { margin: 0 0 12px; color: rgba(239, 201, 110, .82); font-size: .64rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
 .ingredients-index ul { margin: 0; padding: 0; list-style: none; border-bottom: 1px solid rgba(251, 247, 236, .14); }
-.ingredients-index li { display: grid; grid-template-columns: auto 1fr; column-gap: 16px; align-items: baseline; padding: 11px 0 12px; border-top: 1px solid rgba(251, 247, 236, .14); }
-.ingredients-index h3 { margin: 0; color: var(--white); font-family: var(--serif); font-size: 1.2rem; font-weight: 400; line-height: 1.15; }
-.ingredients-index span { justify-self: end; max-width: 30ch; color: rgba(190, 206, 184, .75); font-family: var(--serif); font-size: .82rem; font-style: italic; line-height: 1.35; text-align: right; }
-.ingredients-index p { grid-column: 1 / -1; margin: 5px 0 0; color: rgba(251, 247, 236, .7); font-size: .82rem; line-height: 1.55; }
+.ingredients-index li { display: block; padding: 11px 0 12px; border-top: 1px solid rgba(251, 247, 236, .14); }
+.ingredients-index h3 { display: inline; margin: 0 .5em 0 0; color: var(--white); font-family: var(--serif); font-size: 1.2rem; font-weight: 400; line-height: 1.15; }
+.ingredients-index span { color: rgba(190, 206, 184, .75); font-family: var(--serif); font-size: .82rem; font-style: italic; line-height: 1.35; }
+.ingredients-index p { margin: 4px 0 0; color: rgba(251, 247, 236, .7); font-size: .82rem; line-height: 1.55; }
 
 /* Plate artwork on forest: cream line, honey and lemon carry the colour. */
 .iplate-stem { fill: none; stroke: rgba(251, 247, 236, .78); stroke-width: 1.4; }
@@ -577,7 +589,11 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .iplate-lemon { fill: #dfc15a; stroke: rgba(251, 247, 236, .85); stroke-width: 1.3; }
 .iplate-comb { fill: #c98f33; stroke: rgba(251, 247, 236, .8); stroke-width: 1.2; }
 .iplate-comb-edge { fill: #e2c27a; stroke: rgba(251, 247, 236, .8); stroke-width: 1.2; }
-.iplate-comb-wall { fill: none; stroke: rgba(122, 79, 14, .55); stroke-width: .9; }
+.iplate-comb-cellcut { fill: #d9a24a; stroke: rgba(122, 79, 14, .7); stroke-width: .9; }
+.iplate-pool { fill: #d99a3a; stroke: none; opacity: .9; }
+.iplate-stem--wood { stroke: rgba(236, 222, 190, .9); stroke-width: 2.4; }
+.iplate-cut { fill: #cfa46b; stroke: rgba(251, 247, 236, .8); stroke-width: 1; }
+.iplate-leaf .jart-petiole { fill: none; stroke: rgba(251, 247, 236, .78); stroke-width: 1.3; }
 .iplate-shade { stroke: none; }
 .iplate-ribbon { fill: #e3a646; stroke: none; }
 .iplate-dipper-head { fill: #cfa46b; stroke: rgba(251, 247, 236, .85); stroke-width: 1.2; }
@@ -621,10 +637,9 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .ingredients-head .eyebrow { grid-column: 1 / -1; }
   .ingredients-head h2 { max-width: none; }
   .ingredients-head > p:last-child { margin: 0; }
-  .ingredients-plate { width: min(100%, 640px); justify-self: center; }
+  .ingredients-plate { width: 100%; }
   .ingredients-index { margin-top: 36px; }
-  .ingredients-index ul { max-width: 640px; margin-inline: auto; }
-  .ingredients-index__kicker { max-width: 640px; margin-inline: auto; }
+
 }
 /* Phone: its own composition — plate, then specimen captions, then index. */
 @media (max-width: 560px) {
@@ -644,8 +659,6 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .ingredients-index p { font-size: .86rem; color: rgba(251, 247, 236, .76); }
   .ingredients-index { margin-top: 30px; }
   .ingredients-index ul { display: block; border-bottom: 1px solid rgba(251, 247, 236, .14); }
-  .ingredients-index li { grid-template-columns: 1fr; }
-  .ingredients-index span { justify-self: start; text-align: left; margin-top: 2px; }
 }
 
 /* Delivery */

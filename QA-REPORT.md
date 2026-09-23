@@ -419,9 +419,15 @@ index) via `@media (scripting: none), (prefers-reduced-motion: reduce)`.
 INGREDIENTS — one apothecary still-life plate (honey jar with the house
 label, comb chunk, dipper, lemon branch, cut and whole lemon) captioned
 with the two foundations under specimen ticks, plus a typographic
-herbarium index of the five flavour layers (genus names in the order of
-each Serbian list). Server component; fits one viewport at 1440×900,
-1280×800 and 1024×768.
+herbarium index of the five flavour layers (Latin set inline after each
+name: pharmacopoeia names for the foundations, genus names in the order
+of each Serbian list for the layers). Server component; fits one
+viewport at 1440×900, 1280×800 and 1024×768.
+
+To confirm with the client before launch: the Latin references
+("Mel", "Citri succus", "Rosa canina", the genus lists), the new chapter
+leads and the ginger note ("srce naših sirupa sa đumbirom") are
+editorial copy written for this redesign, not supplied by the brand.
 
 Shared: `Botanical.tsx` drawing primitives (one engraved language:
 hairline, opaque muted fills, hatch shading via SVG pattern + mask),
