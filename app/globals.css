@@ -155,7 +155,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   transition: background-color .45s ease, color .35s ease, box-shadow .45s ease;
 }
 .site-header::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: rgba(255,255,255,.1); transition: background-color .45s ease; }
-.site-header--scrolled { color: var(--ink); background: rgba(243,237,223,.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 8px 30px rgba(19,45,37,.08); }
+.site-header--scrolled { color: var(--ink); background: rgba(243,237,223,.92); backdrop-filter: blur(12px); box-shadow: 0 8px 30px rgba(19,45,37,.08); }
 .site-header--scrolled::after { background: rgba(28,47,40,.12); }
 .site-header__inner { height: var(--header-height); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
 .site-header__logo { justify-self: start; }
@@ -880,6 +880,11 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .final-cta__contacts { margin-top:62px; }
   .site-footer { padding-bottom:92px; }
   .site-footer__bottom { grid-template-columns:1fr; }.site-footer__bottom div{grid-column:auto;grid-row:auto;flex-wrap:wrap}.site-footer__bottom span,.site-footer__bottom>a:last-child{grid-row:auto;justify-self:start}
+  /* The fixed order bar covers the bottom 70px: scroll-padding shrinks the
+     viewport's "visible" region, so keyboard focus that lands behind the
+     bar scrolls the control clear of it (scroll-margin alone only applies
+     when the browser decides to scroll at all). */
+  html { scroll-padding-bottom: 84px; }
   :is(a, button, input, textarea, summary):focus-visible { scroll-margin-bottom: 92px; }
   .mobile-order-bar { position:fixed;z-index:70;left:14px;right:14px;bottom:14px;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 9px 0 21px;border:1px solid rgba(239,201,110,.35);border-radius:999px;background:rgba(15,40,33,.94);backdrop-filter:blur(14px);color:var(--white);box-shadow:0 16px 40px rgba(5,20,15,.24);font-size:.78rem;font-weight:800;cursor:pointer; }
   .mobile-order-bar i { min-width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:var(--honey);color:var(--forest);font-style:normal; }

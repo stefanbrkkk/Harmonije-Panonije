@@ -96,3 +96,32 @@ test("keyboard-only journey reaches catalog and inquiry", async ({ page }) => {
   await expect(page.locator(".order-button")).toHaveAttribute("aria-label", /1 komad$/);
   assertClean();
 });
+
+test("phone: keyboard focus never hides behind the fixed order bar", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/#proizvodi", { waitUntil: "networkidle" });
+  await page.locator(".catalog-search input").focus();
+  const bar = await page.locator(".mobile-order-bar").boundingBox();
+  expect(bar).not.toBeNull();
+  let checked = 0;
+  for (let i = 0; i < 40 && checked < 6; i += 1) {
+    await page.keyboard.press("Tab");
+    const box = await page.evaluate(() => {
+      const node = document.activeElement as HTMLElement | null;
+      if (!node?.matches(".product-card__add")) return null;
+      const rect = node.getBoundingClientRect();
+      return { top: rect.top, bottom: rect.bottom };
+    });
+    if (!box) continue;
+    checked += 1;
+    // Focus scrolling may be smooth: wait for it to settle.
+    await expect
+      .poll(() => page.evaluate(() => (document.activeElement as HTMLElement).getBoundingClientRect().bottom), {
+        message: "focused add button clears the order bar",
+      })
+      .toBeLessThanOrEqual(bar!.y);
+  }
+  expect(checked).toBeGreaterThan(3);
+  assertClean();
+});
