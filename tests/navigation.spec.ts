@@ -46,8 +46,9 @@ test("deep-link refresh and browser history", async ({ page }) => {
   await page.goto("/#proizvodi", { waitUntil: "networkidle" });
   await expect(page.locator("#proizvodi")).toBeVisible();
   await page.goto("/#put-pcele", { waitUntil: "networkidle" });
-  const bee = await page.locator("#put-pcele .scene-bee").getAttribute("transform");
-  expect(bee, "journey renders mid-state on deep link").toMatch(/translate/);
+  const bee = await page.locator("#put-pcele .journey-bee").getAttribute("transform");
+  expect(bee, "journey renders a live state on deep link").toMatch(/translate/);
+  await expect(page.locator("#put-pcele")).toHaveClass(/is-live/);
   await page.goBack();
   await expect(page).toHaveURL(/#proizvodi/);
   await expect(page.locator("#proizvodi")).toBeVisible();

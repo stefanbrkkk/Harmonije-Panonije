@@ -106,10 +106,11 @@ const tripwires = [
   // HP-08/20: reduced motion keeps all chapters; base state reads without JS.
   ["reduced chapters kept", !css.includes("chapter--c { display: none")],
   ["is-live chapter gating", css.includes(".honey-harvest.is-live .honey-harvest__chapter")],
-  ["is-live outro gating", css.includes(".bee-journey.is-live .bee-journey__outro")],
+  // Journey static fallback: no-JS and reduced motion get one complete frame.
+  ["journey static fallback", css.includes("@media (scripting: none), (prefers-reduced-motion: reduce)") && css.includes('.journey:not(.is-live) .journey__plate[data-plate="3"]')],
   // HP-08: static bee poses for no-JS first paint.
-  ["journey bee fallback pose", journey.includes('transform="translate(75 375) scale(1.4)"')],
-  ["journey rail system", journey.includes("bee-journey__rail-item") && css.includes(".bee-journey__rail-tracer")],
+  ["journey bee fallback pose", journey.includes("translate(${PERCHES[LAST][0]} ${PERCHES[LAST][1]})")],
+  ["journey horizon progress", journey.includes("journey__progress") && css.includes(".journey__progress")],
   ["honey bee fallback pose", honey.includes('transform="translate(150 150)')],
   // HP-14/33: notice events carry sequence + quantity; quantities bounded.
   ["notice event model", cart.includes("seq") && cart.includes("MAX_QUANTITY")],
@@ -126,7 +127,7 @@ const tripwires = [
   // HP-12: desktop 6n feature-row reset at tablet.
   ["tablet 6n reset", css.includes(".product-card:nth-child(6n) { grid-template-columns: none;")],
   // HP-03/05/09: camera-framed responsive scenes.
-  ["scene camera", journey.includes("cameraShift(") && honey.includes("cameraShift(")],
+  ["scene camera", honey.includes("cameraShift(")],
   // HP-04: sequential chapter handoff aligned to visual actions (never a
   // symmetric crossfade sharing coordinates at equal opacity).
   ["chapter handoff windows", honey.includes("fade(copyARef.current, -0.05, 0.0, 0.3, 0.325)")],
@@ -141,18 +142,22 @@ const tripwires = [
   ["time-clocked flap", honey.includes("flapT") && honey.includes("Math.sin(flapT * 0.35)")],
   ["page-bee exclusions", bee.includes('[data-page-bee="hide"]')],
   ["exclusion beats end fallback", bee.indexOf("excluded === 1") < bee.indexOf("progress > 0.985")],
-  ["journey stage captions", journey.includes("STAGE_WINDOWS")],
-  ["journey rail placement", css.includes(".bee-journey__rail { position: absolute; z-index: 4;")],
-  ["journey unique stage labels", (journey.match(/<text className="scene-stage"/g) ?? []).length === 4],
-  ["journey marker lockups", journey.includes("scene-stage__name") && journey.includes("PANONIJA")],
+  // Chapter selection with hysteresis: boundary jitter never toggles.
+  ["journey hysteresis", journey.includes("HYSTERESIS") && journey.includes("chapterFor(")],
+  // Explicit rows: hiding the top row in short landscape must not shift
+  // the stage into an auto-sized track (collapsed stage regression).
+  ["journey explicit grid rows", css.includes(".journey__stage { grid-row: 2;") && css.includes(".journey__index { grid-row: 4;")],
+  ["journey four chapters", (journey.match(/ word: "/g) ?? []).length === 4],
   ["translate-only reveals", !css.includes("opacity .6s cubic-bezier(.22,.8,.24,1) var(--reveal-delay")],
   ["semantic reveal roles", read("src/components/MotionOrchestrator.tsx").includes("roleBase")],
   ["reduced route drift", css.includes(".delivery-map__route { animation: none !important; }")],
   ["valid reveal transition", css.includes("transition: translate .7s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms);")],
-  ["tablet ingredient grid", css.includes(".specimen--honey, .specimen--lemon { grid-column: 1 / -1;")],
-  ["atlas specimen order", read("src/components/IngredientsSection.tsx").includes("ingredients.slice(0, 2)")],
-  ["brand seal", css.includes(".seal__ring") && read("src/components/IngredientsSection.tsx").includes("sklad sastojaka")],
-  ["specimen stamps", css.includes(".specimen::after")],
+  // Ingredients: foundation vs flavour layers come from data roles; the two
+  // foundations are captioned on the plate; no decorative numbering.
+  ["ingredient roles", (navSource.match(/role: "base" }/g) ?? []).length === 2 && read("src/components/IngredientsSection.tsx").includes('item.role === "base"')],
+  ["ingredient plate captions", read("src/components/IngredientsSection.tsx").includes("ingredients-plate__captions")],
+  ["ingredient spread areas", css.includes('grid-template-areas: "plate head" "plate index";')],
+  ["no ingredient numbering", !read("src/components/IngredientsSection.tsx").includes("padStart")],
   ["landscape chapter clearance", css.includes(".honey-harvest__chapter { top: calc(var(--header-height) + 10px); translate: none;")],
   // HP-16/36/37/40: one controlled scheduler for the three scenes.
   ["shared scene loop", journey.includes("createSceneLoop(") && honey.includes("createSceneLoop(") && bee.includes("createSceneLoop(")],

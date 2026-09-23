@@ -89,14 +89,20 @@ export const story = {
   sourceStatus: "PUBLIC_VERIFIED" as SourceStatus,
 };
 
+/**
+ * Honey and lemon are the foundation (`role: "base"`); everything else builds
+ * the flavour on top. Latin names are botanical references for the
+ * herbarium-style index (pharmacopoeia names for the foundation, genus names
+ * in the order of each note for the layers), not product claims.
+ */
 export const ingredients = [
-  { name: "Livadski med", note: "Topla osnova i potpis velikog dela ponude.", kind: "honey" },
-  { name: "Ceđeni limun", note: "Svežina koja povezuje brojne kombinacije.", kind: "lemon" },
-  { name: "Đumbir", note: "Oštriji, aromatični sloj za posebnu liniju sirupa.", kind: "ginger" },
-  { name: "Bobičasto voće", note: "Kupina, malina, aronija i šipurak donose dubinu ukusa.", kind: "berry" },
-  { name: "Voće", note: "Jabuka, dunja, kruška, kajsija i druge sezonske kombinacije.", kind: "fruit" },
-  { name: "Lekovito bilje", note: "Nana, žalfija, kopriva, kamilica, lavanda i matičnjak.", kind: "herb" },
-  { name: "Povrće", note: "Cvekla i šargarepa ulaze u odabrane recepture.", kind: "vegetable" },
+  { name: "Livadski med", latin: "Mel", note: "Topla, cvetna osnova većine Immuno Craft sirupa.", kind: "honey", role: "base" },
+  { name: "Ceđeni limun", latin: "Citri succus", note: "Svežina koja povezuje brojne kombinacije.", kind: "lemon", role: "base" },
+  { name: "Đumbir", latin: "Zingiber", note: "Ljut i aromatičan — srce naših sirupa sa đumbirom.", kind: "ginger", role: "layer" },
+  { name: "Bobičasto voće", latin: "Rubus · Aronia · Rosa canina", note: "Kupina, malina, aronija i šipurak donose dubinu ukusa.", kind: "berry", role: "layer" },
+  { name: "Voće", latin: "Malus · Cydonia · Pyrus · Prunus", note: "Jabuka, dunja, kruška, kajsija i drugo sezonsko voće.", kind: "fruit", role: "layer" },
+  { name: "Lekovito bilje", latin: "Mentha · Salvia · Urtica · Matricaria · Lavandula · Melissa", note: "Nana, žalfija, kopriva, kamilica, lavanda i matičnjak.", kind: "herb", role: "layer" },
+  { name: "Povrće", latin: "Beta · Daucus", note: "Cvekla i šargarepa ulaze u odabrane recepture.", kind: "vegetable", role: "layer" },
 ] as const;
 
 export const categoryCopy: Record<ProductCategory, { label: string; title: string; note: string }> = {
@@ -179,7 +185,7 @@ export const products: Product[] = [
 ];
 
 export const delivery = {
-  title: "Od Novog Sada do vaše trpeze.",
+  title: "Od Novog\u00a0Sada do vaše trpeze.",
   visibleCopy: "Za dostavu i preuzimanje kontaktirajte nas — dogovorićemo najjednostavniju opciju.",
   legacyRule: [
     "Istorijski: besplatna dostava u Novom Sadu za dva ili više proizvoda.",

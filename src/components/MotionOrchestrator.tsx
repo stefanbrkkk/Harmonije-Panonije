@@ -10,8 +10,9 @@ const selector = [
   ".catalog-panel__intro",
   ".story-copy > *",
   ".story-art",
-  ".specimen",
-  ".seal",
+  ".ingredients-head",
+  ".ingredients-plate",
+  ".ingredients-index li",
   ".delivery-copy > *",
   ".delivery-map",
   ".proof-intro",
@@ -45,11 +46,11 @@ export function MotionOrchestrator() {
         const scope = node.closest("section, footer") ?? document.body;
         const localIndex = scopeCounts.get(scope) ?? 0;
         scopeCounts.set(scope, localIndex + 1);
-        const roleBase = node.matches(".section-heading")
+        const roleBase = node.matches(".section-heading, .ingredients-head")
           ? 0
           : node.matches(".catalog-panel__intro, .proof-intro, .catalog-toolbar")
             ? 40
-            : node.matches(".story-art, .delivery-map, .specimen, .seal")
+            : node.matches(".story-art, .delivery-map, .ingredients-plate, .ingredients-index li")
               ? 100
               : node.matches(".proof-press")
                 ? 150

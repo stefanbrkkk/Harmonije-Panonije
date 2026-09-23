@@ -6,20 +6,20 @@ import { createSceneLoop } from "@/src/lib/scene";
 type Waypoint = { p: number; x: number; y: number; scale: number };
 
 /*
- * Cinematic route: long arcs on one gutter, only two deliberate crossings.
- * Stays near edges / decorative space, avoids sustained travel through
- * centered headings, body copy and product controls.
+ * Margin route: the bee travels in the outer margins (right, one crossing to
+ * the left while the story/ingredient scenes own the page, and back), and
+ * fades whenever it would sit on text or a control (see `occluded`).
  */
 const desktopPath: Waypoint[] = [
-  { p: 0.0, x: 80, y: 47, scale: 1.0 },
-  { p: 0.14, x: 76, y: 24, scale: 0.92 },
-  { p: 0.28, x: 82, y: 44, scale: 0.9 },
-  { p: 0.42, x: 68, y: 32, scale: 0.88 },
-  { p: 0.55, x: 22, y: 30, scale: 0.82 },
-  { p: 0.66, x: 18, y: 44, scale: 0.84 },
-  { p: 0.78, x: 24, y: 52, scale: 0.86 },
-  { p: 0.9, x: 76, y: 46, scale: 0.9 },
-  { p: 1.0, x: 74, y: 20, scale: 0.94 },
+  { p: 0.0, x: 94, y: 47, scale: 0.92 },
+  { p: 0.14, x: 95, y: 26, scale: 0.9 },
+  { p: 0.28, x: 95, y: 44, scale: 0.88 },
+  { p: 0.42, x: 95, y: 32, scale: 0.86 },
+  { p: 0.55, x: 5, y: 30, scale: 0.82 },
+  { p: 0.66, x: 4.5, y: 44, scale: 0.84 },
+  { p: 0.78, x: 5, y: 52, scale: 0.86 },
+  { p: 0.9, x: 95, y: 46, scale: 0.88 },
+  { p: 1.0, x: 95, y: 22, scale: 0.9 },
 ];
 
 const mobilePath: Waypoint[] = [
@@ -50,6 +50,10 @@ function sample(points: Waypoint[], progress: number) {
     scale: a.scale + (b.scale - a.scale) * local,
   };
 }
+
+// Text and controls the decorative bee must never sit on.
+const PROTECTED = "main :is(h1, h2, h3, h4, p, li, a, button, input, label, blockquote, figcaption, summary)";
+const OCCLUSION_PAD = 10;
 
 const JOURNEY_SELECTORS = [
   "#vrh",
@@ -86,8 +90,15 @@ export function PageBee() {
     let initialized = false;
     let anchors: number[] = [];
     let anchorCount = 0;
-    let localScenes: HTMLElement[] = [];
-    let hideSections: HTMLElement[] = [];
+    // Document-space vertical extents (measured on layout change, not per
+    // frame): the per-frame handoff/exclusion tests are arithmetic only.
+    type Band = { top: number; bottom: number };
+    let localScenes: Band[] = [];
+    let hideSections: Band[] = [];
+    // Document-space boxes of protected content, refreshed on layout change
+    // so the per-frame occlusion test is arithmetic only (no layout reads).
+    let protectedBoxes: Array<{ left: number; top: number; right: number; bottom: number }> = [];
+    let beeSize = 74;
 
     const measureAnchors = () => {
       const tops: number[] = [];
@@ -99,10 +110,36 @@ export function PageBee() {
       tops.sort((a, b) => a - b);
       anchors = tops;
       anchorCount = tops.length;
-      localScenes = Array.from(document.querySelectorAll<HTMLElement>("#put-pcele, .honey-harvest"));
+      beeSize = wrapper.offsetWidth || beeSize;
+      const sx = window.scrollX;
+      const sy = window.scrollY;
+      const band = (node: HTMLElement): Band => {
+        const r = node.getBoundingClientRect();
+        return { top: r.top + sy, bottom: r.bottom + sy };
+      };
+      localScenes = Array.from(document.querySelectorAll<HTMLElement>("#put-pcele, .honey-harvest"), band);
       // Sections with strong dedicated artwork opt out of the global bee so
       // it never competes with a local composition or covers its copy.
-      hideSections = Array.from(document.querySelectorAll<HTMLElement>('[data-page-bee="hide"]'));
+      hideSections = Array.from(document.querySelectorAll<HTMLElement>('[data-page-bee="hide"]'), band);
+      protectedBoxes = [];
+      document.querySelectorAll<HTMLElement>(PROTECTED).forEach((node) => {
+        // Pinned scenes and opted-out sections already hide the bee.
+        if (node.closest('#put-pcele, .honey-harvest, [data-page-bee="hide"]')) return;
+        const r = node.getBoundingClientRect();
+        if (r.width === 0 || r.height === 0) return;
+        protectedBoxes.push({ left: r.left + sx, top: r.top + sy, right: r.right + sx, bottom: r.bottom + sy });
+      });
+    };
+
+    const occluded = (x: number, y: number, halfW: number, halfH: number) => {
+      const left = x - halfW - OCCLUSION_PAD + window.scrollX;
+      const right = x + halfW + OCCLUSION_PAD + window.scrollX;
+      const top = y - halfH - OCCLUSION_PAD + window.scrollY;
+      const bottom = y + halfH + OCCLUSION_PAD + window.scrollY;
+      for (const box of protectedBoxes) {
+        if (left < box.right && box.left < right && top < box.bottom && box.top < bottom) return true;
+      }
+      return false;
     };
 
     const sectionProgress = (scrollY: number) => {
@@ -135,7 +172,9 @@ export function PageBee() {
     };
 
     const paint = (progress: number, dt: number) => {
-      const points = window.innerWidth < 720 ? mobilePath : desktopPath;
+      // Phones in either orientation use the compact path.
+      const compact = Math.min(window.innerWidth, window.innerHeight * 1.6) < 720;
+      const points = compact ? mobilePath : desktopPath;
       const point = sample(points, progress);
       const vw = window.innerWidth;
       const vh = window.innerHeight;
@@ -176,10 +215,9 @@ export function PageBee() {
 
       // Local cinematic handoff: fade out smoothly near sticky scenes.
       let handoff = 0;
-      const focusY = vh * 0.48;
+      const focusY = window.scrollY + vh * 0.48;
       for (const scene of localScenes) {
-        const r = scene.getBoundingClientRect();
-        if (r.top < focusY && r.bottom > focusY) {
+        if (scene.top < focusY && scene.bottom > focusY) {
           handoff = 1;
           break;
         }
@@ -188,8 +226,7 @@ export function PageBee() {
       // opacity below turns the boundary into a smooth fade.
       let excluded = 0;
       for (const section of hideSections) {
-        const r = section.getBoundingClientRect();
-        if (r.top < focusY && r.bottom > focusY) {
+        if (section.top < focusY && section.bottom > focusY) {
           excluded = 1;
           break;
         }
@@ -198,11 +235,13 @@ export function PageBee() {
       let targetOpacity: number;
       // Dedicated-artwork exclusion wins over every fallback (including the
       // end-of-page state) so the global bee never competes with local art.
+      const size = beeSize * currentScale;
       if (progress < 0.012) targetOpacity = 0;
       else if (excluded === 1) targetOpacity = 0.0;
       else if (handoff === 1) targetOpacity = 0.0;
-      else if (progress > 0.985) targetOpacity = 0.25;
-      else targetOpacity = 1;
+      else if (progress > 0.985) targetOpacity = 0;
+      else if (occluded(currentX, currentY, size * 0.5, size * 0.42)) targetOpacity = 0;
+      else targetOpacity = compact ? 0.82 : 1;
       if (overlayOpen()) targetOpacity = 0;
       currentOpacity += (targetOpacity - currentOpacity) * (1 - Math.pow(1 - 0.12, dt));
       if (Math.abs(targetOpacity - currentOpacity) < 0.004) currentOpacity = targetOpacity;
@@ -221,8 +260,15 @@ export function PageBee() {
       }
     };
 
+    // Layout changes (resize, catalog expansion, reveals) are coalesced into
+    // one re-measure per frame.
+    let measureFrame = 0;
     const scheduleMeasure = () => {
-      measureAnchors();
+      if (measureFrame) return;
+      measureFrame = requestAnimationFrame(() => {
+        measureFrame = 0;
+        measureAnchors();
+      });
     };
 
     measureAnchors();
@@ -249,6 +295,7 @@ export function PageBee() {
     );
 
     return () => {
+      if (measureFrame) cancelAnimationFrame(measureFrame);
       window.removeEventListener("resize", scheduleMeasure);
       resizeObserver?.disconnect();
       mutations.disconnect();

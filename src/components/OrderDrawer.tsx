@@ -6,6 +6,7 @@ import { useCart } from "./CartProvider";
 import { ProductVisual } from "./ProductVisual";
 import { restoreFocus } from "@/src/lib/focus";
 import { useOverlayIsolation } from "@/src/lib/overlay";
+import { bindSeparators } from "@/src/lib/typography";
 
 export function OrderDrawer() {
   const { items, count, isOpen, close, add, decrement, remove, clear } = useCart();
@@ -48,6 +49,7 @@ export function OrderDrawer() {
     isOpen,
     [dialogRef, backdropRef],
     [
+      ".skip-link",
       ".site-header",
       "main",
       "footer.site-footer",
@@ -63,12 +65,11 @@ export function OrderDrawer() {
 
   useEffect(() => {
     if (!isOpen) return;
+    // `scrollbar-gutter: stable` on <html> already keeps the layout width
+    // constant when scrolling locks, so no manual scrollbar padding here.
     const previous = document.body.style.overflow;
-    const previousPadding = document.documentElement.style.paddingRight;
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";
     document.body.classList.add("has-overlay");
-    if (scrollbarWidth > 0) document.documentElement.style.paddingRight = `${scrollbarWidth}px`;
     const returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     requestAnimationFrame(() => closeRef.current?.focus());
 
@@ -78,13 +79,26 @@ export function OrderDrawer() {
         return;
       }
       if (event.key !== "Tab" || !dialogRef.current) return;
+      // Only controls that can actually take focus: content of a closed
+      // <details> (the draft textarea) has no boxes and must not be the
+      // trap's last stop, while its <summary> must be included.
       const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
-        'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])',
-      )).filter((node) => !node.hasAttribute("inert"));
+        'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])',
+      )).filter((node) => {
+        if (node.closest("[inert]") || node.getClientRects().length === 0) return false;
+        // Closed <details>: only its own summary is reachable (Chrome keeps
+        // layout boxes for the hidden content, so rects alone are not enough).
+        const details = node.closest("details");
+        if (details && !details.open && !(node.matches("summary") && node.parentElement === details)) return false;
+        return typeof node.checkVisibility === "function" ? node.checkVisibility({ checkVisibilityCSS: true }) : true;
+      });
       if (!focusable.length) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
+      if (!dialogRef.current.contains(document.activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
       } else if (!event.shiftKey && document.activeElement === last) {
@@ -96,7 +110,6 @@ export function OrderDrawer() {
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = previous;
-      document.documentElement.style.paddingRight = previousPadding;
       document.body.classList.remove("has-overlay");
       window.removeEventListener("keydown", onKey);
       // Never restore focus into the (now hidden) toast: prefer the original
@@ -109,12 +122,21 @@ export function OrderDrawer() {
     };
   }, [isOpen, close]);
 
-  const copyTimerRef = useRef(0);
+  // A stable holder: the unmount cleanup reads the latest timer id.
+  const copyTimerRef = useRef({ id: 0 });
 
   useEffect(() => {
     const timer = copyTimerRef.current;
-    return () => window.clearTimeout(timer);
+    return () => window.clearTimeout(timer.id);
   }, []);
+
+  // Removing the focused control (clear, last item) must not drop focus to
+  // <body> inside the modal: land on the dialog's close button instead.
+  const rescueFocus = () =>
+    requestAnimationFrame(() => {
+      const dialog = dialogRef.current;
+      if (dialog && !dialog.contains(document.activeElement)) closeRef.current?.focus();
+    });
 
   const copyMessage = async () => {
     try {
@@ -136,8 +158,8 @@ export function OrderDrawer() {
       setCopyForMessage(message);
       // Owned timer: a second copy restarts the reset window instead of
       // letting the first timer cut the newer feedback short.
-      window.clearTimeout(copyTimerRef.current);
-      copyTimerRef.current = window.setTimeout(() => setCopyState("idle"), 1800);
+      window.clearTimeout(copyTimerRef.current.id);
+      copyTimerRef.current.id = window.setTimeout(() => setCopyState("idle"), 1800);
     } catch {
       setCopyState("failed");
       setCopyForMessage(message);
@@ -189,18 +211,18 @@ export function OrderDrawer() {
                     <ProductVisual category={item.product.category} id={item.product.id} compact />
                     <div className="order-item__info">
                       <span>{item.product.volume}</span>
-                      <h3>{item.product.name}</h3>
+                      <h3>{bindSeparators(item.product.name)}</h3>
                       <div className="order-item__controls" role="group" aria-label={`Količina za ${item.product.name}`}>
-                        <button type="button" onClick={() => decrement(item.product.id)} aria-label={`Smanji količinu za ${item.product.name}`}>−</button>
+                        <button type="button" onClick={() => { decrement(item.product.id); rescueFocus(); }} aria-label={`Smanji količinu za ${item.product.name}`}>−</button>
                         <span aria-live="polite">{item.quantity}</span>
                         <button type="button" onClick={() => add(item.product, { notify: false })} aria-label={`Povećaj količinu za ${item.product.name}`}>+</button>
                       </div>
                     </div>
-                    <button type="button" className="order-item__remove" onClick={() => remove(item.product.id)} aria-label={`Ukloni ${item.product.name}`}>×</button>
+                    <button type="button" className="order-item__remove" onClick={() => { remove(item.product.id); rescueFocus(); }} aria-label={`Ukloni ${item.product.name}`}>×</button>
                   </article>
                 ))}
               </div>
-              <button type="button" className="order-clear" onClick={clear}>Obriši sve</button>
+              <button type="button" className="order-clear" onClick={() => { clear(); rescueFocus(); }}>Obriši sve</button>
             </>
           )}
 

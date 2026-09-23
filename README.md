@@ -39,8 +39,8 @@ That performs, in order:
 4. a real Next.js production build (`npm run build`),
 5. the Playwright behavioral suite against that production build
    (`npm run test:e2e`: full matrix on Chromium plus a WebKit/Firefox
-   smoke spec; browsers install via `npx playwright install --with-deps
-   chromium webkit firefox`).
+   smoke spec that runs in CI or with `PW_CROSS_BROWSER=1`; browsers install
+   via `npx playwright install --with-deps chromium webkit firefox`).
 
 `npm run qa:static` runs steps 1–4 only. `npm run test:e2e` expects a
 production build to already exist (the `qa` chain builds exactly once).
@@ -147,21 +147,42 @@ There is no online payment and no hidden account flow.
 
 The motion hierarchy is intentional:
 
-1. **Persistent page bee** — follows document scroll across the narrative.
-2. **Ingredient-to-house bee scene** — the persistent bee visually hands off to the local cinematic scene rather than competing with it.
-3. **Honey macro sequence** — flower → bee/nectar → honeycomb fill.
+1. **Put pčele (BeeJourney)** — a pinned, four-chapter sequence (Priroda →
+   Sastojci → Craft → Panonija). Each chapter is one finished editorial plate:
+   a monumental word + lead, one engraved illustration standing on a shared
+   horizon rule that doubles as the progress bar, and a chapter index.
+   Chapters are selected from scroll position with hysteresis and swap with
+   short time-based transitions, so every scroll position shows exactly one
+   complete composition; only the horizon progress is scrubbed. The local
+   bee flies between chapter perches (interruptible arc flights).
+2. **Honey macro sequence** — flower → bee/nectar → honeycomb fill.
+3. **Persistent page bee** — travels in the page margins between scenes,
+   hands off to the local scenes, and fades out whenever it would sit on
+   text or a control (occlusion test against cached document boxes).
 4. **Section reveals and tactile microinteractions** — secondary only.
 
 Performance rules:
 
-- scroll work is throttled through `requestAnimationFrame`,
-- scroll listeners are passive,
+- scroll work is throttled through `requestAnimationFrame` (one shared
+  scheduler, parked when idle or off-screen),
+- scroll listeners are passive; per-frame work avoids layout reads,
 - animation favors transform/opacity,
 - no scroll-jacking,
 - no autoplay video,
 - no WebGL dependency,
-- mobile paths/scenes are simplified,
-- `prefers-reduced-motion` removes the persistent bee and collapses long cinematic sequences to static/readable states.
+- phones and short landscape screens get dedicated compositions,
+- `prefers-reduced-motion` (and no-JavaScript) show static, complete frames:
+  the journey becomes one non-pinned plate with the full chapter index, the
+  persistent bee is removed and long sequences collapse to readable states.
+
+## Illustration system
+
+`src/components/Botanical.tsx` holds the shared, deterministic drawing
+primitives (leaves, daisies, elder umbels, lemons, rosehips, poplars, comb
+cells). Both the journey plates (on cream) and the ingredient plate (on
+forest) use one engraved language: a single hairline weight, opaque muted
+fills and hatch shading through an SVG pattern + mask — no gloss, no
+gradients on objects.
 
 ## Responsive behavior
 

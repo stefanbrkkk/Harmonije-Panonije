@@ -1,71 +1,228 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { cameraShift, createSceneLoop, smoothstep } from "@/src/lib/scene";
+import { createSceneLoop } from "@/src/lib/scene";
+import { bindShortWords } from "@/src/lib/typography";
+import { Daisy, Hip, Leaf, Lemon, LemonHalf, PinnateLeaf, Poplar, Tuft, Umbel } from "./Botanical";
 
 // Pre-paint scene ownership without tripping the SSR useLayoutEffect warning.
 const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-const STAGES = [
-  { index: "01", short: "Cvet i voće" },
-  { index: "02", short: "Med i bilje" },
-  { index: "03", short: "Craft" },
-  { index: "04", short: "Panonija" },
+/*
+ * Four chapters, one horizon. Each chapter is a complete editorial plate:
+ * a monumental word, one lead sentence and one illustration standing on the
+ * shared horizon line (which doubles as the progress rule). Chapter changes
+ * are scroll-selected with hysteresis and animated in time, so every scroll
+ * position shows exactly one finished composition; the horizon progress is
+ * the only scrubbed element.
+ */
+const CHAPTERS = [
+  {
+    word: "Priroda",
+    lead: "Livada, zova i voćnjak. Sve počinje od onoga što raste oko nas.",
+    index: "Livada i voćnjak",
+  },
+  {
+    word: "Sastojci",
+    // No-break spaces keep "livadski med" and "ceđeni limun" unsplit.
+    lead: "Livadski\u00a0med i ceđeni\u00a0limun, uz voće, bobice i bilje.",
+    index: "Med, limun i bilje",
+  },
+  {
+    word: "Craft",
+    lead: "Ručno pravljeno — onako kako je počelo, za našim stolom.",
+    index: "Ručni rad",
+  },
+  {
+    word: "Panonija",
+    lead: "Vojvođanska kućica sa naše etikete — Harmonije Panonije.",
+    index: "Novi Sad · Vojvodina",
+  },
+] as const;
+
+const LAST = CHAPTERS.length - 1;
+const BOUNDARIES = [0.25, 0.5, 0.75];
+const HYSTERESIS = 0.012;
+
+// Bee perches in artwork units (viewBox 600 × 520): x, y, facing
+// (1 = native left-facing artwork, -1 = mirrored to face right).
+const PERCHES: Array<[number, number, 1 | -1]> = [
+  [446, 96, 1],
+  [548, 142, 1],
+  [300, 150, -1],
+  [150, 250, -1],
 ];
 
-const STAGE_WINDOWS: Array<[number, number]> = [
-  [-0.05, 0.32],
-  [0.27, 0.55],
-  [0.5, 0.75],
-  [0.7, 1.05],
-];
+const FLIGHT_MS = 1150;
 
-// Resting visibility per stage: the landscape never empties, the active
-// vignette carries full presence.
-const STAGE_FLOORS = [0.55, 0.5, 0.5, 0.45];
+function chapterFor(progress: number, current: number) {
+  let next = 0;
+  for (const boundary of BOUNDARIES) if (progress >= boundary) next += 1;
+  if (next === current || current < 0) return next;
+  const edge = next > current ? BOUNDARIES[next - 1] : BOUNDARIES[current - 1];
+  return Math.abs(progress - edge) > HYSTERESIS ? next : current;
+}
 
-// Ground-hugging route: visits every station like a land contour, so the
-// flight reads as travel through one environment rather than a diagram.
-const ROUTE_D = "M60 440 C120 410 170 430 230 400 C300 365 340 340 380 330 C420 320 430 260 445 235 C460 210 520 230 560 260 C600 290 640 330 700 335 C748 338 762 334 770 330";
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+/* ---------- The four plates ---------- */
+
+// One engraved language: forest hairline, opaque muted fills, hatch shading.
+const SHADE = { fill: "url(#journeyHatch)", mask: "url(#journeyShade)" };
+
+function PlateNature() {
+  return (
+    <>
+      {/* Grass tufts rooted on the horizon */}
+      <Tuft at={[136, 520]} height={70} lean={-6} />
+      <Tuft at={[296, 520]} height={58} lean={8} />
+      <Tuft at={[430, 520]} height={52} lean={-4} />
+      <Tuft at={[572, 520]} height={66} lean={6} />
+      {/* Elder (zova): pinnate leaves, umbel of five-petal florets */}
+      <path className="jart-stem" d="M512 520C510 452 504 368 494 300" />
+      <PinnateLeaf at={[508, 438]} angle={-24} length={88} />
+      <PinnateLeaf at={[505, 396]} angle={-158} length={74} />
+      <Umbel
+        base={[494, 300]}
+        rays={[[436, 262], [452, 238], [474, 224], [498, 220], [522, 226], [544, 240], [558, 262]]}
+      />
+      {/* Bud */}
+      <path className="jart-stem jart-stem--fine" d="M262 520C262 470 266 420 276 372" />
+      <path className="jart-bud" d="M276 372c-9-10-10-24-2-34 9 8 12 22 2 34Z" />
+      <path className="jart-shade" d="M276 372c-9-10-10-24-2-34 9 8 12 22 2 34Z" fill="url(#journeyHatch)" mask="url(#journeyShade)" />
+      <path className="jart-sepal" d="M276 372c-8-2-13-8-14-15M276 372c7-3 12-9 12-16" />
+      {/* Second daisy */}
+      <path className="jart-stem" d="M202 520C204 452 206 372 214 300" />
+      <Leaf at={[205, 440]} angle={-150} length={58} width={12} shade={SHADE} />
+      <Daisy c={[214, 282]} petals={13} reach={30} petalW={8} petalL={20} disk={17} />
+      {/* Principal daisy */}
+      <path className="jart-stem" d="M352 520C348 420 350 300 358 188" />
+      <Leaf at={[350, 400]} angle={-32} length={96} width={19} shade={SHADE} />
+      <Leaf at={[351, 338]} angle={-146} length={82} width={16} shade={SHADE} />
+      <Daisy c={[358, 168]} petals={16} reach={52} petalW={12} petalL={34} disk={27} />
+    </>
+  );
+}
+
+function PlateIngredients() {
+  return (
+    <>
+      {/* Rosehip (šipurak) cane; hips on short pedicels along it */}
+      <path className="jart-stem" d="M470 520C470 430 462 330 446 230C436 170 424 120 404 70" />
+      <PinnateLeaf at={[468, 452]} angle={-24} length={86} />
+      <PinnateLeaf at={[466, 420]} angle={-158} length={78} />
+      <PinnateLeaf at={[454, 300]} angle={-150} length={68} />
+      <PinnateLeaf at={[450, 262]} angle={-28} length={64} />
+      <PinnateLeaf at={[430, 140]} angle={-150} length={56} />
+      <PinnateLeaf at={[416, 104]} angle={-40} length={48} />
+      <Hip at={[466, 360]} angle={-30} />
+      <Hip at={[460, 330]} angle={24} size={0.9} />
+      <Hip at={[440, 196]} angle={-26} />
+      <Hip at={[426, 150]} angle={22} size={0.86} />
+      <Hip at={[404, 70]} angle={-8} size={0.8} />
+      {/* Whole lemon lying on the horizon */}
+      <Lemon c={[190, 472]} rx={84} ry={46} angle={-2} shade={SHADE} />
+      {/* Lemon half, upright: the hero of the plate */}
+      <LemonHalf c={[346, 446]} r={74} />
+      <path className="jart-shade" d="M346 372a74 74 0 0 1 0 148a74 74 0 0 0 0-148Z" fill="url(#journeyHatch)" />
+      {/* Honey dipper laid on the ground to the right, a small pool beneath its head */}
+      <ellipse className="jart-pool" cx="566" cy="516" rx="26" ry="4" />
+      <g transform="rotate(-3 500 506)">
+        <path className="jart-wood" d="M410 508h124" />
+        <ellipse className="jart-dipper" cx="556" cy="506" rx="26" ry="11" />
+        <path className="jart-dipper-grooves" d="M543 497v18M555 496v20M567 497v18" />
+      </g>
+    </>
+  );
+}
+
+function PlateCraft() {
+  return (
+    <>
+      {/* Glass hand reamer: saucer with spout, ribbed dome, pressed juice */}
+      <g className="jart-glassware">
+        <path className="jart-reamer" d="M92 474h184l-14 32q-4 14-18 14H124q-14 0-18-14Z" />
+        <path className="jart-juice" d="M104 482h160l-8 20q-3 8-12 8H124q-9 0-12-8Z" />
+        <path className="jart-reamer" d="M92 474l-24-6q-7-2-5 5l7 9Z" />
+        <path className="jart-reamer" d="M140 476C140 432 160 404 184 404S228 432 228 476Z" />
+        <path className="jart-reamer-rib" d="M184 404C170 420 164 448 164 476M184 404C178 424 176 450 176 476M184 404C190 424 192 450 192 476M184 404C198 420 204 448 204 476" />
+        <path className="jart-shade" d="M92 474h184l-14 32q-4 14-18 14H124q-14 0-18-14Z" fill="url(#journeyHatch)" mask="url(#journeyShade)" />
+        <path className="jart-shade" d="M140 476C140 432 160 404 184 404S228 432 228 476Z" fill="url(#journeyHatch)" mask="url(#journeyShade)" />
+      </g>
+      <LemonHalf c={[64, 474]} r={46} />
+      {/* The brand bottle, twine tag at the neck */}
+      <path className="jart-glass" d="M346 150h56v28c0 16 40 30 40 70v252a20 20 0 0 1-20 20H326a20 20 0 0 1-20-20V248c0-40 40-54 40-70Z" />
+      <path className="jart-liquid" d="M310 292c40 10 76-6 128 4v204a16 16 0 0 1-16 16H326a16 16 0 0 1-16-16Z" />
+      <path className="jart-shade" d="M310 292c40 10 76-6 128 4v204a16 16 0 0 1-16 16H326a16 16 0 0 1-16-16Z" fill="url(#journeyHatch)" mask="url(#journeyShade)" />
+      <path className="jart-glint" d="M320 300v176" />
+      <rect className="jart-cap" x="340" y="108" width="68" height="46" rx="6" />
+      <path className="jart-cap-rib" d="M352 114v34M364 114v34M376 114v34M388 114v34M400 114v34" />
+      <path className="jart-label" d="M374 330l54 24v104H320V354Z" />
+      <text className="jart-label-small" x="374" y="380" textAnchor="middle">HARMONIJE PANONIJE</text>
+      <text className="jart-label-big" x="374" y="408" textAnchor="middle">IMMUNO</text>
+      <text className="jart-label-big" x="374" y="428" textAnchor="middle">CRAFT</text>
+      <path className="jart-label-rule" d="M350 440h48" />
+      <path className="jart-string" d="M346 184c10 8 46 8 56 0M352 188c-4 14-12 26-22 32" />
+      <g transform="rotate(-18 316 236)">
+        <rect className="jart-tag" x="290" y="218" width="48" height="30" rx="2" />
+        <circle className="jart-tag-hole" cx="332" cy="233" r="2.4" />
+        <text className="jart-tag-script" x="310" y="238" textAnchor="middle">ručno</text>
+      </g>
+    </>
+  );
+}
+
+function PlatePanonia() {
+  return (
+    <>
+      {/* Low sun, engraved in horizontal lines */}
+      <circle className="jart-sun" cx="300" cy="266" r="118" />
+      <circle cx="300" cy="266" r="118" fill="url(#journeySunLines)" />
+      {/* The brand house, drawn as on the story plate and the label */}
+      <g className="jart-house" transform="translate(300 520) scale(1.18) translate(-310 -560)">
+        <path className="jart-chimney" d="M356 343.6V272h22v90.5Z" />
+        <path className="jart-wall" d="M215 560V392l95-66 95 66v168H215Z" />
+        <path className="jart-shade" d="M215 560V392l95-66 95 66v168H215Z" fill="url(#journeyHatch)" mask="url(#journeyShade)" />
+        <path className="jart-roof-band" d="M203 396L310 304L417 396L405 392L310 326L215 392Z" />
+        <path className="jart-eaves" d="M196 398h228" />
+        <circle className="jart-vent" cx="310" cy="352" r="13" />
+        <path d="M304 352h12M310 346v12" />
+        <path className="jart-window" d="M238 560V470h44v90M338 560V470h44v90" />
+        <path d="M228 452h64M232 470h56M342 452h64M346 470h56" />
+        <path className="jart-door" d="M292 560v-72a18 20 0 0 1 36 0v72" />
+      </g>
+      {/* A row of poplars on the plain */}
+      <Poplar x={468} base={520} height={196} width={38} shade={SHADE} />
+      <Poplar x={508} base={520} height={250} width={46} shade={SHADE} />
+      <Poplar x={550} base={520} height={284} width={50} shade={SHADE} />
+      <Poplar x={590} base={520} height={206} width={38} shade={SHADE} />
+    </>
+  );
+}
+
+const PLATES = [PlateNature, PlateIngredients, PlateCraft, PlatePanonia];
 
 export function BeeJourney() {
   const sectionRef = useRef<HTMLElement>(null);
-  const sceneRef = useRef<SVGSVGElement>(null);
-  const pathRef = useRef<SVGPathElement>(null);
-  const routeProgRef = useRef<SVGPathElement>(null);
   const beeRef = useRef<SVGGElement>(null);
-  const introRef = useRef<HTMLDivElement>(null);
-  const railRef = useRef<HTMLDivElement>(null);
-  const tracerRef = useRef<HTMLSpanElement>(null);
-  const outroRef = useRef<HTMLDivElement>(null);
-  const leafRef = useRef<SVGGElement>(null);
-  const berryRef = useRef<SVGGElement>(null);
-  const lemonRef = useRef<SVGGElement>(null);
-  const stageRefs = useRef<Array<SVGGElement | null>>([]);
-  const washRefs = useRef<Array<SVGEllipseElement | null>>([]);
+  const flipRef = useRef<SVGGElement>(null);
+  const progressRef = useRef<HTMLSpanElement>(null);
 
   useIsomorphicLayoutEffect(() => {
     const section = sectionRef.current;
-    const scene = sceneRef.current;
-    const path = pathRef.current;
     const bee = beeRef.current;
-    if (!section || !path || !bee) return;
+    const flip = flipRef.current;
+    if (!section || !bee || !flip) return;
 
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const chapters = Array.from(section.querySelectorAll<HTMLElement>("[data-chapter]"));
+    const plates = Array.from(section.querySelectorAll<SVGGElement>("[data-plate]"));
+    const indexItems = Array.from(section.querySelectorAll<HTMLElement>("[data-index]"));
 
-    let length = 0;
-    try {
-      length = path.getTotalLength();
-    } catch {
-      length = 1000;
-    }
-    if (routeProgRef.current) {
-      routeProgRef.current.setAttribute("stroke-dasharray", String(length));
-    }
-
-    let sceneWidth = 0;
-    let lastShift = 0;
-    let stageIndex = -1;
+    let active = -1;
+    let beeX = PERCHES[0][0];
+    let beeY = PERCHES[0][1];
+    let flight = 0;
 
     const readProgress = () => {
       const rect = section.getBoundingClientRect();
@@ -73,158 +230,90 @@ export function BeeJourney() {
       return Math.min(1, Math.max(0, -rect.top / scrollable));
     };
 
-    const measureScene = () => {
-      sceneWidth = scene?.getBoundingClientRect().width ?? 0;
+    const placeBee = (x: number, y: number, tilt: number) => {
+      beeX = x;
+      beeY = y;
+      bee.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${tilt.toFixed(1)})`);
     };
 
-    const stageWeight = (progress: number, i: number) => {
-      const [start, end] = STAGE_WINDOWS[i];
-      return Math.min(smoothstep((progress - start) / 0.05), smoothstep((end - progress) / 0.05));
+    const face = (direction: 1 | -1) => {
+      flip.style.transform = `scaleX(${direction})`;
     };
 
-    const paintStatic = () => {
-      try {
-        const p = path.getPointAtLength(length * 0.86);
-        bee.setAttribute("transform", `translate(${p.x} ${p.y}) rotate(-7) scale(1.4)`);
-      } catch {
-        /* static fallback */
-      }
-      stageRefs.current.forEach((node) => {
-        if (!node) return;
-        node.style.opacity = "1";
-        node.style.scale = "1";
+    const setActive = (next: number, animate: boolean) => {
+      if (next === active) return;
+      const previous = active;
+      active = next;
+      chapters.forEach((node, i) => {
+        node.classList.toggle("is-active", i === next);
+        node.classList.toggle("is-before", i < next);
       });
-      washRefs.current.forEach((node) => {
-        if (node) node.style.opacity = "1";
+      plates.forEach((node, i) => {
+        node.classList.toggle("is-active", i === next);
+        node.classList.toggle("is-before", i < next);
       });
-      if (routeProgRef.current) routeProgRef.current.style.strokeDashoffset = "0";
-      if (introRef.current) {
-        introRef.current.style.opacity = "1";
-        introRef.current.style.transform = "translateX(-50%)";
+      indexItems.forEach((node, i) => {
+        node.classList.toggle("is-active", i === next);
+        node.classList.toggle("is-done", i < next);
+      });
+
+      const [tx, ty, facing] = PERCHES[next];
+      if (flight) cancelAnimationFrame(flight);
+      flight = 0;
+      if (!animate || previous === -1) {
+        placeBee(tx, ty, 0);
+        face(facing);
+        return;
       }
-      if (outroRef.current) {
-        outroRef.current.style.opacity = "1";
-        outroRef.current.style.transform = "translate(-50%, 0)";
-      }
-      if (tracerRef.current) tracerRef.current.style.width = "100%";
-      if (scene) {
-        scene.style.translate = "";
-        lastShift = 0;
-      }
+      // Arc flight from wherever the bee currently is (interruptible).
+      const sx = beeX;
+      const sy = beeY;
+      const cx = (sx + tx) / 2;
+      const cy = Math.min(sy, ty) - 70;
+      face(tx > sx ? -1 : 1);
+      const start = performance.now();
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / FLIGHT_MS);
+        const e = easeInOut(t);
+        const x = (1 - e) * (1 - e) * sx + 2 * (1 - e) * e * cx + e * e * tx;
+        const y = (1 - e) * (1 - e) * sy + 2 * (1 - e) * e * cy + e * e * ty;
+        const dy = 2 * (1 - e) * (cy - sy) + 2 * e * (ty - cy);
+        placeBee(x, y, Math.max(-14, Math.min(14, dy * 0.06)) * (tx > sx ? 1 : -1));
+        if (t < 1) {
+          flight = requestAnimationFrame(step);
+        } else {
+          flight = 0;
+          placeBee(tx, ty, 0);
+          face(facing);
+        }
+      };
+      flight = requestAnimationFrame(step);
     };
 
     const paint = (progress: number) => {
-      const eased = smoothstep(progress);
-      const distance = length * Math.min(0.985, Math.max(0, eased));
-      try {
-        const p = path.getPointAtLength(distance);
-        const p2 = path.getPointAtLength(Math.min(length, distance + 2));
-        const angle = (Math.atan2(p2.y - p.y, p2.x - p.x) * 180) / Math.PI;
-        // Slight perpendicular independence so the bee doesn't look glued
-        // to the route spline.
-        const wobble = Math.sin(progress * Math.PI * 2) * 5;
-        const nx = -(p2.y - p.y);
-        const ny = p2.x - p.x;
-        const nLen = Math.hypot(nx, ny) || 1;
-        const ox = (nx / nLen) * wobble;
-        const oy = (ny / nLen) * wobble;
-        bee.setAttribute(
-          "transform",
-          `translate(${(p.x + ox).toFixed(1)} ${(p.y + oy).toFixed(1)}) rotate(${angle.toFixed(1)}) scale(1.4)`,
-        );
-        // Narrow screens: intentional phase shots (flower/lemon →
-        // berry/honey/herbs → house) instead of chasing the bee.
-        if (scene && window.innerWidth < 720) {
-          const lerpShot = (a: number, b: number, t: number) => a + (b - a) * t;
-          const shot = lerpShot(lerpShot(180, 570, smoothstep((progress - 0.3) / 0.08)), 800, smoothstep((progress - 0.62) / 0.08));
-          const shift = cameraShift(shot, 1000, window.innerWidth, sceneWidth);
-          if (Math.abs(shift - lastShift) > 0.5) {
-            scene.style.translate = `${shift.toFixed(1)}px 0`;
-            lastShift = shift;
-          }
-        } else if (scene && lastShift !== 0) {
-          scene.style.translate = "";
-          lastShift = 0;
-        }
-      } catch {
-        /* keep last pose on path errors */
-      }
-
-      if (routeProgRef.current) {
-        routeProgRef.current.style.strokeDashoffset = String(length * (1 - eased));
-      }
-
-      if (introRef.current) {
-        // Intro reads fully, then exits cleanly early: never a pale ghost
-        // sitting behind the scene.
-        const o = 1 - smoothstep((progress - 0.1) / 0.08);
-        introRef.current.style.opacity = o.toFixed(3);
-        introRef.current.style.transform = `translateX(-50%) translateY(${((1 - o) * -12).toFixed(1)}px)`;
-      }
-      if (outroRef.current) {
-        const o = smoothstep((progress - 0.68) / 0.22);
-        outroRef.current.style.opacity = o.toFixed(3);
-        outroRef.current.style.transform = `translate(-50%, ${((1 - o) * 18).toFixed(1)}px)`;
-      }
-
-      // Stage focus: exactly one vignette carries full presence; the rest
-      // settle to their resting floors. Warms washes + rail follow.
-      let best = 0;
-      let bestWeight = -1;
-      const weights = STAGES.map((_, i) => {
-        const w = stageWeight(progress, i);
-        if (w > bestWeight) {
-          bestWeight = w;
-          best = i;
-        }
-        return w;
-      });
-      stageRefs.current.forEach((node, i) => {
-        if (!node) return;
-        const w = weights[i] ?? 0;
-        node.style.opacity = (STAGE_FLOORS[i] + (1 - STAGE_FLOORS[i]) * w).toFixed(3);
-        node.style.scale = (0.97 + 0.06 * w).toFixed(3);
-      });
-      washRefs.current.forEach((node, i) => {
-        if (node) node.style.opacity = (0.15 + 0.85 * (weights[i] ?? 0)).toFixed(3);
-      });
-      if (best !== stageIndex) {
-        stageIndex = best;
-        railRef.current?.querySelectorAll(".bee-journey__rail-item").forEach((item, i) => {
-          item.classList.toggle("is-active", i === best);
-        });
-      }
-      if (tracerRef.current) tracerRef.current.style.width = `${(eased * 100).toFixed(1)}%`;
-
-      // Subtle ingredient parallax: ~2-3px, ~1deg. Rooted, never jumping.
-      const react = (node: SVGGElement | null, point: number, direction: number) => {
-        if (!node) return;
-        const d = Math.max(0, 1 - Math.abs(progress - point) * 7);
-        const e = smoothstep(d);
-        node.style.transform =
-          `translate(${(e * 2.6 * direction).toFixed(2)}px, ${(-e * 3).toFixed(2)}px) ` +
-          `rotate(${(e * 1.2 * direction).toFixed(2)}deg)`;
-      };
-      react(lemonRef.current, 0.23, 1);
-      react(berryRef.current, 0.42, -1);
-      react(leafRef.current, 0.58, 1);
+      section.classList.add("is-live");
+      setActive(chapterFor(readProgress(), active), active !== -1);
+      // The horizon rule is the one scrubbed element: plates stay grounded.
+      if (progressRef.current) progressRef.current.style.transform = `scaleX(${progress.toFixed(4)})`;
     };
 
-    const onResize = () => {
-      try {
-        length = path.getTotalLength();
-        routeProgRef.current?.setAttribute("stroke-dasharray", String(length));
-      } catch {
-        /* keep previous length */
-      }
-      measureScene();
+    const paintStatic = () => {
+      if (flight) cancelAnimationFrame(flight);
+      flight = 0;
+      section.classList.remove("is-live");
+      active = -1;
+      chapters.forEach((node) => {
+        node.classList.remove("is-active", "is-before");
+      });
+      plates.forEach((node) => node.classList.remove("is-active", "is-before"));
+      indexItems.forEach((node) => node.classList.remove("is-active", "is-done"));
+      if (progressRef.current) progressRef.current.style.transform = "";
+      placeBee(PERCHES[LAST][0], PERCHES[LAST][1], 0);
+      face(PERCHES[LAST][2]);
     };
 
-    measureScene();
-    window.addEventListener("resize", onResize);
-    // Own the scene before first paint: no flash of unmanaged state, and the
-    // initial frame already matches the live scroll position.
-    section.classList.add("is-live");
+    // Own the scene before first paint: the first frame already shows the
+    // chapter that matches the live scroll position.
     if (media.matches) paintStatic();
     else paint(readProgress());
     const stopLoop = createSceneLoop(
@@ -236,233 +325,85 @@ export function BeeJourney() {
         advance: (current, target, blend) => current + (target - current) * blend,
         paintStatic,
       },
-      0.16,
+      0.2,
     );
     return () => {
-      window.removeEventListener("resize", onResize);
+      if (flight) cancelAnimationFrame(flight);
       stopLoop();
     };
   }, []);
 
   return (
-    <section id="put-pcele" ref={sectionRef} className="bee-journey" aria-label="Od sastojaka do Harmonija Panonije">
-      <div className="bee-journey__sticky">
-        <div ref={introRef} className="bee-journey__intro shell">
-          <p className="eyebrow"><span />Jedan mali put</p>
-          <h2>Priroda → sastojci → craft → Panonija.</h2>
-          <p>Put vodi od cveta i voća, preko meda i bilja, do prepoznatljive vojvođanske kućice sa etiketa.</p>
-        </div>
+    <section id="put-pcele" ref={sectionRef} className="journey" aria-labelledby="put-pcele-naslov">
+      <div className="journey__sticky">
+        <div className="journey__frame shell">
+          <div className="journey__top">
+            <h2 id="put-pcele-naslov" className="eyebrow"><span aria-hidden="true" />Put pčele</h2>
+          </div>
 
-        <svg ref={sceneRef} className="bee-scene" viewBox="0 0 1000 560" role="img" aria-label="Stilizovana pčela leti kroz sastojke ka vojvođanskoj kućici">
-          <defs>
-            <linearGradient id="honeyGlow" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#e7b95d" stopOpacity=".3" />
-              <stop offset="1" stopColor="#d38b2e" stopOpacity="0" />
-            </linearGradient>
-            <radialGradient id="sageWash" cx="50%" cy="50%" r="50%">
-              <stop offset="0" stopColor="#7e9379" stopOpacity=".16" />
-              <stop offset="1" stopColor="#7e9379" stopOpacity="0" />
-            </radialGradient>
-            <radialGradient id="honeyWash" cx="50%" cy="50%" r="50%">
-              <stop offset="0" stopColor="#e7b95d" stopOpacity=".2" />
-              <stop offset="1" stopColor="#e7b95d" stopOpacity="0" />
-            </radialGradient>
-          </defs>
+          <div className="journey__stage">
+            <ol className="journey__chapters">
+              {CHAPTERS.map((chapter, i) => (
+                <li key={chapter.word} className="journey__chapter" data-chapter={i}>
+                  <p className="journey__lead">{bindShortWords(chapter.lead)}</p>
+                  <h3 className="journey__word">
+                    <span>{chapter.word}</span>
+                  </h3>
+                </li>
+              ))}
+            </ol>
 
-          {/* Static depth washes */}
-          <ellipse cx="300" cy="300" rx="270" ry="150" fill="url(#sageWash)" />
-          <ellipse cx="790" cy="240" rx="220" ry="150" fill="url(#honeyWash)" />
-          {/* Distant Panonian horizon, orchard row, field divisions */}
-          <g className="bee-scene__backdrop" aria-hidden="true">
-            <path d="M-20 152C200 132 400 152 600 140c150-9 280 0 440-12" />
-            <path d="M-20 196C180 184 380 200 580 190c160-8 300 2 460-8" className="bee-scene__fielddiv" />
-            <g className="bee-scene__orchard" aria-hidden="true">
-              <circle cx="180" cy="168" r="7" /><circle cx="340" cy="162" r="8" /><circle cx="520" cy="166" r="7" /><circle cx="700" cy="160" r="8" /><circle cx="860" cy="164" r="7" />
-              <path d="M180 175v14M340 170v14M520 173v14M700 168v14M860 171v14" />
-            </g>
-            <path d="M60 520C90 440 110 380 140 320M96 452c-46-12-66-44-54-72 42 2 64 28 54 72ZM118 398c44-14 66-44 52-70-40 6-62 30-52 70Z" />
-            <path d="M920 480c-20-70-26-130-22-190M908 372c40-14 58-42 46-68-38 4-56 28-46 68Z" />
-          </g>
-
-          <path className="bee-scene__contour" d="M-50 440 C130 395 240 488 375 420 C535 339 621 194 786 172 C899 158 974 206 1065 134" />
-          {/* Tracing route: faint full path + honey progress drawn with scroll. */}
-          <path ref={pathRef} className="bee-scene__route-base" d={ROUTE_D} />
-          <path
-            ref={routeProgRef}
-            className="bee-scene__route-prog"
-            d={ROUTE_D}
-            pathLength={1000}
-            strokeDasharray={1000}
-            strokeDashoffset={1000}
-          />
-
-          {/* Foreground field band: grounds the panorama so landmarks read
-              as one editorial illustration instead of isolated icons. */}
-          <g className="bee-scene__foreground" aria-hidden="true">
-            <path d="M-20 508 C150 472 300 502 450 480 C600 460 750 492 1020 464" />
-            <path d="M-20 532 C160 500 320 526 470 506 C620 488 770 514 1020 494" />
-            <path d="M150 502c8-22 12-40 14-58M690 484c-6-20-8-38-8-56M880 476c8-18 12-34 14-50" />
-          </g>
-          {/* Large foreground fragments bleeding from the viewport edges. */}
-          <g className="bee-scene__edgegrowth" aria-hidden="true">
-            <path d="M-10 584C-6 548-2 522 4 502M-10 584C2 550 10 524 18 502M-10 584C-16 552-19 526-19 504" />
-            <path d="M1010 584C1002 548 994 520 984 498" />
-            <ellipse cx="976" cy="502" rx="20" ry="9" transform="rotate(-35 976 502)" className="scene-fill-sage" />
-            <path d="M-12 96C30 88 60 76 84 58M-12 96C20 100 44 100 64 94" />
-            <ellipse cx="72" cy="66" rx="14" ry="7" transform="rotate(-18 72 66)" className="scene-fill-sage" />
-            <circle cx="92" cy="52" r="5" className="scene-fill-sage" />
-          </g>
-
-          {/* STAGE 01 — origin thicket: bloom, bud, fruit, grasses, bridge stem. */}
-          <g ref={(node) => { stageRefs.current[0] = node; }} className="scene-stage-group" data-stage="0" aria-hidden="true">
-            <ellipse ref={(node) => { washRefs.current[0] = node; }} cx="150" cy="392" rx="120" ry="72" fill="url(#sageWash)" />
-            <g transform="translate(130 430)" className="scene-bloom-core">
-              <path d="M0 36C-2 14-4-6-6-38" strokeWidth="2" />
-              <ellipse cx="-34" cy="-24" rx="24" ry="11" transform="rotate(-24 -34 -24)" className="scene-fill-sage" />
-              <ellipse cx="34" cy="-24" rx="24" ry="11" transform="rotate(24 34 -24)" className="scene-fill-sage" />
-              <ellipse cx="0" cy="-56" rx="15" ry="26" className="scene-fill-paper" />
-              <ellipse cx="-23" cy="-42" rx="12" ry="21" transform="rotate(-36 -23 -42)" className="scene-fill-paper" />
-              <ellipse cx="23" cy="-42" rx="12" ry="21" transform="rotate(36 23 -42)" className="scene-fill-paper" />
-              <circle cx="0" cy="-34" r="12" className="scene-fill-honey" />
-              <circle cx="44" cy="-6" r="7" className="scene-fill-sage" />
-              <path d="M40 58C43 34 45 14 47-2" strokeWidth="1.6" />
-              <circle cx="66" cy="6" r="4" className="scene-fill-berry" />
-              <circle cx="78" cy="-6" r="3.4" className="scene-fill-berry" />
-              <circle cx="60" cy="-12" r="3" className="scene-fill-berry" />
-              <path d="M-4 30C-40 24-56 6-58-14" strokeWidth="1.6" />
-              {/* Second blossom + grasses root the vignette. */}
-              <path d="M-52 52C-56 30-58 12-58-6" strokeWidth="1.5" />
-              <ellipse cx="-58" cy="-18" rx="8" ry="13" className="scene-fill-paper" />
-              <ellipse cx="-68" cy="-10" rx="7" ry="11" transform="rotate(-30 -68 -10)" className="scene-fill-paper" />
-              <ellipse cx="-48" cy="-10" rx="7" ry="11" transform="rotate(30 -48 -10)" className="scene-fill-paper" />
-              <circle cx="-58" cy="-8" r="5" className="scene-fill-honey" />
-              <path d="M-24 58C-26 40-26 24-24 10M16 58C18 42 18 28 16 16" strokeWidth="1.2" className="scene-grass" />
-              {/* Bridge stem reaching toward the lemon thicket. */}
+            <svg className="journey__art" viewBox="0 0 600 520" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+              <defs>
+                <pattern id="journeyHatch" width="4.5" height="4.5" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
+                  <path d="M0 0V4.5" stroke="rgba(15,40,33,.34)" strokeWidth=".9" />
+                </pattern>
+                <pattern id="journeySunLines" width="8" height="7" patternUnits="userSpaceOnUse">
+                  <path d="M0 3.5H8" stroke="rgba(122,79,14,.42)" strokeWidth="1" />
+                </pattern>
+                <linearGradient id="journeyShadeRamp" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset=".42" stopColor="#000" />
+                  <stop offset=".92" stopColor="#fff" />
+                </linearGradient>
+                <mask id="journeyShade" maskContentUnits="objectBoundingBox">
+                  <rect width="1" height="1" fill="url(#journeyShadeRamp)" />
+                </mask>
+              </defs>
+              {PLATES.map((Plate, i) => (
+                <g key={i} className="journey__plate" data-plate={i}>
+                  <Plate />
+                </g>
+              ))}
+              <g ref={beeRef} className="journey-bee" transform={`translate(${PERCHES[LAST][0]} ${PERCHES[LAST][1]})`}>
+                <g ref={flipRef} className="journey-bee__flip">
+                  <g className="journey-bee__bob">
+                    <g className="journey-bee__wings">
+                      <ellipse cx="-2" cy="-13" rx="9" ry="14" transform="rotate(-28 -2 -13)" />
+                      <ellipse cx="8" cy="-12" rx="8" ry="12" transform="rotate(22 8 -12)" />
+                    </g>
+                    <ellipse className="journey-bee__body" cx="4" cy="0" rx="16" ry="10" />
+                    <path className="journey-bee__stripes" d="M-2-9.5c3 5 3 14 0 19M5-10c3 6 3 14 0 20M12-8.5c2.4 5 2.4 12 0 17" />
+                    <circle className="journey-bee__head" cx="-14" cy="-1" r="6.5" />
+                    <path className="journey-bee__line" d="M-17-6c-3-6-8-8-11-6M-14-7c-1-6 2-10 6-10M20 0l6 1" />
+                  </g>
+                </g>
               </g>
-            <g className="scene-bridge" aria-hidden="true" transform="translate(130 430)">
-              <path d="M60 40C90 20 110 -5 130 -25" strokeWidth="1.6" />
-              <ellipse cx="85" cy="18" rx="13" ry="6" transform="rotate(-24 85 18)" className="scene-fill-sage" />
-              <ellipse cx="108" cy="-2" rx="11" ry="5.5" transform="rotate(-28 108 -2)" className="scene-fill-sage" />
-            </g>
-            <text className="scene-stage" x="60" y="352">01<tspan dx="7" className="scene-stage__name">PRIRODA</tspan></text>
-            <path className="scene-stage__rule" d="M60 362h52" />
-          </g>
+            </svg>
+          </div>
 
-          {/* STAGE 02 — ingredient thicket: lemon branch, berry canes, herb. */}
-          <g ref={(node) => { stageRefs.current[1] = node; }} className="scene-stage-group" data-stage="1" aria-hidden="true">
-            <ellipse ref={(node) => { washRefs.current[1] = node; }} cx="365" cy="300" rx="140" ry="95" fill="url(#sageWash)" />
-            <g transform="translate(290 330)">
-              <g ref={lemonRef} className="scene-ingredient__motion scene-ingredient--lemon">
-                <path d="M-30 75C-52 62-60 44-62 30M-62 34C-32 14-2 4 40-12" strokeWidth="1.8" />
-                <ellipse cx="8" cy="-4" rx="42" ry="32" transform="rotate(-18 8 -4)" />
-                <path d="M-12-30c8-12 24-12 32-4M-16 8l44-24M-8-28l16 48" strokeWidth="1.2" />
-                <path d="M-52 26c-16-2-28-12-30-26 14-2 28 8 30 26ZM32-12c14-8 30-8 38 2-10 10-28 10-38-2Z" className="scene-fill-sage" strokeWidth="1.4" />
-              </g>
-              <text className="scene-stage" x="-82" y="-58">02<tspan dx="7" className="scene-stage__name">SASTOJCI</tspan></text>
-              <path className="scene-stage__rule" d="M-82 -48h52" />
-            </g>
-            <g transform="translate(440 230)">
-              <g ref={berryRef} className="scene-ingredient__motion scene-ingredient--berry">
-                <path d="M-14 108C-12 70-10 30 6-38" strokeWidth="1.8" />
-                <path d="M-14 108C2 74 22 44 48 22" strokeWidth="1.6" />
-                <circle cx="6" cy="-44" r="13" /><circle cx="-12" cy="-30" r="11" /><circle cx="22" cy="-26" r="10" /><circle cx="2" cy="-10" r="12" /><circle cx="26" cy="-6" r="9" />
-                <circle cx="48" cy="16" r="10" /><circle cx="34" cy="28" r="8" />
-                <path d="M-8-52c6-10 18-12 28-8M-14-34c-10-8-24-8-30 0" strokeWidth="1.2" />
-              </g>
-            </g>
-            <g transform="translate(360 420)">
-              <g ref={leafRef} className="scene-ingredient__motion scene-ingredient--leaf">
-                <path d="M0 52C2 22 4-3 6-30" strokeWidth="1.8" />
-                <path d="M3 30c-22-6-32-20-26-32 18 1 28 12 26 32ZM5 8c20-7 29-20 23-31-17 3-25 13-23 31ZM2 46c-18-1-28-9-27-21 15-2 26 6 27 21Z" className="scene-fill-sage" strokeWidth="1.3" />
-              </g>
-            </g>
-          </g>
+          <div className="journey__horizon" aria-hidden="true">
+            <span ref={progressRef} className="journey__progress" />
+          </div>
 
-          {/* STAGE 03 — craft clearing: honey ribbon, suspended drop, vessel. */}
-          <g ref={(node) => { stageRefs.current[2] = node; }} className="scene-stage-group" data-stage="2" aria-hidden="true">
-            <ellipse ref={(node) => { washRefs.current[2] = node; }} cx="590" cy="275" rx="130" ry="90" fill="url(#honeyWash)" />
-            <path d="M508 232C540 260 560 300 566 340" className="scene-ribbon" />
-            <path d="M534 224C562 256 578 300 582 344" className="scene-ribbon scene-ribbon--inner" />
-            <g transform="translate(600 282) scale(0.62)" className="scene-ingredient scene-ingredient--honey">
-              <path d="M0-34c22 27 33 44 33 63A33 33 0 1 1-33 29C-33 10-22-7 0-34Z" />
-              <ellipse cx="0" cy="16" rx="49" ry="49" fill="url(#honeyGlow)" stroke="none" />
-            </g>
-            <g transform="translate(600 372)" className="scene-vessel-group" aria-hidden="true">
-              <path d="M-72 0Q0 34 72 0" className="scene-vessel" />
-              <path d="M-54 2Q0 28 54 2" className="scene-vessel scene-vessel--inner" />
-              <path d="M-14 22h28" className="scene-vessel" />
-            </g>
-            <g transform="translate(672 318)" className="scene-ingredient--stem">
-              <path d="M0 60C3 30 5 0 8-28" strokeWidth="1.8" />
-              <path d="M4 28c-20-5-29-18-24-29 16 1 25 11 24 29ZM6 4c18-6 26-18 21-28-15 2-23 12-21 28Z" className="scene-fill-sage" strokeWidth="1.3" />
-            </g>
-            <text className="scene-stage" x="500" y="196">03<tspan dx="7" className="scene-stage__name">CRAFT</tspan></text>
-            <path className="scene-stage__rule" d="M500 206h52" />
-          </g>
-
-          {/* STAGE 04 — homestead: house, sun, orchard row, ground, fence. */}
-          <g ref={(node) => { stageRefs.current[3] = node; }} className="scene-stage-group" data-stage="3" aria-hidden="true">
-            <ellipse ref={(node) => { washRefs.current[3] = node; }} cx="790" cy="250" rx="150" ry="100" fill="url(#honeyWash)" />
-            <circle cx="806" cy="176" r="54" className="scene-sun" />
-            <g transform="translate(752 238)" className="scene-house">
-              <path d="M-104 96V34l60-44 60 16v90h-120Z" strokeWidth="1.6" />
-              <path d="M-114 38 44-52l116 90" strokeWidth="1.6" />
-              <path d="M-120 40h250" strokeWidth="2" />
-              <circle cx="44" cy="-16" r="10" strokeWidth="1.4" />
-              <path d="M39-16h10M44-21v10" strokeWidth="1.2" />
-              <path d="M-80 96V52h30v44M66 96V52h30v44" strokeWidth="1.4" />
-              <path d="M-86 44h42M-84 52h38M62 44h42M64 52h38" strokeWidth="1" />
-              <path d="M-6 96V64a13 14 0 0 1 26 0v32M-12 96h38" strokeWidth="1.4" />
-              <path d="M84-34v-32h16v40" strokeWidth="1.4" />
-              <path d="M-112 96h240" strokeWidth="1.4" />
-              <text x="4" y="122" textAnchor="middle">HARMONIJE PANONIJE</text>
-            </g>
-            <g className="scene-house__garden" aria-hidden="true" strokeWidth="1.3">
-              <path d="M648 372v-46M642 344l12-6" />
-              <circle cx="648" cy="312" r="17" className="scene-fill-sage" />
-              <circle cx="642" cy="316" r="2.6" className="scene-fill-berry" />
-              <circle cx="654" cy="308" r="2.6" className="scene-fill-berry" />
-              <path d="M892 368v-40M886 344l12-6" />
-              <circle cx="892" cy="312" r="15" className="scene-fill-sage" />
-              <circle cx="898" cy="308" r="2.4" className="scene-fill-berry" />
-              <path d="M600 402C680 394 760 394 840 402M884 398C920 396 950 396 976 398" />
-              <path d="M610 414h8M626 414h8M642 414h8M658 414h8M906 410h8M922 410h8M938 410h8M954 410h8M602 402h280M898 390h84" />
-            </g>
-            <text className="scene-stage" x="872" y="128">04<tspan dx="7" className="scene-stage__name">PANONIJA</tspan></text>
-            <path className="scene-stage__rule" d="M872 138h52" />
-          </g>
-
-          <g ref={beeRef} className="scene-bee" transform="translate(75 375) scale(1.4)">
-            <ellipse cx="0" cy="0" rx="15" ry="9" />
-            <path d="M-10-2h20M-6-8 1 8M5-7 10 5" />
-            {/*
-              Wing ownership (HP-39): base splay lives on the static SVG
-              anchor; the CSS flap animates only the inner shape, so the two
-              transforms never compete for the same layer.
-            */}
-            <g transform="rotate(-35 -7 -12)">
-              <ellipse className="scene-bee__wing scene-bee__wing--a" cx="-7" cy="-12" rx="9" ry="5" />
-            </g>
-            <g transform="rotate(35 6 -12)">
-              <ellipse className="scene-bee__wing scene-bee__wing--b" cx="6" cy="-12" rx="9" ry="5" />
-            </g>
-            <path d="M-15-1c-9-8-13-4-14 1M15-1c8-8 12-4 13 1" />
-          </g>
-        </svg>
-
-        {/* Editorial journey rail: the narrative annotation of the scene. */}
-        <div ref={railRef} className="bee-journey__rail" aria-hidden="true">
-          {STAGES.map((stage, i) => (
-            <span key={stage.index} className={i === 0 ? "bee-journey__rail-item is-active" : "bee-journey__rail-item"}>
-              <i>{stage.index}</i><em>{stage.short}</em>
-            </span>
-          ))}
-          <span ref={tracerRef} className="bee-journey__rail-tracer" style={{ width: "0%" }} />
-        </div>
-
-        <div ref={outroRef} className="bee-journey__outro shell">
-          <span className="section-number">02</span>
-          <p>Prepoznatljiva vojvođanska kućica sa etiketa vraća priču tamo gde pripada — u Panoniju, ručni rad i identitet proizvoda.</p>
+          <ol className="journey__index" aria-hidden="true">
+            {CHAPTERS.map((chapter, i) => (
+              <li key={chapter.word} data-index={i}>
+                <span>{String(i + 1).padStart(2, "0")}</span>
+                <strong>{chapter.word}</strong>
+                <em>{bindShortWords(chapter.index)}</em>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     </section>

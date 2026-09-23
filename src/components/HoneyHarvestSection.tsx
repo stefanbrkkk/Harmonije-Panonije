@@ -228,7 +228,9 @@ export function HoneyHarvestSection() {
         const o = Math.min(enter, exit);
         node.style.opacity = o.toFixed(3);
         node.style.transform = `translate3d(0, ${((1 - enter) * 14 - (1 - exit) * 22).toFixed(1)}px, 0)`;
-        node.style.visibility = o <= 0.01 ? "hidden" : "visible";
+        // Opacity only: faded chapters stay in the accessibility tree so
+        // screen readers can read all three regardless of scroll position
+        // (the copy layer is pointer-events:none, so nothing is hit-testable).
       };
       fade(copyARef.current, -0.05, 0.0, 0.3, 0.325);
       fade(copyBRef.current, 0.325, 0.35, 0.665, 0.68);

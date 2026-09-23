@@ -43,10 +43,23 @@ test("drawer: backdrop, Escape, focus trap, inert background, focus restore", as
   const drawer = page.locator(".order-drawer");
   await expect(drawer).toHaveClass(/is-open/);
   expect(await page.locator("main").getAttribute("inert")).not.toBeNull();
-  // Trap: Tab cycles inside the dialog.
-  await page.keyboard.press("Tab");
-  const inside = await page.evaluate(() => !!document.activeElement?.closest(".order-drawer"));
-  expect(inside).toBe(true);
+  // Trap: a full cycle forward and backward never leaves the dialog (the
+  // draft textarea inside the closed <details> must not be a stop).
+  await expect(page.locator(".order-drawer .icon-button")).toBeFocused();
+  for (let i = 0; i < 24; i += 1) {
+    await page.keyboard.press("Tab");
+    const inside = await page.evaluate(() => !!document.activeElement?.closest(".order-drawer"));
+    expect(inside, `forward Tab ${i + 1} stays in the dialog`).toBe(true);
+  }
+  for (let i = 0; i < 24; i += 1) {
+    await page.keyboard.press("Shift+Tab");
+    const inside = await page.evaluate(() => !!document.activeElement?.closest(".order-drawer"));
+    expect(inside, `backward Tab ${i + 1} stays in the dialog`).toBe(true);
+  }
+  // Shift+Tab from the first control wraps to the last one (never sticks).
+  await page.locator(".order-drawer .icon-button").focus();
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.locator(".order-drawer .icon-button")).not.toBeFocused();
   await page.keyboard.press("Escape");
   await expect(drawer).not.toHaveClass(/is-open/);
   await expect(page.locator("[data-ov-inert]")).toHaveCount(0);
@@ -56,6 +69,18 @@ test("drawer: backdrop, Escape, focus trap, inert background, focus restore", as
   await expect(drawer).toHaveClass(/is-open/);
   await page.locator(".drawer-backdrop").click({ force: true });
   await expect(drawer).not.toHaveClass(/is-open/);
+  assertClean();
+});
+
+test("removing the focused control keeps focus inside the dialog", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.locator(".product-card__add").first().click();
+  await page.locator(".order-button").first().click();
+  await page.locator(".order-clear").focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".order-empty")).toBeVisible();
+  await expect(page.locator(".order-drawer .icon-button"), "focus rescued to the close button").toBeFocused();
   assertClean();
 });
 

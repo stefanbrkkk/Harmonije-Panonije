@@ -33,12 +33,18 @@ test("search: terms, whitespace, diacritics, empty state", async ({ page }) => {
   await search.fill("đumbir");
   expect(await cards.count()).toBe(folded);
   await expect(page.locator(".catalog-count")).toContainText(/rezultat/i);
+  await page.locator("#tab-sirupi").click();
   await search.fill("ŠIPURAK");
+  await expect(cards.first(), "uppercase with diacritics still matches").toContainText(/šipurak/i);
   await search.fill("sargarepa");
-  await search.fill("xyz-nepostojeci-pojam");
+  await expect(cards.first(), "ascii query matches šargarepa").toContainText(/šargarepa/i);
+  await search.fill("  Šljiva Đ ");
   await expect(page.locator(".catalog-empty")).toBeVisible();
+  // The empty state quotes what the visitor typed, not the folded query.
+  await expect(page.locator(".catalog-empty strong")).toHaveText("Nema poklapanja za „Šljiva Đ“.");
   await page.locator(".catalog-empty .text-link").click();
   expect(await cards.count()).toBeGreaterThan(0);
+  await expect(search, "focus returns to the search field").toBeFocused();
   assertClean();
 });
 

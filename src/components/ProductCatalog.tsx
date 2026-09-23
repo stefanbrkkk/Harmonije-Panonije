@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { bindSeparators } from "@/src/lib/typography";
 import { categoryCopy, products, publishedPrice, type ProductCategory } from "@/src/data/siteContent";
 import { ProductVisual } from "./ProductVisual";
 import { useCart } from "./CartProvider";
@@ -41,6 +42,7 @@ export function ProductCatalog() {
   const [enterIds, setEnterIds] = useState<string[]>([]);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const moreRef = useRef<HTMLButtonElement | null>(null);
+  const searchRef = useRef<HTMLInputElement | null>(null);
   const { add, items, open } = useCart();
 
   const normalized = normalizeQuery(query);
@@ -144,6 +146,7 @@ export function ProductCatalog() {
           <label className="catalog-search">
             <span>Pretraži ukuse</span>
             <input
+              ref={searchRef}
               type="search"
               value={query}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
@@ -183,12 +186,17 @@ export function ProductCatalog() {
                         <span>{product.volume}</span>
                         <span>{price != null ? `${price} RSD` : "Cena po upitu"}</span>
                       </div>
-                      <h4>{product.name}</h4>
+                      <h4>{bindSeparators(product.name)}</h4>
                       <p>{product.description}</p>
                       <ul aria-label={`Sastojci za ${product.name}`}>
                         {product.ingredients.map((ingredient) => <li key={ingredient}>{ingredient}</li>)}
                       </ul>
-                      <button type="button" className={`product-card__add ${quantity ? "is-added" : ""}`} onClick={() => add(product, { notify: true })}>
+                      <button
+                        type="button"
+                        className={`product-card__add ${quantity ? "is-added" : ""}`}
+                        onClick={() => add(product, { notify: true })}
+                        aria-label={quantity ? `${product.name}: u upitu ${quantity}, dodaj još` : `Dodaj ${product.name} u upit`}
+                      >
                         <span>{quantity ? `U upitu · ${quantity}` : "Dodaj u upit"}</span><i aria-hidden="true">{quantity ? "✓" : "+"}</i>
                       </button>
                     </div>
@@ -198,9 +206,19 @@ export function ProductCatalog() {
             </div>
           ) : (
             <div className="catalog-empty">
-              <strong>Nema poklapanja za „{normalized}“.</strong>
+              <strong>Nema poklapanja za „{query.trim()}“.</strong>
               <p>Probajte drugi sastojak ili otvorite neku od ostalih kategorija.</p>
-              <button type="button" className="text-link" onClick={() => setQuery("")}>Obriši pretragu <span aria-hidden="true">↗</span></button>
+              <button
+                type="button"
+                className="text-link"
+                onClick={() => {
+                  setQuery("");
+                  // The button unmounts with the empty state: keep focus in
+                  // the search field instead of dropping it to <body>.
+                  searchRef.current?.focus();
+                }}
+              >
+                Obriši pretragu <span aria-hidden="true">↗</span></button>
             </div>
           )}
 

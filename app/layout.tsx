@@ -48,6 +48,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    // Explicit `icons` metadata disables the file convention, so the
+    // generated iOS home-screen icon (app/apple-icon.tsx) is listed here.
+    apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
   },
   formatDetection: { telephone: false, email: false, address: false },
   robots: {

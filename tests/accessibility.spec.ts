@@ -77,5 +77,22 @@ test("keyboard-only journey reaches catalog and inquiry", async ({ page }) => {
   await page.keyboard.press("Tab");
   const insideMain = await page.evaluate(() => !!document.activeElement?.closest("main"));
   expect(insideMain, "skip link leads into main content").toBe(true);
+  // Keep tabbing until the first "add to inquiry" control, then use it.
+  let reached = false;
+  for (let i = 0; i < 40 && !reached; i += 1) {
+    await page.keyboard.press("Tab");
+    reached = await page.evaluate(() => !!document.activeElement?.matches(".product-card__add"));
+  }
+  expect(reached, "catalog add control reachable by Tab").toBe(true);
+  const label = await page.evaluate(() => document.activeElement?.getAttribute("aria-label") ?? "");
+  expect(label, "add control names its product").toMatch(/^Dodaj .+ u upit$/);
+  const box = await page.evaluate(() => {
+    const rect = document.activeElement!.getBoundingClientRect();
+    return { top: rect.top, bottom: rect.bottom, header: document.querySelector(".site-header")!.getBoundingClientRect().bottom };
+  });
+  expect(box.top, "focused control clears the fixed header").toBeGreaterThanOrEqual(box.header);
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".order-button__count")).toHaveText("1");
+  await expect(page.locator(".order-button")).toHaveAttribute("aria-label", /1 stavka$/);
   assertClean();
 });

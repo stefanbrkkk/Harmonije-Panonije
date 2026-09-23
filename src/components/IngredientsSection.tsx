@@ -1,173 +1,179 @@
-"use client";
-
-import { useRef } from "react";
 import { ingredients } from "@/src/data/siteContent";
+import { bindShortWords } from "@/src/lib/typography";
+import { hexPath, Leaf, Lemon, LemonHalf } from "./Botanical";
 
-// Editorial specimen illustrations share one grammar: 1.5px round-cap
-// line drawing, sparse semantic fills (gold/sage/berry 8–18%), hairline
-// detail. Same hand as the BeeJourney panorama, adapted to the dark field.
-function SpecimenIcon({ kind }: { kind: string }) {
-  const common = {
-    viewBox: "0 0 80 80",
-    "aria-hidden": true,
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 1.5,
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-  } as const;
-  if (kind === "honey")
-    return (
-      <svg {...common}>
-        <path d="M36 6c13 16 21 27 21 38a21 21 0 1 1-42 0c0-11 8-22 21-38Z" fill="rgba(239,201,110,.12)" />
-        <path d="M36 22c6 8 10 13 10 19a10 10 0 1 1-20 0c0-6 4-11 10-19Z" strokeWidth="1.2" />
-        <path d="M56 12l8-5 8 5v9l-8 5-8-5Z" />
-        <path d="M60 52c-3-9 0-18 7-22M68 54c3-9 10-15 19-15" strokeWidth="1.2" />
-        <ellipse cx="72" cy="34" rx="4" ry="6" fill="rgba(251,247,236,.4)" stroke="none" />
-        <ellipse cx="62" cy="40" rx="3.4" ry="5" fill="rgba(251,247,236,.4)" stroke="none" />
-        <circle cx="16" cy="60" r="3" fill="rgba(251,247,236,.5)" stroke="none" />
-        <circle cx="26" cy="63" r="2.4" fill="rgba(251,247,236,.5)" stroke="none" />
-        <path d="M12 68h18" strokeWidth="1.2" />
-      </svg>
-    );
-  if (kind === "lemon")
-    return (
-      <svg {...common}>
-        <path d="M8 64C22 50 40 38 62 30" />
-        <ellipse cx="36" cy="46" rx="25" ry="20" transform="rotate(-16 36 46)" fill="rgba(239,201,110,.1)" />
-        <path d="M22 46h28M36 29v34M27 34l18 24M45 34 27 58" strokeWidth="1.1" />
-        <path d="M56 32c2-11 11-18 21-17 0 9-7 17-17 19" fill="rgba(239,201,110,.12)" />
-        <path d="M14 62c-7-2-11-8-11-15 8 0 14 5 15 13" fill="rgba(239,201,110,.12)" />
-        <circle cx="62" cy="58" r="9" strokeWidth="1.2" />
-        <path d="M62 52v12M56 58h12M58 54l8 8M66 54l-8 8" strokeWidth="1" />
-      </svg>
-    );
-  if (kind === "ginger")
-    return (
-      <svg {...common}>
-        <path d="M18 54c-8-4-11-12-8-19 3-6 11-7 16-4 0-8 7-13 15-12 7 1 11 7 10 14 8-2 15 3 15 11 0 9-8 14-17 13-9 5-23 2-31-3Z" fill="rgba(239,201,110,.08)" />
-        <path d="M28 44c-5-8-5-18 0-26M44 40c0-9 5-17 13-20" strokeWidth="1.2" />
-        <path d="M50 22c2-8 9-13 17-12 1 7-4 13-12 15" fill="rgba(126,147,121,.16)" />
-        <path d="M60 14c1-4 4-7 8-8" strokeWidth="1.1" />
-      </svg>
-    );
-  if (kind === "berry")
-    return (
-      <svg {...common}>
-        <path d="M14 70C20 52 28 34 42 22" />
-        <path d="M14 70c8-16 20-28 36-36" strokeWidth="1.2" />
-        <circle cx="44" cy="18" r="9" fill="rgba(146,100,125,.2)" />
-        <circle cx="28" cy="30" r="8" fill="rgba(146,100,125,.2)" />
-        <circle cx="50" cy="36" r="7" fill="rgba(146,100,125,.2)" />
-        <circle cx="32" cy="48" r="8.5" fill="rgba(146,100,125,.2)" />
-        <circle cx="56" cy="52" r="6" fill="rgba(146,100,125,.2)" />
-        <path d="M40 14c2-6 8-9 14-8M24 26c-6-2-12 0-14 5" strokeWidth="1.1" />
-        <circle cx="62" cy="62" r="2.2" fill="rgba(146,100,125,.6)" stroke="none" />
-      </svg>
-    );
-  if (kind === "fruit")
-    return (
-      <svg {...common}>
-        <path d="M38 68c-14-5-23-16-21-30 2-15 18-22 31-17 15 6 19 25 10 37-4 6-11 9-20 10Z" fill="rgba(239,201,110,.08)" />
-        <path d="M38 24c0-9 3-15 9-20" />
-        <path d="M47 8c6-3 12-2 15 3-3 4-10 5-15 3" fill="rgba(126,147,121,.16)" />
-        <path d="M26 42c-3 7-3 14 0 20" strokeWidth="1.1" />
-        <path d="M58 30c4-6 11-8 17-6" strokeWidth="1.2" />
-      </svg>
-    );
-  if (kind === "herb")
-    return (
-      <svg {...common}>
-        <path d="M39 71c2-26 4-46 6-64" />
-        <path d="M43 33C25 31 16 20 17 9c16-2 27 7 26 24ZM42 45c18-3 28-13 27-25-17 0-27 10-27 25ZM39 56C23 54 14 45 15 35c15-2 24 6 24 21ZM41 63c14-2 22-9 22-18-13 0-21 7-22 18Z" fill="rgba(126,147,121,.15)" />
-      </svg>
-    );
+/*
+ * One apothecary plate, one index. Honey and lemon — the foundation — are the
+ * only illustrated ingredients and are captioned under their specimens on the
+ * plate; everything that builds the flavour on top is set as a typographic
+ * herbarium index. Hierarchy comes from scale, not from numbering.
+ */
+const base = ingredients.filter((item) => item.role === "base");
+const layers = ingredients.filter((item) => item.role === "layer");
+
+const SHADE = { fill: "url(#iplateHatch)", mask: "url(#iplateShade)" };
+
+// A broken chunk of comb set back on the ledge: irregular top face with
+// foreshortened cells, a cut face showing open cells, honey pooling in front.
+const COMB_TOP =
+  "M34 438L52 426L70 428L84 414L108 410L120 402L148 400L162 404L184 398L206 402L222 400L244 408L262 406L262 446L240 452L214 450L196 456L168 454L146 458L120 455L96 458L74 452L52 454L36 448Z";
+const COMB_FACE =
+  "M34 438L36 448L52 454L74 452L96 458L120 455L146 458L168 454L196 456L214 450L240 452L262 446L262 470L240 476L214 474L196 480L168 478L146 482L120 479L96 482L74 476L52 478L36 472Z";
+
+function Comb() {
+  const cells: Array<[number, number]> = [];
+  for (let row = 0; row < 7; row += 1) {
+    for (let col = 0; col < 14; col += 1) {
+      cells.push([28 + col * 18 + (row % 2) * 9, 398 + row * 9.5]);
+    }
+  }
   return (
-    <svg {...common}>
-      <path d="M40 58c-12-5-18-16-16-27 2-10 15-13 23-8 10 6 12 20 5 29-3 4-8 5-12 6Z" fill="rgba(146,100,125,.13)" />
-      <path d="M40 52c0 7-2 12-6 16" />
-      <path d="M34 26C26 18 25 8 29 4c6 2 9 9 8 16M44 24c2-10 8-16 15-16 1 7-3 14-11 17M39 28c-1-8 1-15 6-19" fill="rgba(126,147,121,.15)" />
-      <path d="M30 44c-4 4-5 9-4 14" strokeWidth="1.1" />
+    <g>
+      <clipPath id="iplateCombTop">
+        <path d={COMB_TOP} />
+      </clipPath>
+      <clipPath id="iplateCombFace">
+        <path d={COMB_FACE} />
+      </clipPath>
+      <path className="iplate-comb" d={COMB_TOP} />
+      <g clipPath="url(#iplateCombTop)">
+        {cells.map(([x, y], i) => (
+          <path
+            key={i}
+            className={i % 7 === 3 || i % 11 === 6 || i % 13 === 9 ? "iplate-cell iplate-cell--open" : "iplate-cell"}
+            d={hexPath([x, y], 8.6)}
+            transform={`translate(0 ${(y * 0.48).toFixed(1)}) scale(1 .52)`}
+          />
+        ))}
+      </g>
+      <path className="iplate-comb-edge" d={COMB_FACE} />
+      <g clipPath="url(#iplateCombFace)">
+        {Array.from({ length: 19 }, (_, i) => (
+          <path key={i} className="iplate-comb-cellcut" d={`M${40 + i * 12} 452v16a5 5 0 0 0 10 0v-16`} />
+        ))}
+      </g>
+      <path className="iplate-shade" d={COMB_FACE} fill="url(#iplateHatch)" mask="url(#iplateShade)" />
+      <path className="iplate-drip" d="M116 479c0 4 3 6 3 8h-6c0-2 3-4 3-8Z" />
+      <ellipse className="iplate-pool" cx="122" cy="488" rx="44" ry="4" />
+    </g>
+  );
+}
+
+function Plate() {
+  return (
+    <svg className="ingredients-plate__art" viewBox="0 0 640 520" aria-hidden="true">
+      <defs>
+        <radialGradient id="iplateGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0" stopColor="#efc96e" stopOpacity=".17" />
+          <stop offset=".55" stopColor="#efc96e" stopOpacity=".06" />
+          <stop offset="1" stopColor="#efc96e" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="iplateHoney" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#efc162" />
+          <stop offset=".6" stopColor="#d4943a" />
+          <stop offset="1" stopColor="#a5651d" />
+        </linearGradient>
+        <pattern id="iplateHatch" width="4.5" height="4.5" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
+          <path d="M0 0V4.5" stroke="rgba(15,40,33,.42)" strokeWidth=".9" />
+        </pattern>
+        <linearGradient id="iplateShadeRamp" x1="0" y1="0" x2="1" y2="1">
+          <stop offset=".42" stopColor="#000" />
+          <stop offset=".92" stopColor="#fff" />
+        </linearGradient>
+        <mask id="iplateShade" maskContentUnits="objectBoundingBox">
+          <rect width="1" height="1" fill="url(#iplateShadeRamp)" />
+        </mask>
+      </defs>
+      <circle cx="320" cy="300" r="300" fill="url(#iplateGlow)" />
+
+      {/* Comb set back on the ledge, its right end behind the jar */}
+      <Comb />
+
+      {/* Honey jar with the house label; the dipper rests on the rim and
+          leans back over the opening */}
+      <path className="iplate-glass" d="M232 214q0-14 18-18h142q18 4 18 18v256q0 20-20 20H252q-20 0-20-20Z" />
+      <path className="iplate-honey" d="M238 268c44-8 90 8 166-3v203q0 16-16 16H254q-16 0-16-16Z" />
+      <path className="iplate-shade" d="M238 268c44-8 90 8 166-3v203q0 16-16 16H254q-16 0-16-16Z" fill="url(#iplateHatch)" mask="url(#iplateShade)" />
+      <path className="iplate-dipper" d="M270 188L322 76" />
+      <circle className="iplate-dipper-knob" cx="324" cy="70" r="6" />
+      <ellipse className="iplate-rim" cx="321" cy="198" rx="89" ry="11" />
+      <path className="iplate-ribbon" d="M262 206c-2 20 3 38 2 60h-5c0-22-3-40 3-60Z" />
+      <g transform="rotate(-25 264 192)">
+        <ellipse className="iplate-dipper-head" cx="264" cy="194" rx="21" ry="13" />
+        <path className="iplate-dipper-grooves" d="M252 182v24M264 181v26M276 182v24" />
+      </g>
+      <path className="iplate-glint" d="M248 222v236M260 236v60" />
+      <path className="iplate-label" d="M321 326l52 22v74H269v-74Z" />
+      <text className="iplate-label__brand" x="321" y="370" textAnchor="middle">HARMONIJE PANONIJE</text>
+      <text className="iplate-label__name" x="321" y="398" textAnchor="middle">Med</text>
+      <path className="iplate-label__rule" d="M297 408h48" />
+
+      {/* Cut lemon branch: cut end on the ledge, leaning on the jar shoulder */}
+      <path className="iplate-stem iplate-stem--wood" d="M600 486C560 420 470 300 412 222C404 206 400 180 398 150" />
+      <ellipse className="iplate-cut" cx="601" cy="486" rx="4" ry="3" transform="rotate(-50 601 486)" />
+      <Leaf at={[576, 444]} angle={-80} length={60} width={16} petiole={8} className="iplate-leaf" />
+      <Leaf at={[552, 406]} angle={-168} length={62} width={16} petiole={8} className="iplate-leaf" />
+      <Leaf at={[526, 368]} angle={-78} length={58} width={15} petiole={7} className="iplate-leaf" />
+      <Leaf at={[500, 330]} angle={-170} length={60} width={15} petiole={7} className="iplate-leaf" />
+      <Leaf at={[474, 294]} angle={-82} length={54} width={14} petiole={7} className="iplate-leaf" />
+      <Leaf at={[450, 262]} angle={-158} length={50} width={13} petiole={6} className="iplate-leaf" />
+      <Leaf at={[424, 232]} angle={-66} length={46} width={12} petiole={6} className="iplate-leaf" />
+      <Leaf at={[404, 186]} angle={-150} length={40} width={11} petiole={5} className="iplate-leaf" />
+      <Leaf at={[400, 162]} angle={-96} length={34} width={10} petiole={5} className="iplate-leaf" />
+      <g className="iplate-blossom">
+        {[0, 72, 144, 216, 288].map((a) => (
+          <ellipse key={a} cx="398" cy="126" rx="6.5" ry="11" transform={`rotate(${a} 398 138)`} />
+        ))}
+        <circle className="iplate-blossom__eye" cx="398" cy="138" r="4" />
+      </g>
+      <Lemon c={[554, 462]} rx={50} ry={29} angle={-6} className="iplate-lemon" shade={SHADE} />
+
+      {/* Cut lemon standing in front */}
+      <LemonHalf c={[472, 444]} r={46} />
+      <path className="iplate-shade" d="M472 398a46 46 0 0 1 0 92a46 46 0 0 0 0-92Z" fill="url(#iplateHatch)" />
+
+      {/* Ledge; ticks drop from each specimen to its caption column */}
+      <path className="iplate-shelf" d="M0 490H640" />
+      <path className="iplate-tick" d="M232 498v22M426 498v22" />
     </svg>
   );
 }
 
-// Editorial rhythm: heroes dominate at staggered levels; fruit runs
-// horizontal; ginger stays compact; herbs run wide horizontal.
-const specimenClass = (index: number) => {
-  if (index === 0) return "specimen specimen--primary specimen--honey";
-  if (index === 1) return "specimen specimen--primary specimen--lemon";
-  if (index === 4) return "specimen specimen--support specimen--div specimen--horizontal specimen--span5";
-  if (index === 2) return "specimen specimen--support specimen--compact specimen--div";
-  if (index === 3) return "specimen specimen--support specimen--div";
-  if (index === 5) return "specimen specimen--support specimen--wide specimen--horizontal";
-  return "specimen specimen--support specimen--div specimen--span5";
-};
-
 export function IngredientsSection() {
-  const atlasRef = useRef<HTMLDivElement>(null);
-  const onPointerMove = (event: React.PointerEvent) => {
-    const node = atlasRef.current;
-    if (!node || (event.pointerType !== "mouse" && event.pointerType !== "pen")) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const rect = node.getBoundingClientRect();
-    node.style.setProperty("--mx", `${(((event.clientX - rect.left) / rect.width) * 100).toFixed(1)}%`);
-    node.style.setProperty("--my", `${(((event.clientY - rect.top) / rect.height) * 100).toFixed(1)}%`);
-  };
-
   return (
-    <section id="sastojci" data-page-bee="hide" className="ingredients-section section-dark">
-      <div className="shell">
-        <div className="section-heading section-heading--split section-heading--light">
-          <div>
-            <p className="eyebrow eyebrow--light"><span />Sastojci</p>
-            <h2>Šta ulazi u harmoniju?</h2>
-          </div>
-          <p>Livadski med i ceđeni limun povezuju mnoge Immuno Craft kombinacije. Ukusi se zatim grade voćem, bobicama, povrćem, đumbirom i biljem.</p>
+    <section id="sastojci" data-page-bee="hide" className="ingredients-section section-dark" aria-labelledby="sastojci-naslov">
+      <div className="shell ingredients-layout">
+        <div className="ingredients-head">
+          <p className="eyebrow eyebrow--light"><span />Sastojci</p>
+          <h2 id="sastojci-naslov">Šta ulazi u harmoniju?</h2>
+          <p>{bindShortWords("Livadski med i ceđeni limun povezuju mnoge Immuno Craft kombinacije. Ukusi se zatim grade voćem, bobicama, povrćem, đumbirom i biljem.")}</p>
         </div>
 
-        <div ref={atlasRef} className="ingredients-atlas" onPointerMove={onPointerMove}>
-          <svg className="atlas-ghost" viewBox="0 0 300 300" aria-hidden="true">
-            <path d="M150 20C160 90 165 160 150 240M150 80c-40-8-70-34-72-70 36-6 64 22 72 70ZM150 140c44-6 74-34 72-72-38 0-68 26-72 72ZM150 200c-34-4-58-26-58-56 30-4 54 18 58 56Z" />
-          </svg>
-          {ingredients.slice(0, 2).map((item, index) => (
-            <article className={specimenClass(index)} key={item.name} data-kind={item.kind} data-num={String(index + 1).padStart(2, "0")}>
-              <span className="specimen__wash" aria-hidden="true" />
-              <div className="specimen__icon"><SpecimenIcon kind={item.kind} /></div>
-              <p className="specimen__kicker">Primarni sastojak</p>
-              <h3><span className="specimen__num">{String(index + 1).padStart(2, "0")}</span>{item.name}</h3>
-              <p>{item.note}</p>
-            </article>
-          ))}
-          <div className="seal" aria-hidden="true">
-            <span className="seal__ring">
-              <span className="seal__core">
-                <span className="seal__monogram"><span>H</span><strong>+</strong><span>P</span></span>
-                <small>sklad sastojaka</small>
-              </span>
-            </span>
-            <svg className="seal__sprig" viewBox="0 0 120 24" aria-hidden="true">
-              <path d="M4 12h36M80 12h36M40 12c-6-6-14-6-18 0 4 6 12 6 18 0ZM80 12c6-6 14-6 18 0-4 6-12 6-18 0Z" />
-            </svg>
-          </div>
-          {ingredients.slice(2).map((item, offset) => {
-            const index = offset + 2;
-            return (
-              <article className={specimenClass(index)} key={item.name} data-kind={item.kind} data-num={String(index + 1).padStart(2, "0")}>
-                <span className="specimen__wash" aria-hidden="true" />
-                <div className="specimen__icon"><SpecimenIcon kind={item.kind} /></div>
-                <h3><span className="specimen__num">{String(index + 1).padStart(2, "0")}</span>{item.name}</h3>
-                <p>{item.note}</p>
-              </article>
-            );
-          })}
-          <svg className="atlas-flora" viewBox="0 0 1000 620" aria-hidden="true">
-            <path d="M120 500C150 440 165 390 180 340M140 440c-40-10-58-34-48-56 34 2 52 22 48 56Z" />
-            <path d="M880 140C860 190 850 230 848 270M868 210c36-8 54-30 46-52-30 2-48 20-46 52Z" />
-            <circle cx="205" cy="180" r="4" />
-            <circle cx="795" cy="420" r="4" />
-            <circle cx="620" cy="110" r="3.4" />
-          </svg>
+        <figure className="ingredients-plate">
+          <Plate />
+          <figcaption className="ingredients-plate__captions">
+            <p className="ingredients-plate__kicker">Osnova</p>
+            {base.map((item) => (
+              <div key={item.name} className={`ingredients-base ingredients-base--${item.kind}`}>
+                <h3>{item.name}</h3>
+                <span lang="la">{item.latin}</span>
+                <p>{bindShortWords(item.note)}</p>
+              </div>
+            ))}
+          </figcaption>
+        </figure>
+
+        <div className="ingredients-index">
+          <p className="ingredients-index__kicker">Uz med i limun</p>
+          <ul>
+            {layers.map((item) => (
+              <li key={item.name}>
+                <h3>{item.name}</h3>
+                <span lang="la">{item.latin}</span>
+                <p>{bindShortWords(item.note)}</p>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>
