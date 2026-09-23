@@ -352,3 +352,50 @@ parked property; jumps test asserts finite + parked recovery).
 Final: `npm run qa` 0 (68/68 Chromium), WebKit/Firefox 8/8, audit
 0 vulns, `git diff --check` clean. ~50 screenshots reviewed (bursts,
 11-viewport matrix, journey/ingredient states, adversarial sweep).
+
+## Addendum — surgical redesign of BeeJourney + Ingredients
+
+Scope: `BeeJourney.tsx`, `IngredientsSection.tsx`, `globals.css`,
+`verify.mjs` tripwires only. No other section touched; no HoneyHarvest
+changes; no business-data changes. No push/deploy.
+
+BEEJOURNEY: scattered bare stage numbers became systematic
+number+name lockups (01 PRIRODA … 04 PANONIJA); tracing route
+thinned to 1.6px/65% so it guides instead of dominating. Architecture
+(focus system, rail, shots, intro pacing) proven good and kept.
+
+INGREDIENTS: apothecary corner stamps (small serif numerals,
+top-right, 8% opacity) give the supporting rows editorial rhythm
+without noise — after rejecting an oversized ghost-numeral pass that
+read as cheap. Marker/reading order, seal, hover, spotlight unchanged.
+
+Validation: `npm run qa` 0 (68/68 Chromium, zero test modifications
+required), WebKit/Firefox 8/8, audit 0 vulns, `git diff --check`
+clean. Before/after matrices at 1440/1024/390/844 (+320/768/1280
+spot checks) reviewed side by side.
+
+## Addendum — fundamental recomposition of BeeJourney + Ingredients
+
+Scope: `BeeJourney.tsx`, `IngredientsSection.tsx`, `globals.css`,
+`verify.mjs` only. HoneyHarvest and every other section untouched
+(byte-identical). No push/deploy, no business-data changes.
+
+BEEJOURNEY (environment, not icons): origin thicket (bloom + second
+blossom + grasses + fruit), bridge stem S-joining the extended lemon
+branch, twin berry canes, craft clearing (honey ribbon + suspended
+drop + vessel + wash), homestead (sun disc, orchard row, ground
+contour, extended fence), edge-bleeding foreground fragments,
+ground-hugging route ending at the doorstep, bee ×1.4. Rail survived
+with collision-proof placement (verified by test at 1440 + 1280).
+
+INGREDIENTS (table, not radar): staggered heroes (honey 7 cols,
+lemon 5 cols offset), compact seal chapter-break band, varied
+supporting treatments (horizontal fruit/herbs, compact ginger),
+redrawn editorial illustrations with semantic colors, ghost-leaf
+depth, hover tick extension, phone alternation. Fixed during
+iteration: grid-span arithmetic (3+4+5), specificity-qualified
+responsive overrides, ghost overflow, phone seal stacking.
+
+Validation: `npm run qa` 0 (68/68 Chromium), WebKit/Firefox 8/8,
+audit 0 vulns, `git diff --check` clean. ~40 further screenshots
+across 3 journey + 3 ingredient visual iterations.

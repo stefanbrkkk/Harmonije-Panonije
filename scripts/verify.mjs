@@ -108,7 +108,7 @@ const tripwires = [
   ["is-live chapter gating", css.includes(".honey-harvest.is-live .honey-harvest__chapter")],
   ["is-live outro gating", css.includes(".bee-journey.is-live .bee-journey__outro")],
   // HP-08: static bee poses for no-JS first paint.
-  ["journey bee fallback pose", journey.includes('transform="translate(75 375) scale(1.25)"')],
+  ["journey bee fallback pose", journey.includes('transform="translate(75 375) scale(1.4)"')],
   ["journey rail system", journey.includes("bee-journey__rail-item") && css.includes(".bee-journey__rail-tracer")],
   ["honey bee fallback pose", honey.includes('transform="translate(150 150)')],
   // HP-14/33: notice events carry sequence + quantity; quantities bounded.
@@ -144,13 +144,15 @@ const tripwires = [
   ["journey stage captions", journey.includes("STAGE_WINDOWS")],
   ["journey rail placement", css.includes(".bee-journey__rail { position: absolute; z-index: 4;")],
   ["journey unique stage labels", (journey.match(/<text className="scene-stage"/g) ?? []).length === 4],
+  ["journey marker lockups", journey.includes("scene-stage__name") && journey.includes("PANONIJA")],
   ["translate-only reveals", !css.includes("opacity .6s cubic-bezier(.22,.8,.24,1) var(--reveal-delay")],
   ["semantic reveal roles", read("src/components/MotionOrchestrator.tsx").includes("roleBase")],
   ["reduced route drift", css.includes(".delivery-map__route { animation: none !important; }")],
   ["valid reveal transition", css.includes("transition: translate .7s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms);")],
-  ["tablet ingredient grid", css.includes(".specimen--primary { grid-column: span 3;")],
+  ["tablet ingredient grid", css.includes(".specimen--honey, .specimen--lemon { grid-column: 1 / -1;")],
   ["atlas specimen order", read("src/components/IngredientsSection.tsx").includes("ingredients.slice(0, 2)")],
   ["brand seal", css.includes(".seal__ring") && read("src/components/IngredientsSection.tsx").includes("sklad sastojaka")],
+  ["specimen stamps", css.includes(".specimen::after")],
   ["landscape chapter clearance", css.includes(".honey-harvest__chapter { top: calc(var(--header-height) + 10px); translate: none;")],
   // HP-16/36/37/40: one controlled scheduler for the three scenes.
   ["shared scene loop", journey.includes("createSceneLoop(") && honey.includes("createSceneLoop(") && bee.includes("createSceneLoop(")],

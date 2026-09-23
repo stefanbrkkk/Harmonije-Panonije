@@ -24,7 +24,9 @@ const STAGE_WINDOWS: Array<[number, number]> = [
 // vignette carries full presence.
 const STAGE_FLOORS = [0.55, 0.5, 0.5, 0.45];
 
-const ROUTE_D = "M75 400 C150 300 220 430 310 330 C390 242 440 138 545 172 C650 206 640 338 735 312 C780 302 792 322 790 348";
+// Ground-hugging route: visits every station like a land contour, so the
+// flight reads as travel through one environment rather than a diagram.
+const ROUTE_D = "M60 440 C120 410 170 430 230 400 C300 365 340 340 380 330 C420 320 430 260 445 235 C460 210 520 230 560 260 C600 290 640 330 700 335 C748 338 762 334 770 330";
 
 export function BeeJourney() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -83,7 +85,7 @@ export function BeeJourney() {
     const paintStatic = () => {
       try {
         const p = path.getPointAtLength(length * 0.86);
-        bee.setAttribute("transform", `translate(${p.x} ${p.y}) rotate(-7) scale(1.25)`);
+        bee.setAttribute("transform", `translate(${p.x} ${p.y}) rotate(-7) scale(1.4)`);
       } catch {
         /* static fallback */
       }
@@ -128,7 +130,7 @@ export function BeeJourney() {
         const oy = (ny / nLen) * wobble;
         bee.setAttribute(
           "transform",
-          `translate(${(p.x + ox).toFixed(1)} ${(p.y + oy).toFixed(1)}) rotate(${angle.toFixed(1)}) scale(1.25)`,
+          `translate(${(p.x + ox).toFixed(1)} ${(p.y + oy).toFixed(1)}) rotate(${angle.toFixed(1)}) scale(1.4)`,
         );
         // Narrow screens: intentional phase shots (flower/lemon →
         // berry/honey/herbs → house) instead of chasing the bee.
@@ -270,9 +272,10 @@ export function BeeJourney() {
           {/* Static depth washes */}
           <ellipse cx="300" cy="300" rx="270" ry="150" fill="url(#sageWash)" />
           <ellipse cx="790" cy="240" rx="220" ry="150" fill="url(#honeyWash)" />
-          {/* Distant Panonian horizon + faint orchard row */}
+          {/* Distant Panonian horizon, orchard row, field divisions */}
           <g className="bee-scene__backdrop" aria-hidden="true">
             <path d="M-20 152C200 132 400 152 600 140c150-9 280 0 440-12" />
+            <path d="M-20 196C180 184 380 200 580 190c160-8 300 2 460-8" className="bee-scene__fielddiv" />
             <g className="bee-scene__orchard" aria-hidden="true">
               <circle cx="180" cy="168" r="7" /><circle cx="340" cy="162" r="8" /><circle cx="520" cy="166" r="7" /><circle cx="700" cy="160" r="8" /><circle cx="860" cy="164" r="7" />
               <path d="M180 175v14M340 170v14M520 173v14M700 168v14M860 171v14" />
@@ -300,8 +303,17 @@ export function BeeJourney() {
             <path d="M-20 532 C160 500 320 526 470 506 C620 488 770 514 1020 494" />
             <path d="M150 502c8-22 12-40 14-58M690 484c-6-20-8-38-8-56M880 476c8-18 12-34 14-50" />
           </g>
+          {/* Large foreground fragments bleeding from the viewport edges. */}
+          <g className="bee-scene__edgegrowth" aria-hidden="true">
+            <path d="M-10 584C-6 548-2 522 4 502M-10 584C2 550 10 524 18 502M-10 584C-16 552-19 526-19 504" />
+            <path d="M1010 584C1002 548 994 520 984 498" />
+            <ellipse cx="976" cy="502" rx="20" ry="9" transform="rotate(-35 976 502)" className="scene-fill-sage" />
+            <path d="M-12 96C30 88 60 76 84 58M-12 96C20 100 44 100 64 94" />
+            <ellipse cx="72" cy="66" rx="14" ry="7" transform="rotate(-18 72 66)" className="scene-fill-sage" />
+            <circle cx="92" cy="52" r="5" className="scene-fill-sage" />
+          </g>
 
-          {/* STAGE 01 — origin: flower cluster, bud, fruit, bee arrival. */}
+          {/* STAGE 01 — origin thicket: bloom, bud, fruit, grasses, bridge stem. */}
           <g ref={(node) => { stageRefs.current[0] = node; }} className="scene-stage-group" data-stage="0" aria-hidden="true">
             <ellipse ref={(node) => { washRefs.current[0] = node; }} cx="150" cy="392" rx="120" ry="72" fill="url(#sageWash)" />
             <g transform="translate(130 430)" className="scene-bloom-core">
@@ -318,26 +330,43 @@ export function BeeJourney() {
               <circle cx="78" cy="-6" r="3.4" className="scene-fill-berry" />
               <circle cx="60" cy="-12" r="3" className="scene-fill-berry" />
               <path d="M-4 30C-40 24-56 6-58-14" strokeWidth="1.6" />
+              {/* Second blossom + grasses root the vignette. */}
+              <path d="M-52 52C-56 30-58 12-58-6" strokeWidth="1.5" />
+              <ellipse cx="-58" cy="-18" rx="8" ry="13" className="scene-fill-paper" />
+              <ellipse cx="-68" cy="-10" rx="7" ry="11" transform="rotate(-30 -68 -10)" className="scene-fill-paper" />
+              <ellipse cx="-48" cy="-10" rx="7" ry="11" transform="rotate(30 -48 -10)" className="scene-fill-paper" />
+              <circle cx="-58" cy="-8" r="5" className="scene-fill-honey" />
+              <path d="M-24 58C-26 40-26 24-24 10M16 58C18 42 18 28 16 16" strokeWidth="1.2" className="scene-grass" />
+              {/* Bridge stem reaching toward the lemon thicket. */}
+              </g>
+            <g className="scene-bridge" aria-hidden="true" transform="translate(130 430)">
+              <path d="M60 40C90 20 110 -5 130 -25" strokeWidth="1.6" />
+              <ellipse cx="85" cy="18" rx="13" ry="6" transform="rotate(-24 85 18)" className="scene-fill-sage" />
+              <ellipse cx="108" cy="-2" rx="11" ry="5.5" transform="rotate(-28 108 -2)" className="scene-fill-sage" />
             </g>
-            <text className="scene-stage" x="72" y="352">01</text>
+            <text className="scene-stage" x="60" y="352">01<tspan dx="7" className="scene-stage__name">PRIRODA</tspan></text>
+            <path className="scene-stage__rule" d="M60 362h52" />
           </g>
 
-          {/* STAGE 02 — ingredients: lemon branch, berry stem, herb sprig. */}
+          {/* STAGE 02 — ingredient thicket: lemon branch, berry canes, herb. */}
           <g ref={(node) => { stageRefs.current[1] = node; }} className="scene-stage-group" data-stage="1" aria-hidden="true">
             <ellipse ref={(node) => { washRefs.current[1] = node; }} cx="365" cy="300" rx="140" ry="95" fill="url(#sageWash)" />
             <g transform="translate(290 330)">
               <g ref={lemonRef} className="scene-ingredient__motion scene-ingredient--lemon">
-                <path d="M-62 34C-32 14-2 4 40-12" strokeWidth="1.8" />
+                <path d="M-30 75C-52 62-60 44-62 30M-62 34C-32 14-2 4 40-12" strokeWidth="1.8" />
                 <ellipse cx="8" cy="-4" rx="42" ry="32" transform="rotate(-18 8 -4)" />
                 <path d="M-12-30c8-12 24-12 32-4M-16 8l44-24M-8-28l16 48" strokeWidth="1.2" />
                 <path d="M-52 26c-16-2-28-12-30-26 14-2 28 8 30 26ZM32-12c14-8 30-8 38 2-10 10-28 10-38-2Z" className="scene-fill-sage" strokeWidth="1.4" />
               </g>
-              <text className="scene-stage" x="-78" y="-58">02</text>
+              <text className="scene-stage" x="-82" y="-58">02<tspan dx="7" className="scene-stage__name">SASTOJCI</tspan></text>
+              <path className="scene-stage__rule" d="M-82 -48h52" />
             </g>
             <g transform="translate(440 230)">
               <g ref={berryRef} className="scene-ingredient__motion scene-ingredient--berry">
-                <path d="M0 52C-6 22-4-8 6-38" strokeWidth="1.8" />
+                <path d="M-14 108C-12 70-10 30 6-38" strokeWidth="1.8" />
+                <path d="M-14 108C2 74 22 44 48 22" strokeWidth="1.6" />
                 <circle cx="6" cy="-44" r="13" /><circle cx="-12" cy="-30" r="11" /><circle cx="22" cy="-26" r="10" /><circle cx="2" cy="-10" r="12" /><circle cx="26" cy="-6" r="9" />
+                <circle cx="48" cy="16" r="10" /><circle cx="34" cy="28" r="8" />
                 <path d="M-8-52c6-10 18-12 28-8M-14-34c-10-8-24-8-30 0" strokeWidth="1.2" />
               </g>
             </g>
@@ -349,25 +378,32 @@ export function BeeJourney() {
             </g>
           </g>
 
-          {/* STAGE 03 — craft: smaller drop, botanical stem, vessel arc, wash. */}
+          {/* STAGE 03 — craft clearing: honey ribbon, suspended drop, vessel. */}
           <g ref={(node) => { stageRefs.current[2] = node; }} className="scene-stage-group" data-stage="2" aria-hidden="true">
             <ellipse ref={(node) => { washRefs.current[2] = node; }} cx="590" cy="275" rx="130" ry="90" fill="url(#honeyWash)" />
-            <g transform="translate(585 262) scale(0.85)" className="scene-ingredient scene-ingredient--honey">
+            <path d="M508 232C540 260 560 300 566 340" className="scene-ribbon" />
+            <path d="M534 224C562 256 578 300 582 344" className="scene-ribbon scene-ribbon--inner" />
+            <g transform="translate(600 282) scale(0.62)" className="scene-ingredient scene-ingredient--honey">
               <path d="M0-34c22 27 33 44 33 63A33 33 0 1 1-33 29C-33 10-22-7 0-34Z" />
               <ellipse cx="0" cy="16" rx="49" ry="49" fill="url(#honeyGlow)" stroke="none" />
             </g>
-            <path d="M507 352Q585 386 663 352" className="scene-vessel" />
-            <path d="M525 358Q585 382 645 358" className="scene-vessel scene-vessel--inner" />
+            <g transform="translate(600 372)" className="scene-vessel-group" aria-hidden="true">
+              <path d="M-72 0Q0 34 72 0" className="scene-vessel" />
+              <path d="M-54 2Q0 28 54 2" className="scene-vessel scene-vessel--inner" />
+              <path d="M-14 22h28" className="scene-vessel" />
+            </g>
             <g transform="translate(672 318)" className="scene-ingredient--stem">
               <path d="M0 60C3 30 5 0 8-28" strokeWidth="1.8" />
               <path d="M4 28c-20-5-29-18-24-29 16 1 25 11 24 29ZM6 4c18-6 26-18 21-28-15 2-23 12-21 28Z" className="scene-fill-sage" strokeWidth="1.3" />
             </g>
-            <text className="scene-stage" x="500" y="196">03</text>
+            <text className="scene-stage" x="500" y="196">03<tspan dx="7" className="scene-stage__name">CRAFT</tspan></text>
+            <path className="scene-stage__rule" d="M500 206h52" />
           </g>
 
-          {/* STAGE 04 — destination: Panonian house in the Story vocabulary. */}
+          {/* STAGE 04 — homestead: house, sun, orchard row, ground, fence. */}
           <g ref={(node) => { stageRefs.current[3] = node; }} className="scene-stage-group" data-stage="3" aria-hidden="true">
             <ellipse ref={(node) => { washRefs.current[3] = node; }} cx="790" cy="250" rx="150" ry="100" fill="url(#honeyWash)" />
+            <circle cx="806" cy="176" r="54" className="scene-sun" />
             <g transform="translate(752 238)" className="scene-house">
               <path d="M-104 96V34l60-44 60 16v90h-120Z" strokeWidth="1.6" />
               <path d="M-114 38 44-52l116 90" strokeWidth="1.6" />
@@ -389,12 +425,14 @@ export function BeeJourney() {
               <path d="M892 368v-40M886 344l12-6" />
               <circle cx="892" cy="312" r="15" className="scene-fill-sage" />
               <circle cx="898" cy="308" r="2.4" className="scene-fill-berry" />
-              <path d="M610 400h8M626 400h8M642 400h8M658 400h8M906 396h8M922 396h8M938 396h8M954 396h8M602 388h280M898 384h84" />
+              <path d="M600 402C680 394 760 394 840 402M884 398C920 396 950 396 976 398" />
+              <path d="M610 414h8M626 414h8M642 414h8M658 414h8M906 410h8M922 410h8M938 410h8M954 410h8M602 402h280M898 390h84" />
             </g>
-            <text className="scene-stage" x="892" y="128">04</text>
+            <text className="scene-stage" x="872" y="128">04<tspan dx="7" className="scene-stage__name">PANONIJA</tspan></text>
+            <path className="scene-stage__rule" d="M872 138h52" />
           </g>
 
-          <g ref={beeRef} className="scene-bee" transform="translate(75 375) scale(1.25)">
+          <g ref={beeRef} className="scene-bee" transform="translate(75 375) scale(1.4)">
             <ellipse cx="0" cy="0" rx="15" ry="9" />
             <path d="M-10-2h20M-6-8 1 8M5-7 10 5" />
             {/*

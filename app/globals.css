@@ -235,13 +235,21 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .bee-journey__intro > p:last-child { max-width: 500px; margin: 24px 0 0; color: #657169; font-size: .94rem; line-height: 1.72; }
 .bee-scene { position: absolute; z-index: 2; left: 50%; top: 52%; width: min(1300px, 110vw); transform: translate(-50%,-40%); overflow: visible; }
 .bee-scene__backdrop { fill: none; stroke: rgba(23,54,45,.16); stroke-width: 1.2; }
+.bee-scene__fielddiv { opacity: .6; }
+.bee-scene__edgegrowth { fill: none; stroke: rgba(23,54,45,.34); stroke-width: 1.6; }
+.scene-ribbon { fill: none; stroke: var(--honey-dark); stroke-width: 1.4; opacity: .6; }
+.scene-ribbon--inner { opacity: .35; stroke-width: 1; }
+.scene-sun { fill: rgba(216,162,72,.1); stroke: none; }
+.scene-grass { opacity: .7; }
+.scene-stage__rule { fill: none; stroke: rgba(28,47,40,.35); stroke-width: 1; }
 .bee-scene__orchard { fill: rgba(95,127,101,.35); stroke: none; }
 .bee-scene__orchard path { fill: none; stroke: rgba(23,54,45,.3); stroke-width: 1; }
 .scene-stage { fill: rgba(28,47,40,.48); stroke: none; font-family: var(--sans); font-size: 13px; font-weight: 800; letter-spacing: 2px; }
+.scene-stage__name { font-size: 10px; font-weight: 400; letter-spacing: 3px; fill: rgba(28,47,40,.42); }
 .bee-scene__contour { fill: none; stroke: rgba(23,54,45,.13); stroke-width: 1; stroke-dasharray: 3 8; }
 .bee-scene__foreground { fill: none; stroke: rgba(23,54,45,.3); stroke-width: 1.4; }
 .bee-scene__route-base { fill: none; stroke: rgba(23,54,45,.14); stroke-width: 1.2; }
-.bee-scene__route-prog { fill: none; stroke: var(--honey-dark); stroke-width: 2; stroke-linecap: round; opacity: .75; }
+.bee-scene__route-prog { fill: none; stroke: var(--honey-dark); stroke-width: 1.6; stroke-linecap: round; opacity: .65; }
 /* Stage focus: opacity + scale are scroll-owned (see BeeJourney); the CSS
    scale property composes with the static position transforms. */
 .scene-stage-group { transform-box: fill-box; transform-origin: center; will-change: opacity, scale; }
@@ -419,6 +427,8 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .ingredients-section { padding-bottom: clamp(100px,12vw,160px); background:radial-gradient(circle at 50% 60%,#24483c 0,var(--forest) 35%,var(--forest-2) 100%); }
 .ingredients-atlas { position: relative; margin-top: 56px; display: grid; grid-template-columns: repeat(12,1fr); background: radial-gradient(circle 280px at var(--mx,70%) var(--my,18%), rgba(239,201,110,.07), transparent 70%); }
 .specimen { position: relative; padding: 34px 28px 32px; border-top: 1px solid rgba(251,247,236,.16); color: var(--white); transition: transform .25s cubic-bezier(.22,.8,.24,1), border-color .25s ease; }
+.specimen::after { content: attr(data-num); position: absolute; right: 18px; top: 16px; font-family: var(--serif); font-size: 2.2rem; line-height: 1; color: rgba(251,247,236,.07); pointer-events: none; }
+.atlas-flora { fill: none; }
 .specimen:hover, .specimen:focus-within { transform: translateY(-3px); border-color: rgba(239,201,110,.55); }
 .specimen__wash { position: absolute; inset: 0; opacity: 0; background: radial-gradient(circle at 30% 18%, rgba(239,201,110,.1), transparent 65%); transition: opacity .3s ease; pointer-events: none; }
 .specimen:hover .specimen__wash, .specimen:focus-within .specimen__wash { opacity: 1; }
@@ -426,26 +436,44 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .specimen:hover .specimen__icon, .specimen:focus-within .specimen__icon { color: #f4d98c; transform: translateY(-2px); }
 .specimen__icon svg { width: 100%; height: 100%; overflow: visible; }
 .specimen h3 { margin: 0; display: flex; align-items: baseline; gap: 12px; font-family: var(--serif); font-size: 1.6rem; font-weight: 400; }
-.specimen__num { font-family: var(--sans); font-size: .66rem; font-weight: 800; letter-spacing: .14em; color: var(--honey); }
-.specimen p { margin: 10px 0 0; color: rgba(251,247,236,.58); font-size: .76rem; line-height: 1.6; }
+.specimen__num { position: relative; font-family: var(--sans); font-size: .66rem; font-weight: 800; letter-spacing: .14em; color: var(--honey); }
+.specimen__num::after { content: ""; display: block; width: 0; height: 1px; margin-top: 5px; background: var(--honey); transition: width .25s cubic-bezier(.22,.8,.24,1); }
+.specimen:hover .specimen__num::after, .specimen:focus-within .specimen__num::after { width: 100%; }
+.specimen p { margin: 10px 0 0; color: rgba(251,247,236,.58); font-size: .76rem; line-height: 1.6; transition: color .25s ease; }
+.specimen:hover p, .specimen:focus-within p { color: rgba(251,247,236,.78); }
 .specimen__kicker { margin: 0 0 10px; color: rgba(239,201,110,.75); font-size: .6rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
-.specimen--primary { grid-column: span 6; padding: 40px 36px 38px; }
-.specimen--primary + .specimen--primary { border-left: 1px solid rgba(251,247,236,.16); }
-.specimen--primary .specimen__icon { width: 104px; height: 104px; }
+/* Heroes at staggered levels with static tonal fields. */
+.specimen--honey { grid-column: 1 / 8; padding: 40px 40px 38px 0; }
+.specimen--lemon { grid-column: 8 / 13; margin-top: 56px; padding: 40px 0 38px 36px; border-left: 1px solid rgba(251,247,236,.16); }
+.specimen--primary .specimen__icon { width: 120px; height: 120px; }
 .specimen--primary h3 { font-size: clamp(2.1rem, 2.8vw, 3rem); }
+.specimen--honey::before { content: ""; position: absolute; inset: -20px 0; background: radial-gradient(circle at 25% 22%, rgba(239,201,110,.09), transparent 60%); pointer-events: none; }
+.specimen--lemon::before { content: ""; position: absolute; inset: -20px 0; background: radial-gradient(circle at 70% 30%, rgba(126,147,121,.1), transparent 60%); pointer-events: none; }
+/* Supporting variety: horizontal feature, compact note, standard. */
+.specimen--horizontal { display: grid; grid-template-columns: 76px 1fr; column-gap: 18px; align-content: start; }
+.specimen--horizontal .specimen__icon { width: 76px; height: 76px; margin: 2px 0 0; grid-row: span 2; }
+.specimen--horizontal h3 { font-size: 1.5rem; }
+.specimen--horizontal p { grid-column: 2; }
+.specimen--support.specimen--compact { grid-column: span 3; }
+.specimen--compact .specimen__icon { width: 56px; height: 56px; }
+.specimen--compact h3 { font-size: 1.35rem; }
 .specimen--support { grid-column: span 4; }
 .specimen--support.specimen--div { border-left: 1px solid rgba(251,247,236,.12); }
-.specimen--support.specimen--wide { grid-column: span 6; }
 .specimen--support h3 { font-size: 1.42rem; }
 .specimen--support .specimen__icon { width: 64px; height: 64px; }
-/* Brand seal: printed emboss, not a radar bullseye. */
-.seal { grid-column: 4 / 10; position: relative; display: grid; justify-items: center; gap: 6px; padding: 44px 20px 40px; border-top: 1px solid rgba(251,247,236,.16); text-align: center; }
-.seal__ring { position: absolute; left: 50%; top: 50%; width: 240px; height: 240px; transform: translate(-50%,-50%) rotate(-24deg); border: 1px solid rgba(239,201,110,.25); border-top-color: transparent; border-radius: 50%; pointer-events: none; }
+.specimen--span5 { grid-column: span 5; }
+.specimen--support.specimen--wide { grid-column: span 7; }
+/* Brand seal: compact chapter-break band with extending hairlines. */
+.seal { grid-column: 1 / -1; display: flex; align-items: center; gap: 28px; padding: 30px 0; border-top: 1px solid rgba(251,247,236,.16); }
+.seal::before, .seal::after { content: ""; flex: 1; height: 1px; background: rgba(251,247,236,.14); }
+.seal__ring { position: relative; flex: 0 0 auto; width: 148px; height: 148px; border: 1px solid rgba(239,201,110,.28); border-top-color: transparent; border-radius: 50%; transform: rotate(-24deg); display: grid; place-items: center; }
+.seal__core { display: grid; justify-items: center; gap: 4px; color: var(--honey-bright); transform: rotate(24deg); }
+.seal__monogram { display: flex; align-items: baseline; gap: 8px; font-family: var(--serif); font-size: 1.5rem; }
 .seal__core { display: grid; justify-items: center; gap: 8px; color: var(--honey-bright); }
-.seal__core p { margin: 0; display: flex; align-items: baseline; gap: 12px; font-family: var(--serif); font-size: 2.2rem; }
-.seal__core strong { font-size: 1rem; font-weight: 400; opacity: .7; }
-.seal__core small { color: rgba(251,247,236,.45); font-size: .55rem; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; }
-.seal__sprig { width: 120px; height: 24px; fill: none; stroke: rgba(239,201,110,.5); stroke-width: 1.2; }
+.seal__monogram strong { font-size: .7rem; font-weight: 400; opacity: .7; }
+.seal__core small { color: rgba(251,247,236,.45); font-size: .48rem; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; white-space: nowrap; }
+.seal__sprig { width: 96px; height: 20px; fill: none; stroke: rgba(239,201,110,.5); stroke-width: 1.2; flex: 0 0 auto; }
+.atlas-ghost { position: absolute; right: 0; top: 90px; width: min(340px, 30vw); height: auto; opacity: .05; fill: none; stroke: rgba(251,247,236,1); stroke-width: 1.4; pointer-events: none; }
 .atlas-flora { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: rgba(239,201,110,.12); stroke-width: 1.2; pointer-events: none; }
 .atlas-flora circle { fill: rgba(239,201,110,.16); stroke: none; }
 /* Restrained focus: hovered specimen leads, siblings recede slightly. */
@@ -568,16 +596,25 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .story-layout { grid-template-columns:1fr 1fr;gap:55px; }
   .story-copy__paragraphs { grid-template-columns:1fr; }
   .story-art { min-height:680px; }
-  /* Tablet atlas: primaries side by side, seal as a full band, then a
-     compact 3-column specimen field. */
-  .ingredients-atlas { margin-top:48px; grid-template-columns:repeat(6,1fr); }
-  .specimen--primary { grid-column: span 3; padding: 30px 24px; }
-  .specimen--primary .specimen__icon { width: 84px; height: 84px; }
+  /* Tablet atlas: full-width hero rows, compact seal band, 2-col field. */
+  .ingredients-atlas { margin-top: 48px; grid-template-columns: 1fr 1fr; }
+  .specimen--honey, .specimen--lemon { grid-column: 1 / -1; margin-top: 0; padding: 28px 0; border-left: 0; display: grid; grid-template-columns: 88px 1fr; column-gap: 20px; align-content: start; }
+  .specimen--honey::before, .specimen--lemon::before { inset: 0; }
+  .specimen--primary .specimen__icon { width: 80px; height: 80px; margin: 2px 0 0; grid-row: span 3; }
   .specimen--primary h3 { font-size: clamp(1.7rem, 3vw, 2.2rem); }
-  .seal { grid-column: 1 / -1; padding: 32px 20px 30px; }
-  .specimen--support { grid-column: span 2; padding: 26px 20px; }
-  .specimen--support.specimen--wide { grid-column: span 3; }
-  .specimen--support.specimen--div { border-left: 1px solid rgba(251,247,236,.12); }
+  .specimen--primary p { grid-column: 2; }
+  .specimen--primary .specimen__kicker { margin: 0; }
+  .seal { grid-column: 1 / -1; padding: 24px 0; gap: 20px; }
+  .seal__ring { width: 118px; height: 118px; }
+  .seal__monogram { font-size: 1.15rem; }
+  .seal__sprig { width: 72px; }
+  .specimen--support, .specimen--span5, .specimen--wide, .specimen--horizontal, .specimen--compact { grid-column: span 1; border-left: 0; padding: 26px 20px 26px 0; display: block; }
+  .ingredients-atlas .specimen--support, .ingredients-atlas .specimen--span5, .ingredients-atlas .specimen--wide, .ingredients-atlas .specimen--horizontal, .ingredients-atlas .specimen--compact { grid-column: span 1; }
+  .specimen--horizontal .specimen__icon { width: 64px; height: 64px; margin: 0 0 16px; }
+  .ingredients-atlas .specimen--horizontal .specimen__icon { width: 64px; height: 64px; }
+  .specimen--horizontal h3, .specimen--horizontal p { grid-column: auto; }
+  .specimen--horizontal h3 { font-size: 1.42rem; }
+  .atlas-ghost { width: min(240px, 30vw); }
   .delivery-layout { grid-template-columns:1fr 1.1fr;gap:52px; }
 }
 
@@ -616,16 +653,12 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .story-layout { grid-template-columns:1fr; }
   .story-copy__paragraphs { grid-template-columns:1fr 1fr; }
   .story-art { min-height:720px; }
-  /* Small-tablet atlas: feature-row primaries, compact 2-column field. */
-  .ingredients-atlas { margin-top: 44px; grid-template-columns: 1fr 1fr; }
-  .specimen--primary { grid-column: 1 / -1; display: grid; grid-template-columns: 84px 1fr; column-gap: 18px; align-content: start; padding: 26px 0; }
-  .specimen--primary + .specimen--primary { border-left: 0; }
-  .specimen--primary .specimen__icon { width: 76px; height: 76px; margin: 2px 0 0; grid-row: span 3; }
-  .specimen--primary h3 { font-size: 1.8rem; }
-  .specimen--primary p { grid-column: 2; }
-  .specimen--primary .specimen__kicker { margin: 0; }
-  .seal { grid-column: 1 / -1; padding: 32px 16px 30px; }
-  .specimen--support, .specimen--support.specimen--wide { grid-column: span 1; border-left: 0; padding: 24px 18px 24px 0; }
+  /* Narrower tablets inherit the 1080 atlas; tighten rhythm only. */
+  .ingredients-atlas { margin-top: 40px; }
+  .specimen--honey, .specimen--lemon { padding: 24px 0; }
+  .specimen--primary .specimen__icon { width: 72px; height: 72px; }
+  .specimen--support, .specimen--span5, .specimen--wide, .specimen--horizontal, .specimen--compact { padding: 22px 16px 22px 0; }
+  .seal { padding: 22px 0; gap: 18px; }
   .delivery-layout { grid-template-columns:1fr; }
   .delivery-map { min-height:520px; }
   .proof-layout { grid-template-columns:1fr;row-gap:48px; }
@@ -683,16 +716,20 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .ingredients-section { padding-bottom:80px; }
   /* Phone atlas: one-column ingredient index; seal as interstitial band. */
   .ingredients-atlas { margin-top: 40px; grid-template-columns: 1fr; }
-  .specimen, .specimen--primary, .specimen--support, .specimen--support.specimen--wide { grid-column: auto; border-left: 0; padding: 22px 0; }
+  .ingredients-atlas .specimen, .ingredients-atlas .specimen--primary, .ingredients-atlas .specimen--support, .ingredients-atlas .specimen--span5, .ingredients-atlas .specimen--wide, .ingredients-atlas .specimen--horizontal, .ingredients-atlas .specimen--compact { grid-column: auto; border-left: 0; padding: 22px 0; display: grid; grid-template-columns: 64px 1fr; column-gap: 16px; align-content: start; margin-top: 0; }
   .specimen--primary + .specimen--primary { border-left: 0; }
-  .specimen { display: grid; grid-template-columns: 64px 1fr; column-gap: 16px; align-content: start; }
+  /* Alternating index rhythm on phone: illustration side swaps per row. */
+  .ingredients-atlas .specimen:nth-of-type(even) { direction: rtl; }
+  .ingredients-atlas .specimen:nth-of-type(even) > * { direction: ltr; }
   .specimen__icon, .specimen--primary .specimen__icon, .specimen--support .specimen__icon { width: 60px; height: 60px; margin: 2px 0 0; grid-row: span 3; }
   .specimen__kicker { margin: 0; }
   .specimen h3, .specimen--primary h3, .specimen--support h3 { font-size: 1.45rem; }
   .specimen p { grid-column: 2; margin-top: 6px; }
-  .seal { grid-column: auto; padding: 30px 16px 28px; }
-  .seal__ring { width: 200px; height: 200px; }
-  .seal__core p { font-size: 1.8rem; }
+  .seal { grid-column: auto; padding: 30px 16px 28px; flex-direction: column; gap: 14px; }
+  .seal::before, .seal::after { flex: none; width: 100%; }
+  .seal__ring { width: 132px; height: 132px; }
+  .seal__monogram { font-size: 1.35rem; }
+  .seal__sprig { width: 96px; }
   .delivery-section { padding:90px 0; }
   .delivery-copy h2 { font-size:clamp(3.5rem,14vw,5.2rem); }
   .delivery-actions { align-items:flex-start;flex-direction:column;gap:20px; }

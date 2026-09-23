@@ -371,11 +371,12 @@ test("journey rail never collides with scene chrome", async ({ page }) => {
       const intro = rect(".bee-journey__intro");
       const bee = rect("#put-pcele .scene-bee");
       const bloom = rect(".scene-bloom-core");
+      const bridge = rect(".scene-bridge");
       const house = rect(".scene-house");
       // Glow washes intentionally bleed past vignette cores, so collision
       // is tested against visible content boxes, not glow-inflated groups.
       // Shell-width containers (outro) are tested via their content.
-      const targets: Record<string, DOMRect> = { intro, bee, bloom, house };
+      const targets: Record<string, DOMRect> = { intro, bee, bloom, bridge, house };
       document.querySelectorAll(".bee-journey__outro > *").forEach((node, i) => {
         targets[`outro${i}`] = node.getBoundingClientRect();
       });
