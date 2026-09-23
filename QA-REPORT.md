@@ -311,3 +311,44 @@ flaky timing assertion in untouched `tests/inquiry.spec.ts`
 (different test each time; 10/10 green in isolation, 60/60 green
 without the transient spec, 12/12 transient+inquiry green) —
 environmental suite-load flakiness, no code overlap with this diff.
+
+## Addendum — design-direction + production-hardening pass
+
+Base: `59bd2e1` (verified HEAD == origin/main, tree clean). No push,
+no deploy, no external-link activation, no submissions, no business
+data changes. Baseline before edits: 67/67 Chromium, audit clean.
+
+DIRECTION: "Panonian botanical editorial" — paper/ink/forest/honey/
+sage/restrained berry, hairline rules, serif + small caps, layered
+fills (8–22% active, 4–10% background). Mechanics from tracing-beam
+research (faint full route + honey progress), never its neon look.
+
+BEEJOURNEY (panorama, not icons): 4 stage vignettes (origin cluster /
+lemon branch + berry stem + herb / smaller drop + stem + vessel arc +
+wash / Story-vocabulary house + garden + fence), horizon + orchard
+row + field band (foreground/midground/background), normalized focus
+(active 1.0/scale 1.03, rest at floors), tracing route (base 14% +
+honey progress, doorstep destination), bee ×1.25, intro exits by 18%,
+rail (4 annotated stages + tracer, 220ms active transitions) with
+per-form-factor placement, outro payoff.
+
+INGREDIENTS (atlas, not radar): 12-col grid (primaries span 6, seal
+band 4–10, 3+2 supporting), catalog numbers locked to titles in DOM
+reading order, H+P embossed seal (incomplete ring + sprig), 7
+upgraded specimen illustrations, hover (wash + brighten + 3px lift,
+siblings to .9) + pointer spotlight (fine-pointer, no reduced
+motion), tablet/phone/tablet-small responsive tracks. Fits cleanly;
+no accidental cropping.
+
+HONEYHARVEST: re-tested aggressively (16/16 transient + settled),
+architecture untouched — one geometry improvement found by testing
+(desktop overflow camera + soft scene-edge mask).
+
+OTHER: semantic reveal roles; routeDrift disabled under reduced
+motion + perpetual-animation test; caption→rail test migration;
+single-point handoff gap documented (mid-flight readability is a
+parked property; jumps test asserts finite + parked recovery).
+
+Final: `npm run qa` 0 (68/68 Chromium), WebKit/Firefox 8/8, audit
+0 vulns, `git diff --check` clean. ~50 screenshots reviewed (bursts,
+11-viewport matrix, journey/ingredient states, adversarial sweep).

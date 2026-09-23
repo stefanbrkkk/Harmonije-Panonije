@@ -10,7 +10,8 @@ const selector = [
   ".catalog-panel__intro",
   ".story-copy > *",
   ".story-art",
-  ".ingredient-card",
+  ".specimen",
+  ".seal",
   ".delivery-copy > *",
   ".delivery-map",
   ".proof-intro",
@@ -48,7 +49,7 @@ export function MotionOrchestrator() {
           ? 0
           : node.matches(".catalog-panel__intro, .proof-intro, .catalog-toolbar")
             ? 40
-            : node.matches(".story-art, .delivery-map, .ingredient-card")
+            : node.matches(".story-art, .delivery-map, .specimen, .seal")
               ? 100
               : node.matches(".proof-press")
                 ? 150

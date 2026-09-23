@@ -13,7 +13,7 @@ test("reduced motion shows all meaningful content statically", async ({ page }) 
     expect((await chapter.boundingBox())!.height).toBeGreaterThan(60);
   }
   await expect(page.locator(".bee-journey__outro")).toBeVisible();
-  await expect(page.locator(".bee-journey__caption")).toBeVisible();
+  await expect(page.locator(".bee-journey__rail")).toBeVisible();
   for (const heading of await page.locator(".section-heading h2").all()) {
     await expect(heading).toBeVisible();
   }

@@ -12,7 +12,7 @@ test("meaningful content is visible without JavaScript", async ({ browser }) => 
   }
   await expect(page.locator(".bee-journey__intro")).toBeVisible();
   await expect(page.locator(".bee-journey__outro")).toBeVisible();
-  await expect(page.locator(".bee-journey__caption")).toBeVisible();
+  await expect(page.locator(".bee-journey__rail")).toBeVisible();
   await expect(page.locator("#proizvodi .product-card").first()).toBeVisible();
   await expect(page.locator("#kontakt")).toContainText(/063 727 4392/);
   expect(await page.locator("h2").count()).toBeGreaterThan(3);
