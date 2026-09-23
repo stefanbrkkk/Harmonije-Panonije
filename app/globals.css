@@ -373,6 +373,10 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .journey.is-live .journey__plate { opacity: 0; transform: translateY(22px); transition: opacity .35s ease, transform .8s cubic-bezier(.2,.75,.15,1); }
 .journey.is-live .journey__plate.is-before { transform: translateY(-22px); }
 .journey.is-live .journey__plate.is-active { opacity: 1; transform: none; transition: opacity .75s ease .2s, transform 1.05s cubic-bezier(.2,.75,.15,1) .12s; }
+/* A chapter skipped by a jump changes side instantly (see setActive). */
+.journey.is-live .is-snap,
+.journey.is-live .is-snap .journey__word > span,
+.journey.is-live .is-snap .journey__lead { transition: none !important; }
 
 /* Portrait (phones, tablets): the plate leads, the word anchors below it. */
 @media (orientation: portrait) {
@@ -393,7 +397,8 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .journey__frame { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
   .journey__index { padding-top: 14px; }
   .journey__index li::before { top: -19px; }
-  .journey__index strong { font-size: .92rem; }
+  .journey__index strong { font-size: min(.92rem, 3.9vw); }
+  .journey__index span { font-size: min(.62rem, 2.6vw); }
   .journey__index em { display: none; }
 }
 /* Short landscape (phones on their side, very short windows). */
@@ -741,7 +746,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 /* Drawer */
 .drawer-backdrop { position:fixed;z-index:94;inset:0;border:0;background:rgba(5,18,14,.58);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s ease, visibility 0s linear .3s; visibility: hidden; }
 .drawer-backdrop.is-open { opacity:1;pointer-events:auto; transition:opacity .3s ease; visibility: visible; }
-.order-drawer { position:fixed;z-index:95;top:0;right:0;width:min(520px,100vw);height:100dvh;display:grid;grid-template-rows:auto 1fr auto;background:var(--paper);transform:translateX(101%);transition:transform .42s cubic-bezier(.22,.8,.24,1), visibility 0s linear .42s;visibility:hidden;box-shadow:-30px 0 80px rgba(7,22,17,.25); }
+.order-drawer { position:fixed;z-index:95;top:0;right:0;width:min(520px,100%);height:100dvh;display:grid;grid-template-rows:auto 1fr auto;background:var(--paper);transform:translateX(101%);transition:transform .42s cubic-bezier(.22,.8,.24,1), visibility 0s linear .42s;visibility:hidden;box-shadow:-30px 0 80px rgba(7,22,17,.25); }
 .order-drawer.is-open { transform:translateX(0); transition:transform .42s cubic-bezier(.22,.8,.24,1); visibility: visible; }
 .order-drawer__head { min-height:105px;display:flex;align-items:center;justify-content:space-between;padding:24px 26px;border-bottom:1px solid var(--line); }
 .order-drawer__head .eyebrow { margin-bottom:6px; }
@@ -819,7 +824,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .story-layout { grid-template-columns:1fr; }
   .story-copy__paragraphs { grid-template-columns:1fr 1fr; }
   .story-art { min-height:720px; }
-  .delivery-layout { grid-template-columns:1fr; }
+  .delivery-layout { grid-template-columns:minmax(0,1fr); }
   .delivery-map { min-height:520px; }
   .proof-layout { grid-template-columns:1fr;row-gap:48px; }
   .proof-quotes { grid-template-columns:1fr 1fr; }
@@ -850,8 +855,14 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .product-section { padding-bottom:90px; }
   .catalog-tabs { margin-top:46px;margin-inline:-14px;padding-left:14px; }
   .catalog-tabs button { min-height:66px;font-size:.95rem; }
+  /* All four categories stay visible: a 2×2 grid instead of a strip that
+     silently scrolls its last tab off-screen. */
+  #proizvodi .catalog-toolbar .catalog-tabs { overflow-x:visible;grid-template-columns:repeat(2,minmax(0,1fr));margin-inline:0;padding-left:0; }
+  .catalog-toolbar .catalog-tabs button { min-height:58px; }
+  .catalog-toolbar .catalog-tabs button:nth-child(2n) { border-right:0; }
+  .catalog-toolbar .catalog-tabs button:nth-child(-n+2) { border-bottom:1px solid var(--line); }
   .catalog-panel { padding-top:42px; }
-  .product-grid { grid-template-columns:1fr;gap:14px; }
+  .product-grid { grid-template-columns:1fr;gap:14px;container-type:inline-size; }
   .product-card,.product-card:nth-child(n) { min-height:auto;grid-template-columns:39% 61%;grid-template-rows:auto; }
   .product-card__visual { border-bottom:0;border-right:1px solid rgba(28,47,40,.1); }
   .product-card__body { padding:20px 18px; }
@@ -865,7 +876,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .story-art { min-height:560px; }
   .story-art__note { grid-template-columns:1fr;gap:7px; }
   .delivery-section { padding:90px 0; }
-  .delivery-copy h2 { font-size:clamp(3.5rem,14vw,5.2rem); }
+  .delivery-copy h2 { font-size:min(clamp(3.5rem,14vw,5.2rem),14.5vw); }
   .delivery-actions { align-items:flex-start;flex-direction:column;gap:20px; }
   .delivery-map { min-height:410px; }
   .delivery-map svg { inset:8% 3% auto;width:94%;height:72%; }
@@ -1276,7 +1287,9 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .story-signature > div,
   .story-signature > div:not(:first-child) { padding: 12px 0; border-right: 0; border-bottom: 1px solid var(--line); }
   .story-signature > div:last-child { border-bottom: 0; }
-  .honey-harvest__chapter { width: min(480px, 48vw); }
+  /* The copy measure ends before the scene column (43% of the viewport,
+     minus the shell gutter) so headings never run into the flower. */
+  .honey-harvest__chapter { width: min(480px, calc(43vw - 44px)); }
   .honey-harvest__scene { left: 43%; }
 }
 
@@ -1362,8 +1375,8 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .honey-harvest__sticky { min-height: 0; }
   /* Short viewports: desktop translate:-50% centering would push the copy
      behind the fixed header — top-align below the header instead. */
-  .honey-harvest__chapter { top: calc(var(--header-height) + 10px); translate: none; width: min(480px, 52vw); }
-  .honey-harvest__chapter h2 { font-size: clamp(2.2rem, 7vw, 3.4rem); }
+  .honey-harvest__chapter { top: calc(var(--header-height) + 10px); translate: none; width: min(480px, calc(43vw - 30px)); }
+  .honey-harvest__chapter h2 { font-size: clamp(2rem, 5.6vw, 3rem); }
   .honey-harvest__chapter > p:last-child { margin-top: 12px; font-size: .72rem; }
 }
 
@@ -1423,7 +1436,7 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   z-index: 86;
   right: 22px;
   bottom: 22px;
-  width: min(420px, calc(100vw - 44px));
+  width: min(420px, calc(100% - 44px));
   min-height: 76px;
   display: grid;
   grid-template-columns: 38px minmax(0,1fr) auto 24px;
@@ -1460,6 +1473,15 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .motion-ready .reveal-target,
   .motion-ready .reveal-target.is-inview { opacity:1;translate:none;scale:none;transition:none; }
   .product-card--new { animation:none; }
+}
+
+/* Enlarged text on phones: once the grid is narrower than ~18em (text at
+   roughly 125% and up), the side-by-side card leaves the body column too
+   narrow for names and labels — stack the art above the copy instead. */
+@container (max-width: 18em) {
+  .product-card,.product-card:nth-child(n) { grid-template-columns:minmax(0,1fr);grid-template-rows:200px auto; }
+  .product-card .product-card__visual { border-right:0;border-bottom:1px solid rgba(28,47,40,.1); }
+  .product-card h4 { overflow-wrap:break-word;hyphens:auto; }
 }
 
 /* Keyboard entry point */

@@ -53,6 +53,13 @@ function sample(points: Waypoint[], progress: number) {
 
 // Text and controls the decorative bee must never sit on.
 const PROTECTED = "main :is(h1, h2, h3, h4, p, li, a, button, input, label, blockquote, figcaption, summary)";
+// On phones the single-column product cards leave only slivers of gap
+// between their labels and bottle art, which made the bee flicker in and
+// out: there the whole card counts as content.
+const PROTECTED_COMPACT = `${PROTECTED}, main .product-card`;
+// Frames the bee must stay clear of content before it fades back in, so
+// scrolling past gaps between protected boxes never pulses it.
+const CLEAR_FRAMES = 18;
 const OCCLUSION_PAD = 10;
 
 const JOURNEY_SELECTORS = [
@@ -86,6 +93,9 @@ export function PageBee() {
     let currentFacing: 1 | -1 = 1;
     let facingLock = 0;
     let currentOpacity = 0;
+    let clearFrames = CLEAR_FRAMES;
+    // True while the bee is still fading or flying toward its target.
+    let busy = false;
     let wingDuration = 0.34;
     let initialized = false;
     let anchors: number[] = [];
@@ -118,11 +128,15 @@ export function PageBee() {
         return { top: r.top + sy, bottom: r.bottom + sy };
       };
       localScenes = Array.from(document.querySelectorAll<HTMLElement>("#put-pcele, .honey-harvest"), band);
+      // The journey's pinned frame (word, index) stays on screen until the
+      // section's end scrolls past the top: keep the handoff until then.
+      if (document.querySelector("#put-pcele") && localScenes[0]) localScenes[0] = { ...localScenes[0], bottom: localScenes[0].bottom + window.innerHeight * 0.52 };
       // Sections with strong dedicated artwork opt out of the global bee so
       // it never competes with a local composition or covers its copy.
       hideSections = Array.from(document.querySelectorAll<HTMLElement>('[data-page-bee="hide"]'), band);
       protectedBoxes = [];
-      document.querySelectorAll<HTMLElement>(PROTECTED).forEach((node) => {
+      const compact = Math.min(window.innerWidth, window.innerHeight * 1.6) < 720;
+      document.querySelectorAll<HTMLElement>(compact ? PROTECTED_COMPACT : PROTECTED).forEach((node) => {
         // Pinned scenes and opted-out sections already hide the bee.
         if (node.closest('#put-pcele, .honey-harvest, [data-page-bee="hide"]')) return;
         const r = node.getBoundingClientRect();
@@ -233,6 +247,7 @@ export function PageBee() {
       }
 
       let targetOpacity: number;
+      let waiting = false;
       // Dedicated-artwork exclusion wins over every fallback (including the
       // end-of-page state) so the global bee never competes with local art.
       const size = beeSize * currentScale;
@@ -240,11 +255,20 @@ export function PageBee() {
       else if (excluded === 1) targetOpacity = 0.0;
       else if (handoff === 1) targetOpacity = 0.0;
       else if (progress > 0.985) targetOpacity = 0;
-      else if (occluded(currentX, currentY, size * 0.5, size * 0.42)) targetOpacity = 0;
-      else targetOpacity = compact ? 0.82 : 1;
+      else if (occluded(currentX, currentY, size * 0.5, size * 0.42)) {
+        targetOpacity = 0;
+        clearFrames = 0;
+      } else if (clearFrames < CLEAR_FRAMES && currentOpacity < 0.05) {
+        // Clear, but only just: wait before fading in (see CLEAR_FRAMES).
+        clearFrames += dt;
+        waiting = true;
+        targetOpacity = 0;
+      } else targetOpacity = compact ? 0.82 : 1;
       if (overlayOpen()) targetOpacity = 0;
       currentOpacity += (targetOpacity - currentOpacity) * (1 - Math.pow(1 - 0.12, dt));
       if (Math.abs(targetOpacity - currentOpacity) < 0.004) currentOpacity = targetOpacity;
+      // Keep the shared loop running until the fade and flight have landed.
+      busy = waiting || currentOpacity !== targetOpacity || speed > 0.5;
 
       wrapper.style.opacity = currentOpacity.toFixed(3);
       wrapper.style.transform = `translate3d(${currentX.toFixed(1)}px, ${currentY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${currentScale.toFixed(3)})`;
@@ -292,6 +316,7 @@ export function PageBee() {
         readTarget: () => sectionProgress(window.scrollY),
         advance: (current, target, blend) => current + (target - current) * blend,
         paintStatic,
+        busy: () => busy,
       },
       0.14,
     );

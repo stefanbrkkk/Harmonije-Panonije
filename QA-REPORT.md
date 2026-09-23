@@ -475,3 +475,48 @@ deep link) and `ingredients.spec.ts` (hierarchy, one-viewport fit,
 journey, SEO, catalog, menu and page-bee occlusion tests; cross-engine
 smoke extended to both redesigned sections. Selector-bound tests of the
 removed markup were replaced by behaviour-level equivalents.
+
+## Addendum — second audit pass (23 September 2026)
+
+Three independent audits (code, browser/visual at 9 viewports incl. 200%
+text, no-JS and reduced motion, and per-frame scroll-motion tracing) were
+run against the merged build. Every fix below was reproduced first.
+
+- Journey: a jump or fast sweep across chapters slid the skipped words
+  through the word slot (stacked type for ~130–260 ms). Skipped and
+  swept-past chapters now change side without travelling; a new test fails
+  on the old code and passes now.
+- Shared scene loop: a jump from far away painted ~3 stale frames before
+  snapping (IntersectionObserver is async) → synchronous proximity check on
+  scroll; the loop no longer parks while a scene is still fading.
+- Page bee: froze half-faded over body copy (loop parked mid-fade); pulsed
+  over product cards on phones; sat on the journey index as the pinned frame
+  left → busy-aware parking, clear-time hysteresis, whole cards protected on
+  phones, handoff kept while the pinned frame is on screen.
+- Honey section: chapters overlapped without JavaScript → static stacked
+  layout; copy ran over the flower at 1024×768 and 844×390 → measure ends
+  before the scene column.
+- 200% text on phones: delivery section overflowed the page (649 px wide),
+  product cards split words → capped display type, shrinkable grid column,
+  cards stack when narrower than 18em; journey index capped (decorative).
+- Header blur was dropped by the CSS minifier (only the -webkit- rule
+  survived) → single unprefixed declaration, prefixed at build.
+- Drawer and toast used 100vw and overflowed the reserved scrollbar gutter
+  on narrow classic-scrollbar windows → 100%.
+- Keyboard focus could land behind the phone order bar → scroll-padding.
+- Catalog: search finds matches in other categories (one-click switch
+  keeping the query); tabs are a 2×2 grid on phones (no hidden 4th tab).
+- Menu links move focus to their destination; focus restoration never
+  scrolls; clipboard falls back to the legacy copy path on rejection;
+  CRLF mailto with a length cap and a paste hint; quantity cap disables +;
+  counts announced as pieces; drawer labels include the volume.
+- Lookbehind-free typography regex (Safari < 16.4 parse error took down
+  the cart there); verify.mjs now guards it, checks every in-page link and
+  the honey no-JS fallback.
+- Indexing on hosts other than Vercel: SITE_INDEXABLE=1 (see README).
+
+Left for the client: "Busteri" vs "Boosteri" spelling; "Lekovito bilje"
+wording (possible health connotation); footer year updates on redeploy.
+Not changed (protected HoneyHarvest choreography): the brief copy gap at
+two exact scroll positions, the fast catch-up swoop on large in-section
+jumps, and comb cropping at the right edge during the pour at ≤1024 px.

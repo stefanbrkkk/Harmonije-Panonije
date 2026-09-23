@@ -56,11 +56,17 @@ test("axe clean with menu and drawer open at 320px", async ({ page }) => {
   await page.keyboard.press("Escape");
   await page.locator(".order-button").first().click();
   await expect(page.locator(".order-drawer")).toHaveClass(/is-open/);
+  // Slide-in finished, and the panel fits the viewport exactly (a 100vw
+  // width overflowed by the reserved scrollbar gutter at narrow widths).
   await page.waitForFunction(() => {
     const drawer = document.querySelector<HTMLElement>(".order-drawer")!;
-    const rect = drawer.getBoundingClientRect();
-    return Math.abs(rect.right - window.innerWidth) < 1;
+    return drawer.getAnimations().length === 0 && getComputedStyle(drawer).transform === "matrix(1, 0, 0, 1, 0, 0)";
   });
+  const fit = await page.locator(".order-drawer").evaluate((drawer) => {
+    const rect = drawer.getBoundingClientRect();
+    return { left: rect.left, width: rect.width };
+  });
+  expect(fit.left, "drawer starts inside the viewport").toBeGreaterThanOrEqual(-0.5);
   results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
   expect(results.violations).toEqual([]);
   assertClean();
