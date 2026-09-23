@@ -27,7 +27,9 @@
   --radius-sm: 12px;
   --radius-md: 22px;
   --radius-lg: 36px;
-  --shell: min(1240px, calc(100vw - 48px));
+  /* 100% of the containing block, not 100vw: classic scrollbars (with
+     scrollbar-gutter: stable) must not eat into the side gutters. */
+  --shell: min(1240px, calc(100% - 48px));
 }
 
 * { box-sizing: border-box; }
@@ -226,72 +228,168 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .scroll-cue i::after { content: ""; position: absolute; left: 0; top: -100%; width: 100%; height: 100%; background: var(--honey); animation: scrollCue 2s ease-in-out infinite; }
 @keyframes scrollCue { 0%{transform:translateY(0)}70%,100%{transform:translateY(200%)} }
 
-/* Bee journey */
-.bee-journey { position: relative; height: 165vh; background: var(--cream); color: var(--forest-2); }
-.bee-journey__sticky { position: sticky; top: 0; height: 100svh; overflow: hidden; display: grid; place-items: center; }
-.bee-journey__sticky::before { content: ""; position: absolute; inset: 0; opacity: .55; background-image: linear-gradient(rgba(23,54,45,.035) 1px,transparent 1px), linear-gradient(90deg,rgba(23,54,45,.035) 1px,transparent 1px); background-size: 52px 52px; mask-image: linear-gradient(to bottom,transparent,#000 20%,#000 80%,transparent); }
-.bee-journey__intro { position: absolute; z-index: 4; top: clamp(98px, 14vh, 150px); left: 50%; transform: translateX(-50%); pointer-events: none; will-change: opacity, transform; }
-.bee-journey__intro h2 { max-width: 650px; margin: 0; font-family: var(--serif); font-size: clamp(3.1rem, 5.8vw, 6.8rem); font-weight: 400; line-height: .9; letter-spacing: -.055em; }
-.bee-journey__intro > p:last-child { max-width: 500px; margin: 24px 0 0; color: #657169; font-size: .94rem; line-height: 1.72; }
-.bee-scene { position: absolute; z-index: 2; left: 50%; top: 52%; width: min(1300px, 110vw); transform: translate(-50%,-40%); overflow: visible; }
-.bee-scene__backdrop { fill: none; stroke: rgba(23,54,45,.16); stroke-width: 1.2; }
-.bee-scene__fielddiv { opacity: .6; }
-.bee-scene__edgegrowth { fill: none; stroke: rgba(23,54,45,.34); stroke-width: 1.6; }
-.scene-ribbon { fill: none; stroke: var(--honey-dark); stroke-width: 1.4; opacity: .6; }
-.scene-ribbon--inner { opacity: .35; stroke-width: 1; }
-.scene-sun { fill: rgba(216,162,72,.1); stroke: none; }
-.scene-grass { opacity: .7; }
-.scene-stage__rule { fill: none; stroke: rgba(28,47,40,.35); stroke-width: 1; }
-.bee-scene__orchard { fill: rgba(95,127,101,.35); stroke: none; }
-.bee-scene__orchard path { fill: none; stroke: rgba(23,54,45,.3); stroke-width: 1; }
-.scene-stage { fill: rgba(28,47,40,.48); stroke: none; font-family: var(--sans); font-size: 13px; font-weight: 800; letter-spacing: 2px; }
-.scene-stage__name { font-size: 10px; font-weight: 400; letter-spacing: 3px; fill: rgba(28,47,40,.42); }
-.bee-scene__contour { fill: none; stroke: rgba(23,54,45,.13); stroke-width: 1; stroke-dasharray: 3 8; }
-.bee-scene__foreground { fill: none; stroke: rgba(23,54,45,.3); stroke-width: 1.4; }
-.bee-scene__route-base { fill: none; stroke: rgba(23,54,45,.14); stroke-width: 1.2; }
-.bee-scene__route-prog { fill: none; stroke: var(--honey-dark); stroke-width: 1.6; stroke-linecap: round; opacity: .65; }
-/* Stage focus: opacity + scale are scroll-owned (see BeeJourney); the CSS
-   scale property composes with the static position transforms. */
-.scene-stage-group { transform-box: fill-box; transform-origin: center; will-change: opacity, scale; }
-.scene-stage-group > g { fill: none; stroke: currentColor; stroke-width: 1.5; }
-.scene-fill-paper { fill: #fbf7ec; }
-.scene-fill-sage { fill: rgba(126,147,121,.25); }
-.scene-fill-honey { fill: #d8a248; }
-.scene-fill-berry { fill: rgba(85,45,66,.55); stroke: none; }
-.scene-ingredient--lemon { color: #b68a2f; }
-.scene-ingredient--berry { color: var(--berry); }
-.scene-ingredient--leaf { color: #607e68; }
-.scene-ingredient--honey { color: var(--honey-dark); }
-.scene-ingredient--honey > path:first-child { fill: rgba(216,162,72,.14); }
-.scene-ingredient--bloom { color: #607e68; }
-.scene-ingredient--stem { color: #607e68; }
-.scene-ingredient__motion { transform-box: fill-box; transform-origin: center; will-change: transform; }
-.scene-vessel { fill: none; stroke: rgba(122,79,14,.55); stroke-width: 1.6; }
-.scene-vessel--inner { opacity: .45; stroke-width: 1.2; }
-/* Editorial journey rail: narrative annotation with progress tracer. */
-.bee-journey__rail { position: absolute; z-index: 4; left: 43%; bottom: 56px; transform: translateX(-50%); display: flex; align-items: stretch; pointer-events: none; }
-.bee-journey__rail-item { display: flex; align-items: baseline; gap: 8px; padding: 10px 14px; border-left: 1px solid rgba(28,47,40,.25); color: #6a7570; opacity: .55; transform: translateY(3px); transition: opacity .22s cubic-bezier(.22,.8,.24,1), transform .22s cubic-bezier(.22,.8,.24,1); }
-.bee-journey__rail-item:first-child { border-left: 0; }
-.bee-journey__rail-item i { font-style: normal; font-size: .62rem; font-weight: 800; letter-spacing: .12em; }
-.bee-journey__rail-item em { font-style: normal; font-family: var(--serif); font-size: .88rem; white-space: nowrap; }
-.bee-journey__rail-item.is-active { opacity: 1; color: var(--forest-2); transform: none; }
-.bee-journey__rail-item.is-active i { color: var(--honey-dark); }
-.bee-journey__rail-tracer { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; background: var(--honey-dark); opacity: .8; }
-@media (max-width: 380px) {
-  .bee-journey__rail-item { padding: 8px 9px; }
-  .bee-journey__rail-item em { display: none; }
-  .bee-journey__rail-item.is-active em { display: inline; font-size: .72rem; }
+/* Bee journey — four chapters on one Panonian horizon.
+   One monumental word, one lead line and one plate per chapter; the
+   horizon rule carries the (only) scrubbed progress. Chapter swaps are
+   time-animated from a scroll-selected state (see BeeJourney). */
+.journey { position: relative; height: 300vh; background: var(--cream); color: var(--forest-2); }
+.journey__sticky { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+/* Printed-paper tooth, shared with the hero grain. */
+.journey__sticky::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E"); mix-blend-mode: multiply; }
+.journey__frame { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; padding: calc(var(--header-height) + clamp(22px, 4.6vh, 50px)) 0 clamp(24px, 4.6vh, 46px); }
+.journey__top { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.journey__top .eyebrow { margin: 0; color: var(--forest-2); font-family: var(--sans); }
+.journey__stage { grid-row: 2; position: relative; min-height: 0; }
+.journey__chapters { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; }
+.journey__chapter { position: absolute; inset: 0; display: grid; grid-template-rows: 1fr auto auto; justify-items: start; }
+.journey__lead { grid-row: 2; max-width: 21ch; margin: 0 0 clamp(14px, 2.6vh, 28px); color: #34443c; font-family: var(--serif); font-size: clamp(1.2rem, min(1.95vw, 3.3svh), 2rem); line-height: 1.22; letter-spacing: -.012em; text-wrap: balance; }
+.journey__word { grid-row: 3; position: relative; z-index: 1; margin: 0 0 -.02em; overflow: hidden; padding: .06em .04em .2em 0; font-family: var(--serif); font-size: min(clamp(3.4rem, min(11.2vw, 18svh), 11.6rem), 12.5vw); font-weight: 400; line-height: .8; letter-spacing: -.05em; white-space: nowrap; }
+.journey__word > span { display: block; }
+.journey__art { position: absolute; z-index: 2; right: 0; bottom: 0; height: 100%; max-width: 60%; aspect-ratio: 600 / 520; overflow: visible; }
+.journey__plate * { vector-effect: non-scaling-stroke; }
+.journey__horizon { grid-row: 3; position: relative; z-index: 3; height: 1px; background: rgba(15, 40, 33, .46); }
+.journey__progress { position: absolute; left: 0; top: -1px; width: 100%; height: 3px; background: var(--honey-dark); transform: scaleX(0); transform-origin: left center; }
+.journey__index { grid-row: 4; margin: 0; padding: 18px 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); list-style: none; }
+.journey__index li { position: relative; display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: baseline; padding-right: 18px; color: #5f6862; transition: color .5s ease; }
+.journey__index li::before { content: ""; position: absolute; left: 0; top: -23px; width: 1px; height: 10px; background: currentColor; }
+.journey__index span { font-size: .64rem; font-weight: 800; letter-spacing: .14em; font-variant-numeric: tabular-nums; }
+.journey__index strong { font-family: var(--serif); font-size: 1.12rem; font-weight: 400; }
+.journey__index em { grid-column: 2; margin-top: 4px; font-size: .76rem; font-style: normal; line-height: 1.45; }
+.journey__index li.is-active, .journey__index li.is-done { color: var(--forest-2); }
+.journey__index li.is-active span { color: var(--honey-dark); }
+
+/* Plate artwork: one line weight, paper occluders, sparse semantic fills. */
+.journey__art g, .journey__art path, .journey__art circle, .journey__art ellipse, .journey__art rect { stroke-linecap: round; stroke-linejoin: round; }
+.jart-sun { fill: rgba(216, 162, 72, .2); stroke: none; }
+.jart-shade { stroke: none; }
+.jart-stem, .jart-grass path, .jart-line path, .jart-house path, .jart-house circle { fill: none; stroke: var(--forest-2); stroke-width: 1.5; }
+.jart-stem--fine, .jart-grass path, .jart-line--fine { stroke-width: 1.1; }
+.jart-grass path { stroke: rgba(15, 40, 33, .6); }
+.jart-leaf path:not(.jart-rib) { fill: #b8bea4; stroke: var(--forest-2); stroke-width: 1.2; }
+.jart-rib { fill: none; stroke: rgba(15, 40, 33, .45); stroke-width: .9; }
+.jart-petal { fill: #fbf7ec; stroke: var(--forest-2); stroke-width: 1.2; }
+.jart-disk { fill: var(--honey); stroke: var(--forest-2); stroke-width: 1.3; }
+.jart-seed { fill: var(--honey-dark); stroke: none; opacity: .75; }
+.jart-floret { fill: #fbf7ec; stroke: var(--forest-2); stroke-width: 1; }
+.jart-bud { fill: #fbf7ec; stroke: var(--forest-2); stroke-width: 1.3; }
+.jart-sepal { fill: none; stroke: var(--forest-2); stroke-width: 1.1; }
+.jart-lemon { fill: #e4c35e; stroke: var(--forest-2); stroke-width: 1.3; }
+.jart-hip { fill: #9b4a3f; stroke: var(--forest-2); stroke-width: 1.1; }
+.jart-reamer { fill: #f4efe3; stroke: var(--forest-2); stroke-width: 1.3; }
+.jart-poplar { fill: #aeb69b; stroke: var(--forest-2); stroke-width: 1.2; }
+.jart-eaves { stroke-width: 2; }
+.jart-tag-hole { fill: var(--cream); stroke: var(--forest-2); stroke-width: .9; }
+.jart-pores circle { fill: rgba(122, 79, 14, .45); stroke: none; }
+.jart-lemon-rind { fill: #e8c65c; stroke: var(--forest-2); stroke-width: 1.4; }
+.jart-lemon-pith { fill: #f8f0d4; stroke: rgba(15, 40, 33, .35); stroke-width: .9; }
+.jart-lemon-seg { fill: #f0d672; stroke: rgba(122, 79, 14, .45); stroke-width: .9; }
+.jart-lemon-core { fill: #f8f0d4; stroke: none; }
+.jart-comb-frame { fill: #f4e2b0; stroke: var(--forest-2); stroke-width: 1.4; }
+.jart-cell { fill: var(--honey); stroke: var(--honey-dark); stroke-width: 1; }
+.jart-cell--empty { fill: #f6ead0; }
+.jart-drip { fill: var(--honey); stroke: var(--honey-dark); stroke-width: 1; }
+.jart-berry { fill: var(--berry); stroke: var(--forest-2); stroke-width: 1; }
+.jart-glass { fill: rgba(251, 247, 236, .55); stroke: var(--forest-2); stroke-width: 1.5; }
+.jart-honey, .jart-liquid { fill: rgba(216, 162, 72, .82); stroke: none; }
+.jart-liquid { fill: rgba(198, 132, 42, .78); }
+.jart-glint { fill: none; stroke: rgba(255, 250, 235, .7); stroke-width: 3; }
+.jart-lid { fill: #c9b18d; stroke: var(--forest-2); stroke-width: 1.3; }
+.jart-cloth { fill: #f3eddf; stroke: var(--forest-2); stroke-width: 1.3; }
+.jart-string { fill: none; stroke: var(--honey-dark); stroke-width: 1.2; }
+.jart-tag { fill: #fbf7ec; stroke: var(--forest-2); stroke-width: 1; }
+.jart-tag-line { fill: none; stroke: rgba(15, 40, 33, .5); stroke-width: 1; }
+.jart-ribbon { fill: none; stroke: var(--honey); stroke-width: 4; }
+.jart-wood { fill: none; stroke: #9a7442; stroke-width: 5; }
+.jart-dipper { fill: #d9b98a; stroke: var(--forest-2); stroke-width: 1.3; }
+.jart-dipper-grooves { fill: none; stroke: rgba(15, 40, 33, .55); stroke-width: 1; }
+.jart-cap { fill: #d8c291; stroke: var(--forest-2); stroke-width: 1.3; }
+.jart-cap-rib { fill: none; stroke: rgba(15, 40, 33, .35); stroke-width: 1; }
+.jart-label { fill: #fbf7ec; stroke: var(--forest-2); stroke-width: 1.2; }
+.jart-label-small { fill: var(--forest-2); font-family: var(--sans); font-size: 5.6px; font-weight: 800; letter-spacing: .9px; }
+.jart-label-big { fill: var(--forest-2); font-family: var(--serif); font-size: 17px; letter-spacing: -.2px; }
+.jart-label-rule { fill: none; stroke: var(--honey-dark); stroke-width: 1; }
+.jart-furrows path { fill: none; stroke: rgba(15, 40, 33, .28); stroke-width: 1; }
+.jart-canopy-line { fill: none; stroke: rgba(15, 40, 33, .35); stroke-width: 1; }
+.jart-lemon-rind-line { fill: none; stroke: rgba(122, 79, 14, .5); stroke-width: .9; }
+.jart-weight { fill: #c9b18d; stroke: var(--forest-2); stroke-width: 1.2; }
+.jart-house .jart-roof { fill: #d9c29a; stroke: none; }
+.jart-house .jart-wall { fill: #f3eddf; }
+.jart-house .jart-door { fill: rgba(15, 40, 33, .1); }
+.jart-canopy { fill: rgba(126, 147, 121, .45); stroke: var(--forest-2); stroke-width: 1.4; }
+.jart-fruit { fill: var(--berry); stroke: none; }
+
+/* The bee: same drawing as the page bee, handed over locally. */
+.journey-bee__flip { transition: transform .38s cubic-bezier(.3,.7,.3,1); }
+.journey-bee__bob { animation: journeyBob 2.6s ease-in-out infinite alternate; }
+.journey-bee__wings { transform-box: fill-box; transform-origin: 50% 92%; animation: journeyWing .16s linear infinite alternate; }
+.journey-bee__wings ellipse { fill: rgba(251, 247, 236, .82); stroke: var(--forest-2); stroke-width: 1; }
+.journey-bee__body { fill: var(--honey); stroke: var(--forest-2); stroke-width: 1.3; }
+.journey-bee__stripes { fill: none; stroke: var(--forest-2); stroke-width: 2.4; stroke-linecap: round; }
+.journey-bee__head { fill: var(--forest-2); }
+.journey-bee__line { fill: none; stroke: var(--forest-2); stroke-width: 1.2; stroke-linecap: round; }
+@keyframes journeyBob { from { translate: 0 -3px; } to { translate: 0 3px; } }
+@keyframes journeyWing { to { transform: scaleY(.5); } }
+
+/* Base (pre-hydration first frame): chapter one composed. */
+.journey:not(.is-live) .journey__chapter:not(:first-child),
+.journey:not(.is-live) .journey__plate:not([data-plate="0"]) { opacity: 0; }
+
+/* Live: exactly one chapter owns the stage; swaps are directional. */
+.journey.is-live .journey__word > span { transform: translateY(150%); transition: transform .9s cubic-bezier(.2,.75,.15,1); }
+.journey.is-live .journey__chapter.is-before .journey__word > span { transform: translateY(-150%); }
+.journey.is-live .journey__chapter.is-active .journey__word > span { transform: none; transition-delay: .08s; }
+.journey.is-live .journey__lead { opacity: 0; transform: translateY(14px); transition: opacity .35s ease, transform .5s cubic-bezier(.2,.75,.15,1); }
+.journey.is-live .journey__chapter.is-before .journey__lead { transform: translateY(-14px); }
+.journey.is-live .journey__chapter.is-active .journey__lead { opacity: 1; transform: none; transition: opacity .7s ease .28s, transform .9s cubic-bezier(.2,.75,.15,1) .22s; }
+.journey.is-live .journey__plate { opacity: 0; transform: translateY(22px); transition: opacity .35s ease, transform .8s cubic-bezier(.2,.75,.15,1); }
+.journey.is-live .journey__plate.is-before { transform: translateY(-22px); }
+.journey.is-live .journey__plate.is-active { opacity: 1; transform: none; transition: opacity .75s ease .2s, transform 1.05s cubic-bezier(.2,.75,.15,1) .12s; }
+
+/* Portrait (phones, tablets): the plate leads, the word anchors below it. */
+@media (orientation: portrait) {
+  .journey__frame { padding-top: calc(var(--header-height) + clamp(18px, 3vh, 34px)); }
+  .journey__chapter { grid-template-rows: auto auto 1fr; }
+  .journey__lead { grid-row: 1; max-width: 26ch; margin: clamp(4px, 1.4vh, 16px) 0 clamp(10px, 1.6vh, 16px); font-size: clamp(1.08rem, 4.4vw, 1.7rem); }
+  .journey__word { grid-row: 2; font-size: min(clamp(3.2rem, 17vw, 8.4rem), 18vw); letter-spacing: -.035em; }
+  .journey__art { top: auto; bottom: 0; left: 0; right: 0; width: 100%; max-width: none; height: 54%; aspect-ratio: auto; }
+  .journey__index li { grid-template-columns: 1fr; padding-right: 8px; }
+  .journey__index span { margin-bottom: 3px; }
+  .journey__index em { grid-column: 1; }
 }
-.scene-house text { fill: var(--forest-2); stroke: none; font-family: var(--sans); font-size: 9px; font-weight: 800; letter-spacing: 2px; }
-.scene-bee { fill: var(--honey); stroke: var(--forest-2); stroke-width: 1.2; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 6px 7px rgba(23,54,45,.18)); }
-.scene-house { fill: none; stroke: var(--forest-2); stroke-width: 1.6; }
-.scene-house__garden { fill: none; stroke: var(--forest-2); }
-.scene-bee .scene-bee__wing { fill: rgba(255,255,255,.55); stroke: var(--forest-2); transform-box: fill-box; transform-origin: center; animation: wing .12s ease-in-out infinite alternate; }
-@keyframes wing { to { transform: rotate(12deg) scaleY(.62); } }
-.bee-journey__outro { position: absolute; z-index: 5; left: 50%; bottom: clamp(42px, 8vh, 82px); transform: translate(-50%,24px); opacity: 1; display: grid; grid-template-columns: auto minmax(0, 440px); justify-content: end; gap: 20px; align-items: start; pointer-events: none; }
-/* Motion hiding applies only once the scroll driver owns the scene. */
-.bee-journey.is-live .bee-journey__outro { opacity: 0; }
-.bee-journey__outro p { margin: 0; color: #5d685f; line-height: 1.65; font-size: .86rem; }
+@media (orientation: portrait) and (max-width: 560px) {
+  .journey__frame { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+  .journey__index { padding-top: 14px; }
+  .journey__index li::before { top: -19px; }
+  .journey__index strong { font-size: .92rem; }
+  .journey__index em { display: none; }
+  .journey__art { height: 52%; }
+}
+/* Short landscape (phones on their side, very short windows). */
+@media (orientation: landscape) and (max-height: 540px) {
+  .journey__frame { padding-top: calc(var(--header-height) + 10px); padding-bottom: 12px; }
+  .journey__top { display: none; }
+  .journey__lead { max-width: 26ch; margin-top: 4px; font-size: clamp(.95rem, 4.6svh, 1.2rem); }
+  .journey__word { font-size: min(clamp(2.6rem, 17svh, 5.4rem), 9vw); }
+  .journey__art { max-width: 52%; }
+  .journey__index { padding-top: 10px; }
+  .journey__index li::before { top: -15px; height: 8px; }
+  .journey__index strong { font-size: .9rem; }
+  .journey__index em { display: none; }
+}
+
+/* Static composition (no JavaScript, reduced motion): the full narrative in
+   one frame — the final plate plus the complete index. */
+@media (scripting: none), (prefers-reduced-motion: reduce) {
+  .journey { height: auto; }
+  .journey__sticky { position: relative; }
+  .journey:not(.is-live) .journey__chapter:first-child,
+  .journey:not(.is-live) .journey__plate[data-plate="0"] { opacity: 0; }
+  .journey:not(.is-live) .journey__chapter:last-child,
+  .journey:not(.is-live) .journey__plate[data-plate="3"] { opacity: 1; }
+  .journey:not(.is-live) .journey__index li { color: var(--forest-2); }
+  .journey:not(.is-live) .journey__progress { transform: none; }
+  .journey-bee__bob, .journey-bee__wings { animation: none; }
+}
 
 /* Section headings */
 .section-heading { padding-top: clamp(88px, 10vw, 138px); }
@@ -421,65 +519,116 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .story-art__note span { font-size:.66rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase; }
 .story-art__note p { margin:0;color:#59655c;font-size:.78rem;line-height:1.55; }
 
-/* Ingredients */
-/* Ingredients: botanical atlas, not an orbit diagram. Grid structure with
-   hairline specimen divisions; primaries dominate, the seal anchors. */
-.ingredients-section { padding-bottom: clamp(100px,12vw,160px); background:radial-gradient(circle at 50% 60%,#24483c 0,var(--forest) 35%,var(--forest-2) 100%); }
-.ingredients-atlas { position: relative; margin-top: 56px; display: grid; grid-template-columns: repeat(12,1fr); background: radial-gradient(circle 280px at var(--mx,70%) var(--my,18%), rgba(239,201,110,.07), transparent 70%); }
-.specimen { position: relative; padding: 34px 28px 32px; border-top: 1px solid rgba(251,247,236,.16); color: var(--white); transition: transform .25s cubic-bezier(.22,.8,.24,1), border-color .25s ease; }
-.specimen::after { content: attr(data-num); position: absolute; right: 18px; top: 16px; font-family: var(--serif); font-size: 2.2rem; line-height: 1; color: rgba(251,247,236,.07); pointer-events: none; }
-.atlas-flora { fill: none; }
-.specimen:hover, .specimen:focus-within { transform: translateY(-3px); border-color: rgba(239,201,110,.55); }
-.specimen__wash { position: absolute; inset: 0; opacity: 0; background: radial-gradient(circle at 30% 18%, rgba(239,201,110,.1), transparent 65%); transition: opacity .3s ease; pointer-events: none; }
-.specimen:hover .specimen__wash, .specimen:focus-within .specimen__wash { opacity: 1; }
-.specimen__icon { width: 72px; height: 72px; margin-bottom: 18px; color: var(--honey-bright); transition: color .2s ease, transform .25s cubic-bezier(.22,.8,.24,1); }
-.specimen:hover .specimen__icon, .specimen:focus-within .specimen__icon { color: #f4d98c; transform: translateY(-2px); }
-.specimen__icon svg { width: 100%; height: 100%; overflow: visible; }
-.specimen h3 { margin: 0; display: flex; align-items: baseline; gap: 12px; font-family: var(--serif); font-size: 1.6rem; font-weight: 400; }
-.specimen__num { position: relative; font-family: var(--sans); font-size: .66rem; font-weight: 800; letter-spacing: .14em; color: var(--honey); }
-.specimen__num::after { content: ""; display: block; width: 0; height: 1px; margin-top: 5px; background: var(--honey); transition: width .25s cubic-bezier(.22,.8,.24,1); }
-.specimen:hover .specimen__num::after, .specimen:focus-within .specimen__num::after { width: 100%; }
-.specimen p { margin: 10px 0 0; color: rgba(251,247,236,.58); font-size: .76rem; line-height: 1.6; transition: color .25s ease; }
-.specimen:hover p, .specimen:focus-within p { color: rgba(251,247,236,.78); }
-.specimen__kicker { margin: 0 0 10px; color: rgba(239,201,110,.75); font-size: .6rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
-/* Heroes at staggered levels with static tonal fields. */
-.specimen--honey { grid-column: 1 / 8; padding: 40px 40px 38px 0; }
-.specimen--lemon { grid-column: 8 / 13; margin-top: 56px; padding: 40px 0 38px 36px; border-left: 1px solid rgba(251,247,236,.16); }
-.specimen--primary .specimen__icon { width: 120px; height: 120px; }
-.specimen--primary h3 { font-size: clamp(2.1rem, 2.8vw, 3rem); }
-.specimen--honey::before { content: ""; position: absolute; inset: -20px 0; background: radial-gradient(circle at 25% 22%, rgba(239,201,110,.09), transparent 60%); pointer-events: none; }
-.specimen--lemon::before { content: ""; position: absolute; inset: -20px 0; background: radial-gradient(circle at 70% 30%, rgba(126,147,121,.1), transparent 60%); pointer-events: none; }
-/* Supporting variety: horizontal feature, compact note, standard. */
-.specimen--horizontal { display: grid; grid-template-columns: 76px 1fr; column-gap: 18px; align-content: start; }
-.specimen--horizontal .specimen__icon { width: 76px; height: 76px; margin: 2px 0 0; grid-row: span 2; }
-.specimen--horizontal h3 { font-size: 1.5rem; }
-.specimen--horizontal p { grid-column: 2; }
-.specimen--support.specimen--compact { grid-column: span 3; }
-.specimen--compact .specimen__icon { width: 56px; height: 56px; }
-.specimen--compact h3 { font-size: 1.35rem; }
-.specimen--support { grid-column: span 4; }
-.specimen--support.specimen--div { border-left: 1px solid rgba(251,247,236,.12); }
-.specimen--support h3 { font-size: 1.42rem; }
-.specimen--support .specimen__icon { width: 64px; height: 64px; }
-.specimen--span5 { grid-column: span 5; }
-.specimen--support.specimen--wide { grid-column: span 7; }
-/* Brand seal: compact chapter-break band with extending hairlines. */
-.seal { grid-column: 1 / -1; display: flex; align-items: center; gap: 28px; padding: 30px 0; border-top: 1px solid rgba(251,247,236,.16); }
-.seal::before, .seal::after { content: ""; flex: 1; height: 1px; background: rgba(251,247,236,.14); }
-.seal__ring { position: relative; flex: 0 0 auto; width: 148px; height: 148px; border: 1px solid rgba(239,201,110,.28); border-top-color: transparent; border-radius: 50%; transform: rotate(-24deg); display: grid; place-items: center; }
-.seal__core { display: grid; justify-items: center; gap: 4px; color: var(--honey-bright); transform: rotate(24deg); }
-.seal__monogram { display: flex; align-items: baseline; gap: 8px; font-family: var(--serif); font-size: 1.5rem; }
-.seal__core { display: grid; justify-items: center; gap: 8px; color: var(--honey-bright); }
-.seal__monogram strong { font-size: .7rem; font-weight: 400; opacity: .7; }
-.seal__core small { color: rgba(251,247,236,.45); font-size: .48rem; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; white-space: nowrap; }
-.seal__sprig { width: 96px; height: 20px; fill: none; stroke: rgba(239,201,110,.5); stroke-width: 1.2; flex: 0 0 auto; }
-.atlas-ghost { position: absolute; right: 0; top: 90px; width: min(340px, 30vw); height: auto; opacity: .05; fill: none; stroke: rgba(251,247,236,1); stroke-width: 1.4; pointer-events: none; }
-.atlas-flora { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: rgba(239,201,110,.12); stroke-width: 1.2; pointer-events: none; }
-.atlas-flora circle { fill: rgba(239,201,110,.16); stroke: none; }
-/* Restrained focus: hovered specimen leads, siblings recede slightly. */
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .ingredients-atlas:has(.specimen:hover) .specimen:not(:hover) { opacity: .9; }
-  .ingredients-atlas:has(.specimen:hover) .specimen { transition: transform .25s cubic-bezier(.22,.8,.24,1), border-color .25s ease, opacity .25s ease; }
+/* Ingredients — one apothecary plate, one index.
+   Honey and lemon are the only illustrated specimens (captioned on the
+   plate); the flavour layers read as a typographic herbarium index. */
+.ingredients-section { padding: clamp(72px, 9.5vh, 118px) 0; background: radial-gradient(circle at 30% 55%, #24483c 0, var(--forest) 38%, var(--forest-2) 100%); }
+.ingredients-layout { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); grid-template-areas: "plate head" "plate index"; grid-template-rows: auto 1fr; column-gap: clamp(40px, 6vw, 96px); align-items: start; }
+.ingredients-head { grid-area: head; }
+.ingredients-head .eyebrow { margin-bottom: 16px; }
+.ingredients-head h2 { margin: 0; max-width: 11ch; font-family: var(--serif); font-size: min(clamp(2.7rem, 4.4vw, 4.6rem), 13vw); font-weight: 400; line-height: .92; letter-spacing: -.045em; text-wrap: balance; }
+.ingredients-head > p:last-child { max-width: 42ch; margin: 22px 0 0; color: rgba(251, 247, 236, .7); font-size: .9rem; line-height: 1.7; }
+
+.ingredients-plate { grid-area: plate; align-self: center; margin: 0; container-type: inline-size; }
+.ingredients-plate__art { display: block; width: 100%; height: auto; overflow: visible; }
+.ingredients-plate__art * { vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+/* Caption columns start exactly under the plate's specimen ticks
+   (x 232 and 426 of 640), so text reflows at any size without drifting. */
+.ingredients-plate__captions { display: grid; grid-template-columns: 36.25% 30.31% minmax(0, 1fr); margin-top: 8px; }
+.ingredients-plate__kicker { grid-column: 2 / 4; grid-row: 1; margin: 0 0 8px; color: rgba(239, 201, 110, .86); font-size: .64rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.ingredients-base { grid-row: 2; min-width: 0; }
+.ingredients-base--honey { grid-column: 2; padding-right: 18px; }
+.ingredients-base--lemon { grid-column: 3; }
+.ingredients-base h3 { margin: 0; color: var(--honey-bright); font-family: var(--serif); font-size: clamp(1.3rem, 4.5cqw, 2.2rem); font-weight: 400; line-height: 1.02; letter-spacing: -.02em; }
+.ingredients-base span { display: block; margin-top: 4px; color: rgba(190, 206, 184, .75); font-family: var(--serif); font-size: .82rem; font-style: italic; }
+.ingredients-base p { margin: 8px 0 0; max-width: 26ch; color: rgba(251, 247, 236, .72); font-size: .82rem; line-height: 1.55; }
+
+.ingredients-index { grid-area: index; margin-top: clamp(28px, 4.4vh, 46px); }
+.ingredients-index__kicker { margin: 0 0 12px; color: rgba(239, 201, 110, .82); font-size: .64rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.ingredients-index ul { margin: 0; padding: 0; list-style: none; border-bottom: 1px solid rgba(251, 247, 236, .14); }
+.ingredients-index li { display: grid; grid-template-columns: auto 1fr; column-gap: 16px; align-items: baseline; padding: 11px 0 12px; border-top: 1px solid rgba(251, 247, 236, .14); }
+.ingredients-index h3 { margin: 0; color: var(--white); font-family: var(--serif); font-size: 1.2rem; font-weight: 400; line-height: 1.15; }
+.ingredients-index span { justify-self: end; max-width: 30ch; color: rgba(190, 206, 184, .75); font-family: var(--serif); font-size: .82rem; font-style: italic; line-height: 1.35; text-align: right; }
+.ingredients-index p { grid-column: 1 / -1; margin: 5px 0 0; color: rgba(251, 247, 236, .7); font-size: .82rem; line-height: 1.55; }
+
+/* Plate artwork on forest: cream line, honey and lemon carry the colour. */
+.iplate-stem { fill: none; stroke: rgba(251, 247, 236, .78); stroke-width: 1.4; }
+.iplate-leaf path:first-child { fill: #6f8a6c; stroke: rgba(251, 247, 236, .78); stroke-width: 1.1; }
+.iplate-leaf .jart-rib { fill: none; stroke: rgba(251, 247, 236, .38); stroke-width: .9; }
+.iplate-blossom ellipse { fill: #f6efdc; stroke: rgba(15, 40, 33, .55); stroke-width: .9; }
+.iplate-blossom__eye { fill: var(--honey); stroke: none; }
+.iplate-lemon { fill: #dfc15a; stroke: rgba(251, 247, 236, .85); stroke-width: 1.3; }
+.iplate-comb { fill: #c98f33; stroke: rgba(251, 247, 236, .8); stroke-width: 1.2; }
+.iplate-comb-edge { fill: #e2c27a; stroke: rgba(251, 247, 236, .8); stroke-width: 1.2; }
+.iplate-comb-wall { fill: none; stroke: rgba(122, 79, 14, .55); stroke-width: .9; }
+.iplate-shade { stroke: none; }
+.iplate-ribbon { fill: #e3a646; stroke: none; }
+.iplate-dipper-head { fill: #cfa46b; stroke: rgba(251, 247, 236, .85); stroke-width: 1.2; }
+.iplate-dipper-grooves { fill: none; stroke: rgba(15, 40, 33, .55); stroke-width: 1; }
+.iplate-cell { fill: #e0ad50; stroke: rgba(122, 79, 14, .85); stroke-width: .9; }
+.iplate-cell--open { fill: #f0d9a2; }
+.iplate-glass { fill: rgba(251, 247, 236, .07); stroke: rgba(251, 247, 236, .85); stroke-width: 1.5; }
+.iplate-honey { fill: url(#iplateHoney); stroke: none; }
+.iplate-rim { fill: rgba(15, 40, 33, .35); stroke: rgba(251, 247, 236, .85); stroke-width: 1.3; }
+.iplate-drip { fill: #e2a849; stroke: none; }
+.iplate-glint { fill: none; stroke: rgba(255, 250, 235, .45); stroke-width: 3; }
+.iplate-dipper { fill: none; stroke: #b58a52; stroke-width: 6; }
+.iplate-dipper-knob { fill: #b58a52; stroke: none; }
+.iplate-label { fill: #efe6d2; stroke: rgba(15, 40, 33, .4); stroke-width: 1; }
+.iplate-label__brand { fill: var(--forest-2); font-family: var(--sans); font-size: 6.5px; font-weight: 800; letter-spacing: 1.1px; }
+.iplate-label__name { fill: var(--forest-2); font-family: var(--serif); font-size: 24px; letter-spacing: -.3px; }
+.iplate-label__rule { fill: none; stroke: var(--honey-dark); stroke-width: 1; }
+.ingredients-plate .jart-lemon-rind { fill: #dfc15a; stroke: rgba(251, 247, 236, .85); stroke-width: 1.3; }
+.ingredients-plate .jart-lemon-pith { fill: #f4ecd2; stroke: rgba(15, 40, 33, .25); stroke-width: .9; }
+.ingredients-plate .jart-lemon-seg { fill: #ecd26b; stroke: rgba(122, 79, 14, .45); stroke-width: .9; }
+.ingredients-plate .jart-lemon-core { fill: #f4ecd2; stroke: none; }
+.ingredients-plate .jart-pores circle { fill: rgba(122, 79, 14, .5); stroke: none; }
+.iplate-shelf { fill: none; stroke: rgba(251, 247, 236, .34); stroke-width: 1; }
+.iplate-tick { fill: none; stroke: rgba(239, 201, 110, .7); stroke-width: 1; }
+
+/* Short desktop windows: keep the whole spread inside one viewport. */
+@media (min-width: 901px) and (max-height: 820px) {
+  .ingredients-section { padding: clamp(48px, 7vh, 72px) 0; }
+  .ingredients-head h2 { font-size: clamp(2.5rem, min(4.4vw, 7.6vh), 4.6rem); }
+  .ingredients-head > p:last-child { margin-top: 14px; font-size: .86rem; line-height: 1.6; }
+  .ingredients-index { margin-top: 20px; }
+  .ingredients-index li { padding: 8px 0 9px; }
+  .ingredients-index h3 { font-size: 1.12rem; }
+  .ingredients-plate { width: min(100%, calc((100svh - var(--header-height) - 240px) * 1.23)); justify-self: center; }
+  .ingredients-index p { margin-top: 3px; font-size: .76rem; }
+}
+/* Tablet: the plate leads, heading and index share the row beneath. */
+@media (max-width: 900px) {
+  .ingredients-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "head head" "plate plate" "index index"; grid-template-rows: auto; }
+  .ingredients-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 40px; align-items: end; margin-bottom: 34px; }
+  .ingredients-head .eyebrow { grid-column: 1 / -1; }
+  .ingredients-head h2 { max-width: none; }
+  .ingredients-head > p:last-child { margin: 0; }
+  .ingredients-plate { width: min(100%, 640px); justify-self: center; }
+  .ingredients-index { margin-top: 36px; }
+  .ingredients-index ul { max-width: 640px; margin-inline: auto; }
+  .ingredients-index__kicker { max-width: 640px; margin-inline: auto; }
+}
+/* Phone: its own composition — plate, then specimen captions, then index. */
+@media (max-width: 560px) {
+  .ingredients-head { display: block; margin-bottom: 18px; }
+  .ingredients-head h2 { font-size: min(clamp(2.5rem, 12vw, 3.4rem), 14.5vw); }
+  .ingredients-head > p:last-child { margin-top: 16px; font-size: .86rem; }
+  .ingredients-plate { width: 100%; }
+  .ingredients-plate__art .iplate-tick { display: none; }
+  .ingredients-plate__art .iplate-label__brand { display: none; }
+  .ingredients-plate__captions { grid-template-columns: 1fr 1fr; column-gap: 18px; margin-top: 14px; }
+  .ingredients-plate__kicker { grid-column: 1 / -1; margin-bottom: 10px; }
+  .ingredients-base { padding-top: 12px; border-top: 1px solid rgba(239, 201, 110, .5); }
+  .ingredients-base--honey { grid-column: 1; padding-right: 0; }
+  .ingredients-base--lemon { grid-column: 2; }
+  .ingredients-base h3 { font-size: clamp(1.35rem, 6.4vw, 1.7rem); }
+  .ingredients-base p { font-size: .86rem; color: rgba(251, 247, 236, .76); }
+  .ingredients-index p { font-size: .86rem; color: rgba(251, 247, 236, .76); }
+  .ingredients-index { margin-top: 30px; }
+  .ingredients-index ul { display: block; border-bottom: 1px solid rgba(251, 247, 236, .14); }
+  .ingredients-index li { grid-template-columns: 1fr; }
+  .ingredients-index span { justify-self: start; text-align: left; margin-top: 2px; }
 }
 
 /* Delivery */
@@ -596,30 +745,11 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .story-layout { grid-template-columns:1fr 1fr;gap:55px; }
   .story-copy__paragraphs { grid-template-columns:1fr; }
   .story-art { min-height:680px; }
-  /* Tablet atlas: full-width hero rows, compact seal band, 2-col field. */
-  .ingredients-atlas { margin-top: 48px; grid-template-columns: 1fr 1fr; }
-  .specimen--honey, .specimen--lemon { grid-column: 1 / -1; margin-top: 0; padding: 28px 0; border-left: 0; display: grid; grid-template-columns: 88px 1fr; column-gap: 20px; align-content: start; }
-  .specimen--honey::before, .specimen--lemon::before { inset: 0; }
-  .specimen--primary .specimen__icon { width: 80px; height: 80px; margin: 2px 0 0; grid-row: span 3; }
-  .specimen--primary h3 { font-size: clamp(1.7rem, 3vw, 2.2rem); }
-  .specimen--primary p { grid-column: 2; }
-  .specimen--primary .specimen__kicker { margin: 0; }
-  .seal { grid-column: 1 / -1; padding: 24px 0; gap: 20px; }
-  .seal__ring { width: 118px; height: 118px; }
-  .seal__monogram { font-size: 1.15rem; }
-  .seal__sprig { width: 72px; }
-  .specimen--support, .specimen--span5, .specimen--wide, .specimen--horizontal, .specimen--compact { grid-column: span 1; border-left: 0; padding: 26px 20px 26px 0; display: block; }
-  .ingredients-atlas .specimen--support, .ingredients-atlas .specimen--span5, .ingredients-atlas .specimen--wide, .ingredients-atlas .specimen--horizontal, .ingredients-atlas .specimen--compact { grid-column: span 1; }
-  .specimen--horizontal .specimen__icon { width: 64px; height: 64px; margin: 0 0 16px; }
-  .ingredients-atlas .specimen--horizontal .specimen__icon { width: 64px; height: 64px; }
-  .specimen--horizontal h3, .specimen--horizontal p { grid-column: auto; }
-  .specimen--horizontal h3 { font-size: 1.42rem; }
-  .atlas-ghost { width: min(240px, 30vw); }
   .delivery-layout { grid-template-columns:1fr 1.1fr;gap:52px; }
 }
 
 @media (max-width: 800px) {
-  :root { --shell: calc(100vw - 34px); --header-height: 72px; }
+  :root { --shell: calc(100% - 34px); --header-height: 72px; }
   .order-button > span:first-child { display:none; }
   .order-button { padding-left:6px;border:0;background:transparent; }
   .hero-section { min-height:auto;padding:118px 0 70px; }
@@ -632,11 +762,6 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .hero-art__bottles { transform:scale(.88); }
   .hero-art__caption { bottom:0; }
   .scroll-cue { display:none; }
-  .bee-journey { height:150vh; }
-  .bee-journey__intro { top:90px; }
-  .bee-journey__intro h2 { max-width:600px;font-size:clamp(3.2rem,11vw,5.8rem); }
-  .bee-scene { width:118vw;top:56%;transform:translate(-50%,-40%); }
-  .bee-journey__outro { bottom:35px;grid-template-columns:auto 1fr; }
   .section-heading--split { grid-template-columns:1fr;gap:25px;align-items:start; }
   .section-heading--split > p { max-width:580px; }
   .catalog-tabs { overflow-x:auto;grid-template-columns:repeat(4,minmax(145px,1fr));scrollbar-width:none; }
@@ -653,12 +778,6 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .story-layout { grid-template-columns:1fr; }
   .story-copy__paragraphs { grid-template-columns:1fr 1fr; }
   .story-art { min-height:720px; }
-  /* Narrower tablets inherit the 1080 atlas; tighten rhythm only. */
-  .ingredients-atlas { margin-top: 40px; }
-  .specimen--honey, .specimen--lemon { padding: 24px 0; }
-  .specimen--primary .specimen__icon { width: 72px; height: 72px; }
-  .specimen--support, .specimen--span5, .specimen--wide, .specimen--horizontal, .specimen--compact { padding: 22px 16px 22px 0; }
-  .seal { padding: 22px 0; gap: 18px; }
   .delivery-layout { grid-template-columns:1fr; }
   .delivery-map { min-height:520px; }
   .proof-layout { grid-template-columns:1fr;row-gap:48px; }
@@ -673,7 +792,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 }
 
 @media (max-width: 560px) {
-  :root { --shell: calc(100vw - 28px); --header-height: 68px; }
+  :root { --shell: calc(100% - 28px); --header-height: 68px; }
   .brand-mark--compact .brand-mark__words span { display:none; }
   .hero-section { padding-top:106px; }
   .hero-copy h1 { font-size:clamp(2.75rem,14vw,5.4rem);line-height:.84; }
@@ -684,16 +803,6 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .hero-art__bottles { height:450px;width:100%;transform:scale(.77); }
   .hero-art__ingredient--lemon{left:-2%;top:29%}.hero-art__ingredient--berry{right:-2%;top:21%}.hero-art__ingredient--leaf{left:2%;bottom:15%}.hero-art__ingredient--flower{right:-2%;bottom:18%}
   .hero-art__caption { display:none; }
-  .bee-journey { height:128vh;min-height:960px; }
-  .bee-journey__intro { top:90px; }
-  .bee-journey__intro h2 { font-size:clamp(3rem,14vw,4.4rem); }
-  .bee-journey__intro > p:last-child { font-size:.82rem; }
-  .bee-scene { width:132vw;top:57%;transform:translate(-50%,-34%); }
-  .bee-journey__rail { bottom: 168px; }
-  .bee-journey__rail-item { padding: 8px 10px; }
-  .bee-journey__rail-item em { font-size: .72rem; }
-  .bee-journey__rail-item i { font-size: .55rem; }
-  .bee-journey__outro { bottom:calc(25px + 70px);grid-template-columns:1fr;gap:8px; }
   .section-heading { padding-top:86px; }
   .section-heading h2 { font-size:clamp(3.2rem,13vw,4.8rem); }
   .product-section { padding-bottom:90px; }
@@ -713,23 +822,6 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .story-copy__paragraphs { grid-template-columns:1fr; }
   .story-art { min-height:560px; }
   .story-art__note { grid-template-columns:1fr;gap:7px; }
-  .ingredients-section { padding-bottom:80px; }
-  /* Phone atlas: one-column ingredient index; seal as interstitial band. */
-  .ingredients-atlas { margin-top: 40px; grid-template-columns: 1fr; }
-  .ingredients-atlas .specimen, .ingredients-atlas .specimen--primary, .ingredients-atlas .specimen--support, .ingredients-atlas .specimen--span5, .ingredients-atlas .specimen--wide, .ingredients-atlas .specimen--horizontal, .ingredients-atlas .specimen--compact { grid-column: auto; border-left: 0; padding: 22px 0; display: grid; grid-template-columns: 64px 1fr; column-gap: 16px; align-content: start; margin-top: 0; }
-  .specimen--primary + .specimen--primary { border-left: 0; }
-  /* Alternating index rhythm on phone: illustration side swaps per row. */
-  .ingredients-atlas .specimen:nth-of-type(even) { direction: rtl; }
-  .ingredients-atlas .specimen:nth-of-type(even) > * { direction: ltr; }
-  .specimen__icon, .specimen--primary .specimen__icon, .specimen--support .specimen__icon { width: 60px; height: 60px; margin: 2px 0 0; grid-row: span 3; }
-  .specimen__kicker { margin: 0; }
-  .specimen h3, .specimen--primary h3, .specimen--support h3 { font-size: 1.45rem; }
-  .specimen p { grid-column: 2; margin-top: 6px; }
-  .seal { grid-column: auto; padding: 30px 16px 28px; flex-direction: column; gap: 14px; }
-  .seal::before, .seal::after { flex: none; width: 100%; }
-  .seal__ring { width: 132px; height: 132px; }
-  .seal__monogram { font-size: 1.35rem; }
-  .seal__sprig { width: 96px; }
   .delivery-section { padding:90px 0; }
   .delivery-copy h2 { font-size:clamp(3.5rem,14vw,5.2rem); }
   .delivery-actions { align-items:flex-start;flex-direction:column;gap:20px; }
@@ -755,8 +847,6 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   html { scroll-behavior:auto; }
   *,*::before,*::after { animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
   .hero-bottle--small:first-child,.hero-bottle--small:last-child { transform:none; }
-  .bee-journey { height:100vh;min-height:760px; }
-  .scene-bee__wing { animation:none !important; }
   .delivery-map__route { animation: none !important; }
   .delivery-map__pulse { display:none; }
   .scroll-cue { display:none; }
@@ -1148,7 +1238,7 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .story-signature > div:first-child { padding-left: 0; }
   .story-signature > div:last-child { border-right: 0; }
   .honey-harvest { height: 215vh; min-height: 1450px; }
-  .honey-harvest__chapter { top: 10%; width: var(--shell); }
+  .honey-harvest__chapter { top: 10%; width: 100%; }
   .honey-harvest__chapter h2 { max-width: 620px; font-size: clamp(3.4rem,11vw,6rem); }
   .honey-harvest__chapter > p:last-child { max-width: 540px; }
   .honey-harvest__scene { inset: 34% -8% -3% 0; }
@@ -1193,19 +1283,6 @@ body.has-overlay .page-bee { opacity: 0 !important; }
 
 /* Short landscape: compact cinematic copy, same content, smaller type. */
 @media (max-height: 500px) and (orientation: landscape) {
-  .bee-journey__intro { top: 78px; }
-  /* Bottom-left rail: centered captions would cross the central artwork
-     in short viewports; the left rail stays on quiet background. */
-  .bee-journey__rail { bottom: 12px; }
-  .bee-journey__rail-item { padding: 6px 12px; display: none; }
-  .bee-journey__rail-item.is-active { display: flex; }
-  .bee-journey__rail-item em { font-size: .72rem; }
-  .bee-journey__rail-tracer { display: none; }
-  .bee-journey__intro h2 { font-size: clamp(2rem, 6vw, 3rem); }
-  .bee-journey__intro > p:last-child { margin-top: 12px; font-size: .75rem; }
-  .bee-scene { top: 62%; }
-  .bee-journey__outro { bottom: 18px; }
-  .bee-journey__outro p { font-size: .72rem; }
   .honey-harvest__sticky { min-height: 0; }
   /* Short viewports: desktop translate:-50% centering would push the copy
      behind the fixed header — top-align below the header instead. */
@@ -1241,7 +1318,7 @@ body.has-overlay .page-bee { opacity: 0 !important; }
 .motion-ready .section-heading.reveal-target { translate: 0 20px; }
 .motion-ready .section-heading.reveal-target,
 .motion-ready .proof-quotes article.reveal-target { transition-duration: .8s; }
-.motion-ready .specimen.reveal-target,
+.motion-ready .ingredients-index li.reveal-target,
 .motion-ready .delivery-copy.reveal-target { translate: 0 10px; }
 .motion-ready .story-art.reveal-target,
 .motion-ready .delivery-map.reveal-target { scale: .985; transition:

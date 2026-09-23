@@ -163,26 +163,6 @@ test("mobile honey keeps the action framed", async ({ page }) => {
   assertClean();
 });
 
-test("BeeJourney stage captions track progress", async ({ page }) => {
-  const assertClean = trackErrors(page);
-  await page.goto("/", { waitUntil: "networkidle" });
-  // The rail is the single caption system: short labels with an animated
-  // active state, never pasted over the artwork.
-  const expected = ["Cvet i voće", "Med i bilje", "Craft", "Panonija"];
-  for (const [fraction, stage] of [[0.1, 0], [0.4, 1], [0.6, 2], [0.85, 3]] as Array<[number, number]>) {
-    await scrollToStickyProgress(page, "#put-pcele", fraction);
-    await page.waitForTimeout(800);
-    const rail = await page.evaluate(() => {
-      const items = [...document.querySelectorAll(".bee-journey__rail-item")];
-      const active = items.findIndex((item) => item.classList.contains("is-active"));
-      return { active, text: items[active]?.querySelector("em")?.textContent ?? null };
-    });
-    expect(rail.active, `active rail stage at p=${fraction}`).toBe(stage);
-    expect(rail.text, `rail label at p=${fraction}`).toBe(expected[stage]);
-  }
-  assertClean();
-});
-
 test("persistent bee yields to dedicated-artwork sections", async ({ page }) => {
   const assertClean = trackErrors(page);
   await page.goto("/", { waitUntil: "networkidle" });
@@ -214,28 +194,6 @@ test("persistent bee yields to dedicated-artwork sections", async ({ page }) => 
   assertClean();
 });
 
-test("BeeJourney ends with bee, house and outro framed", async ({ page }) => {
-  const assertClean = trackErrors(page);
-  await page.goto("/", { waitUntil: "networkidle" });
-  await scrollToStickyProgress(page, "#put-pcele", 1);
-  await page.waitForTimeout(900);
-  const end = await page.evaluate(() => {
-    const inFrame = (selector: string) => {
-      const rect = document.querySelector(selector)!.getBoundingClientRect();
-      return rect.width > 10 && rect.bottom > 0 && rect.top < window.innerHeight;
-    };
-    return {
-      bee: (document.querySelector("#put-pcele .scene-bee")?.getAttribute("transform") ?? "").length > 10,
-      house: parseFloat(document.querySelector<HTMLElement>('[data-stage="3"]')?.style.opacity ?? "0"),
-      outro: inFrame(".bee-journey__outro"),
-    };
-  });
-  expect(end.bee).toBe(true);
-  expect(end.house).toBeGreaterThan(0.9);
-  expect(end.outro).toBe(true);
-  assertClean();
-});
-
 test("rapid scroll, reverse and mid-scene resize stay valid", async ({ page }) => {
   const assertClean = trackErrors(page);
   await page.goto("/", { waitUntil: "networkidle" });
@@ -245,15 +203,19 @@ test("rapid scroll, reverse and mid-scene resize stay valid", async ({ page }) =
   await page.waitForTimeout(800);
   const state = await page.evaluate(() => ({
     bee: document.querySelector(".page-bee")!.getAttribute("style") ?? "",
-    journey: document.querySelector("#put-pcele .scene-bee")?.getAttribute("transform") ?? "",
+    journey: document.querySelector("#put-pcele .journey-bee")?.getAttribute("transform") ?? "",
   }));
   expect(/NaN|undefined/.test(state.bee + state.journey)).toBe(false);
   await page.evaluate(() => window.scrollTo({ top: document.querySelector<HTMLElement>("#put-pcele")!.offsetTop + 200, behavior: "instant" }));
   await page.setViewportSize({ width: 1024, height: 768 });
-  const resized = await page.evaluate(
-    () => document.querySelector("#put-pcele .scene-bee")?.getAttribute("transform") ?? "",
-  );
-  expect(resized).toMatch(/translate\([-0-9.]+ [-0-9.]+\)/);
+  // Read after the resize has been laid out and painted, not the stale value.
+  await page.waitForTimeout(600);
+  const resized = await page.evaluate(() => ({
+    bee: document.querySelector("#put-pcele .journey-bee")?.getAttribute("transform") ?? "",
+    page: document.querySelector(".page-bee")!.getAttribute("style") ?? "",
+  }));
+  expect(resized.bee).toMatch(/translate\([-0-9.]+ [-0-9.]+\)/);
+  expect(/NaN|undefined/.test(resized.bee + resized.page)).toBe(false);
   assertClean();
 });
 
@@ -263,7 +225,7 @@ test("generic reveal targets animate with a nonzero transition", async ({ page }
   // A syntactically invalid transition declaration (e.g. a trailing comma)
   // computes to a zero-second duration and reveals appear abruptly.
   const reveal = await page.evaluate(() => {
-    const node = document.querySelector<HTMLElement>(".specimen")!;
+    const node = document.querySelector<HTMLElement>(".ingredients-index li")!;
     const style = getComputedStyle(node);
     return { duration: style.transitionDuration, property: style.transitionProperty };
   });
@@ -355,47 +317,6 @@ test("landscape honey copy clears the fixed header", async ({ page }) => {
     expect(layout.active.bottom, `chapter inside viewport at ${viewport.width}x${viewport.height}`).toBeLessThanOrEqual(
       layout.viewport + 1,
     );
-  }
-  assertClean();
-});
-
-test("journey rail never collides with scene chrome", async ({ page }) => {
-  const assertClean = trackErrors(page);
-  await page.goto("/", { waitUntil: "networkidle" });
-  for (const fraction of [0.02, 0.4, 0.7, 1]) {
-    await scrollToStickyProgress(page, "#put-pcele", fraction);
-    await page.waitForTimeout(800);
-    const boxes = await page.evaluate(() => {
-      const rect = (selector: string) => document.querySelector(selector)!.getBoundingClientRect();
-      const rail = rect(".bee-journey__rail");
-      const intro = rect(".bee-journey__intro");
-      const bee = rect("#put-pcele .scene-bee");
-      const bloom = rect(".scene-bloom-core");
-      const bridge = rect(".scene-bridge");
-      const house = rect(".scene-house");
-      // Glow washes intentionally bleed past vignette cores, so collision
-      // is tested against visible content boxes, not glow-inflated groups.
-      // Shell-width containers (outro) are tested via their content.
-      const targets: Record<string, DOMRect> = { intro, bee, bloom, bridge, house };
-      document.querySelectorAll(".bee-journey__outro > *").forEach((node, i) => {
-        targets[`outro${i}`] = node.getBoundingClientRect();
-      });
-      document.querySelectorAll(".scene-stage").forEach((node, i) => {
-        targets[`marker${i}`] = node.getBoundingClientRect();
-      });
-      const overlaps = (a: DOMRect, b: DOMRect) =>
-        a.left < b.right - 2 && b.left < a.right - 2 && a.top < b.bottom - 2 && b.top < a.bottom - 2;
-      const visible = (selector: string, fallback: number) =>
-        parseFloat((document.querySelector(selector) as HTMLElement)?.style.opacity ?? String(fallback));
-      const hits: string[] = [];
-      for (const [name, box] of Object.entries(targets)) {
-        if (name === "intro" && visible(".bee-journey__intro", 1) < 0.05) continue;
-        if (name.startsWith("outro") && visible(".bee-journey__outro", 0) < 0.05) continue;
-        if (overlaps(rail, box)) hits.push(name);
-      }
-      return hits;
-    });
-    expect(boxes, `rail collisions at p=${fraction}`).toEqual([]);
   }
   assertClean();
 });

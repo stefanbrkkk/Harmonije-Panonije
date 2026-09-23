@@ -12,8 +12,23 @@ test("reduced motion shows all meaningful content statically", async ({ page }) 
     await expect(chapter).toBeVisible();
     expect((await chapter.boundingBox())!.height).toBeGreaterThan(60);
   }
-  await expect(page.locator(".bee-journey__outro")).toBeVisible();
-  await expect(page.locator(".bee-journey__rail")).toBeVisible();
+  const journey = await page.evaluate(() => {
+    const section = document.querySelector<HTMLElement>("#put-pcele")!;
+    const opacity = (el: Element) => parseFloat(getComputedStyle(el).opacity);
+    return {
+      live: section.classList.contains("is-live"),
+      shown: [...section.querySelectorAll("[data-chapter]")].filter((el) => opacity(el) > 0.98).map((el) => el.querySelector("h3")!.textContent),
+      plates: [...section.querySelectorAll("[data-plate]")].map(opacity),
+      height: section.offsetHeight,
+      sticky: getComputedStyle(section.querySelector(".journey__sticky")!).position,
+    };
+  });
+  expect(journey.live, "no scroll-driven journey under reduced motion").toBe(false);
+  expect(journey.shown, "one complete static journey frame").toEqual(["Panonija"]);
+  expect(journey.plates).toEqual([0, 0, 0, 1]);
+  expect(journey.sticky).not.toBe("sticky");
+  expect(journey.height, "no pinned scroll distance").toBeLessThanOrEqual(page.viewportSize()!.height + 2);
+  await expect(page.locator(".journey__index")).toBeVisible();
   for (const heading of await page.locator(".section-heading h2").all()) {
     await expect(heading).toBeVisible();
   }
@@ -53,13 +68,15 @@ test("reduced motion disables perpetual decorative animation", async ({ page }) 
         .filter((name) => name && name !== "none");
     };
     return {
-      wings: names(".scene-bee__wing"),
+      wings: names(".journey-bee__wings"),
+      bob: names(".journey-bee__bob"),
       route: names(".delivery-map__route"),
       heroFloat: names(".hero-art__ingredient--lemon"),
       halo: names(".hero-art__halo"),
     };
   });
   expect(animated.wings, "no perpetual wing flap").toEqual([]);
+  expect(animated.bob, "no perpetual journey bee bob").toEqual([]);
   expect(animated.route, "no perpetual route drift").toEqual([]);
   expect(animated.heroFloat, "no perpetual hero float").toEqual([]);
   expect(animated.halo, "no perpetual halo pulse").toEqual([]);
