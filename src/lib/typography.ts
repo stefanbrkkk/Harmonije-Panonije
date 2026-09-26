@@ -16,7 +16,13 @@ export function bindShortWords(text: string) {
   return bind(bind(text)).replace(/ —/g, `${NBSP}—`);
 }
 
-/** Product names like "Cvekla · šargarepa · jabuka": a line never starts with "·". */
+/**
+ * Names like "Šipurak · kajenska paprika": a line never starts with "·", and
+ * breaks fall only between the parts, never inside a two-word part.
+ */
 export function bindSeparators(text: string) {
-  return text.replace(/ · /g, `${NBSP}· `);
+  return text
+    .split(" · ")
+    .map((part) => part.replace(/ /g, NBSP))
+    .join(`${NBSP}· `);
 }

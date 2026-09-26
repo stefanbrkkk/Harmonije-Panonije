@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { pluralSr } from "@/src/lib/plural";
-import { bindSeparators } from "@/src/lib/typography";
-import { categoryCopy, products, publishedPrice, type ProductCategory } from "@/src/data/siteContent";
+import { bindSeparators, bindShortWords } from "@/src/lib/typography";
+import { categoryCopy, contact, products, publishedPrice, type ProductCategory } from "@/src/data/siteContent";
 import { ProductVisual } from "./ProductVisual";
 import { useCart } from "./CartProvider";
 import { UsageStrip } from "./UsageStrip";
@@ -36,8 +36,8 @@ function resultCountText(count: number, total: number, searching: boolean) {
   if (count === 0) return "Nema rezultata u ovoj kategoriji.";
   if (searching) return `${count} ${pluralSr(count, "rezultat", "rezultata", "rezultata")} pretrage.`;
   return count >= total
-    ? `Prikazano: ${total} ${pluralSr(total, "proizvod", "proizvoda", "proizvoda")}.`
-    : `Prikazano ${count} od ${total}.`;
+    ? `Ukupno ${total} ${pluralSr(total, "proizvod", "proizvoda", "proizvoda")}.`
+    : `Prikazano ${count} od ${total} proizvoda.`;
 }
 
 export function ProductCatalog() {
@@ -139,15 +139,16 @@ export function ProductCatalog() {
       });
     } else {
       // Expansion inserts cards above the toggle; focus moves to the first
-      // new card's action (already in view, where the toggle was) so the
-      // revealed products come next in keyboard order. No scroll: the
+      // new card itself: its top is where the toggle was, so the focus ring
+      // is on screen (its add button, at the card's foot, often is not) and
+      // the card's own action is next in keyboard order. No scroll: the
       // viewport stays where the visitor is reading.
       const firstNew = categoryProducts[baseCount]?.id;
       setEnterIds(categoryProducts.slice(baseCount).map((product) => product.id));
       setExpanded(true);
       if (firstNew) {
         requestAnimationFrame(() => requestAnimationFrame(() => {
-          document.querySelector<HTMLElement>(`[data-product="${firstNew}"] .product-card__add`)?.focus({ preventScroll: true });
+          document.querySelector<HTMLElement>(`[data-product="${firstNew}"]`)?.focus({ preventScroll: true });
         }));
       }
     }
@@ -173,7 +174,7 @@ export function ProductCatalog() {
             <p className="eyebrow"><span />Immuno Craft</p>
             <h2 id="proizvodi-heading" tabIndex={-1}>Ukusi koji imaju karakter.</h2>
           </div>
-          <p>Birajte kombinacije koje vas zanimaju i dodajte ih u upit. Ukusi prate sezonu, pa dostupnost i cenu potvrđujemo direktno — bez online plaćanja, registracije ili skrivenih koraka.</p>
+          <p>{bindShortWords("Birajte kombinacije koje vas zanimaju i dodajte ih u upit. Ukusi prate sezonu, pa dostupnost i cenu potvrđujemo direktno — bez online plaćanja, registracije ili skrivenih koraka.")}</p>
         </div>
 
         <div className="catalog-toolbar">
@@ -215,7 +216,7 @@ export function ProductCatalog() {
           <div className="catalog-panel__intro" hidden={searching}>
             <p className="eyebrow eyebrow--quiet">{copy.label}</p>
             <h3>{copy.title}</h3>
-            <p>{copy.note}</p>
+            <p>{bindShortWords(copy.note)}</p>
           </div>
 
           <p className="catalog-count" role="status">{resultCountText(visible.length, categoryProducts.length, searching)}</p>
@@ -234,6 +235,7 @@ export function ProductCatalog() {
                     className={`product-card ${isNew ? "product-card--new" : ""}`}
                     key={product.id}
                     data-product={product.id}
+                    tabIndex={-1}
                     style={isNew ? { animationDelay: `${Math.min(240, enterIds.indexOf(product.id) * 45)}ms` } : undefined}
                   >
                     <div className="product-card__visual">
@@ -246,7 +248,7 @@ export function ProductCatalog() {
                         <span>{price != null ? `${price} RSD` : "Cena po upitu"}</span>
                       </div>
                       <h4>{bindSeparators(product.name)}</h4>
-                      <p>{product.description}</p>
+                      <p>{bindShortWords(product.description)}</p>
                       <ul aria-label={`Sastojci: ${product.name}`}>
                         {product.ingredients.map((ingredient) => <li key={ingredient}>{ingredient}</li>)}
                       </ul>
@@ -269,7 +271,7 @@ export function ProductCatalog() {
               {elsewhere.length > 0 ? (
                 <p className="catalog-elsewhere">Pronađeno u: {elsewhereLinks}</p>
               ) : (
-                <p>Probajte drugi sastojak ili otvorite neku od ostalih kategorija.</p>
+                <p>{bindShortWords("Probajte drugi sastojak ili otvorite neku od ostalih kategorija.")}</p>
               )}
               <button
                 type="button"
@@ -293,10 +295,34 @@ export function ProductCatalog() {
             </div>
           )}
 
-          <UsageStrip />
+          {/* Without JavaScript the tabs and "show all" cannot run: the whole
+              range is listed here instead (browsers with JS never parse it). */}
+          <noscript>
+            <div className="catalog-noscript">
+              <h3>Ceo asortiman</h3>
+              {categories.map((category) => (
+                <div key={category}>
+                  <h4>{categoryCopy[category].title}</h4>
+                  <ul>
+                    {products.filter((product) => product.category === category).map((product) => (
+                      <li key={product.id}>
+                        <strong>{bindSeparators(product.name)}</strong> <span>{product.volume}</span>
+                        <em>{product.ingredients.join(", ")}</em>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+              <p>Za upit pišite na <a href={`mailto:${contact.email}`}>{contact.email}</a> ili pozovite <a href={`tel:${contact.phoneHref}`}>{contact.phoneDisplay}</a>.</p>
+            </div>
+          </noscript>
+
+          {/* Dilution, yield and storage are syrup facts: the Booster jars
+              have their own use, still to be confirmed by the client. */}
+          {active !== "busteri" && <UsageStrip />}
 
           <div className="catalog-assurance">
-            <p><strong>Bez online naplate.</strong> Izbor samo priprema jasan upit za aktuelnu cenu i dostupnost.</p>
+            <p><strong>Bez online naplate.</strong> {bindShortWords("Izbor samo priprema jasan upit za aktuelnu cenu i dostupnost.")}</p>
             <button type="button" className="text-link" onClick={open}>Otvori moj upit <span aria-hidden="true">↗</span></button>
           </div>
         </div>

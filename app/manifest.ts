@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Harmonije Panonije",
-    short_name: "Harmonije Panonije",
+    short_name: "Harmonije",
     description: "Immuno Craft sirupi i Immuno Booster tegle sa porodičnog gazdinstva u Budisavi.",
     start_url: "/",
     display: "standalone",

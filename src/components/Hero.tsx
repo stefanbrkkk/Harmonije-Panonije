@@ -1,4 +1,5 @@
 import { hero } from "@/src/data/siteContent";
+import { bindShortWords } from "@/src/lib/typography";
 
 function Bottle({ size = "large", tone = "berry", label = "IMMUNO\nCRAFT" }: { size?: "large" | "small"; tone?: string; label?: string }) {
   return (
@@ -23,8 +24,8 @@ export function Hero() {
       <div className="shell hero-grid">
         <div className="hero-copy">
           <p className="eyebrow eyebrow--light"><span />{hero.eyebrow}</p>
-          <h1>{hero.headline}</h1>
-          <p className="hero-copy__lead">{hero.subheadline}</p>
+          <h1>{bindShortWords(hero.headline)}</h1>
+          <p className="hero-copy__lead">{bindShortWords(hero.subheadline)}</p>
           <div className="hero-copy__actions">
             <a className="button button--honey" href="#proizvodi">{hero.primaryCta}</a>
             <a className="text-link text-link--light" href="#prica">{hero.secondaryCta}<span aria-hidden="true">↘</span></a>
@@ -49,7 +50,7 @@ export function Hero() {
           </div>
           <div className="hero-art__caption">
             <span>01</span>
-            <p>Livadski med i ceđeni limun osnova su svakog Immuno Craft sirupa — voće i bilje daju mu karakter.</p>
+            <p>{bindShortWords("Livadski med i ceđeni limun osnova su svakog našeg sirupa — voće i bilje daju mu karakter.")}</p>
           </div>
         </div>
       </div>

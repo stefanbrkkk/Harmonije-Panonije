@@ -169,7 +169,7 @@ test("how to enjoy and store a syrup is on the page, at every width", async ({ p
     await strip.scrollIntoViewIfNeeded();
     await expect(strip).toBeVisible();
     await expect(strip).toContainText("3–3,5 litra");
-    await expect(strip).toContainText("frižideru, do mesec dana");
+    await expect(strip).toContainText("frižideru do mesec dana");
     await expect(strip).toContainText("promućkajte");
     await expect(strip.locator("dt")).toHaveText(["Na kašiku", "Sa vodom", "U koktelima i kolačima", "Ujutru, pre jela"]);
     const overflow = await page.evaluate(() => {
@@ -178,5 +178,53 @@ test("how to enjoy and store a syrup is on the page, at every width", async ({ p
     });
     expect(overflow.right, `strip fits at ${width}`).toBeLessThanOrEqual(overflow.vw + 1);
   }
+  // Dilution and bottle storage are syrup facts: not shown under the jars.
+  await page.locator("#tab-busteri").click();
+  await expect(page.locator(".catalog-ritual")).toHaveCount(0);
+  await page.locator("#tab-djumbir").click();
+  await expect(page.locator(".catalog-ritual")).toHaveCount(1);
+  assertClean();
+});
+
+test("the availability badge stays inside the card art on small phones", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  for (const width of [320, 360, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/#proizvodi", { waitUntil: "networkidle" });
+    const clipped = await page.evaluate(() =>
+      [...document.querySelectorAll(".product-card")].flatMap((card) => {
+        const pane = card.querySelector(".product-card__visual")!.getBoundingClientRect();
+        const badge = card.querySelector(".product-card__availability")!.getBoundingClientRect();
+        return badge.left < pane.left - 0.5 || badge.right > pane.right + 0.5 ? [card.getAttribute("data-product")] : [];
+      }),
+    );
+    expect(clipped, `badges clipped at ${width}`).toEqual([]);
+  }
+  assertClean();
+});
+
+test("keyboard expand keeps focus on screen; search results sit under the field", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    // A fresh document each time (a same-URL hash goto would keep the state).
+    await page.goto("/", { waitUntil: "networkidle" });
+    const toggle = page.locator(".catalog-more button");
+    await toggle.scrollIntoViewIfNeeded();
+    await toggle.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator(".product-card")).toHaveCount(8);
+    // Focus lands on the first new card, which is where the toggle was.
+    await expect(page.locator(".product-card").nth(6)).toBeFocused();
+    const focused = await page.evaluate(() => {
+      const rect = document.activeElement!.getBoundingClientRect();
+      return { top: rect.top, header: document.querySelector(".site-header")!.getBoundingClientRect().bottom, vh: window.innerHeight };
+    });
+    expect(focused.top, `focused card on screen at ${viewport.width}`).toBeGreaterThanOrEqual(focused.header - 1);
+    expect(focused.top, `focused card on screen at ${viewport.width}`).toBeLessThan(focused.vh - 40);
+  }
+  // While searching, the category intro is really hidden (display, not just the attribute).
+  await page.locator(".catalog-search input").fill("kupina");
+  await expect(page.locator(".catalog-panel__intro")).toBeHidden();
   assertClean();
 });

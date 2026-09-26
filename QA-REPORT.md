@@ -542,8 +542,9 @@ Client content, implemented:
   delivery copy, footer, meta description, JSON-LD (address Budisava 21242,
   foundingLocation Novi Sad), manifest, OG image.
 - Catalogue realigned with the real range: 13 products in three
-  categories. Seven match the client's current labels; six stay listed with
-  the "to confirm" badge. The 0,3 l juice family is removed (no current
+  categories. Seven match the client's current labels; six stay listed and
+  are flagged `toConfirm()` in the data (every card shows the same neutral
+  "Dostupnost po upitu"). The 0,3 l juice family is removed (no current
   label or mention). Boosters are named "Immuno Booster" consistently.
 - Product art redrawn as packaging-true SVG (gable-house label, label line,
   band colour, gingham/plain/linen fabric cap, twine) from a per-product

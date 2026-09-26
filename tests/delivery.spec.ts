@@ -69,22 +69,26 @@ test("the route draws once and the plate settles complete", async ({ page }) => 
   const assertClean = trackErrors(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await page.evaluate(() => document.querySelector("#dostava")!.scrollIntoView({ block: "start", behavior: "instant" }));
+  // The whole settled state in one poll: the route label fades in ~300ms
+  // after the route finishes, so checking it at that exact moment raced.
+  const read = () =>
+    page.evaluate(() => ({
+      route: parseFloat(getComputedStyle(document.querySelector(".at-route-mask")!).strokeDashoffset),
+      bee: parseFloat(getComputedStyle(document.querySelector(".at-bee__flight")!).opacity),
+      label: parseFloat(getComputedStyle(document.querySelector(".at-l--route")!).opacity),
+    }));
   await expect
-    .poll(() => page.evaluate(() => parseFloat(getComputedStyle(document.querySelector(".at-route-mask")!).strokeDashoffset)), {
-      message: "route fully revealed",
-      timeout: 8000,
-    })
-    .toBeLessThan(0.01);
-  const settled = await page.evaluate(() => ({
-    bee: parseFloat(getComputedStyle(document.querySelector(".at-bee__flight")!).opacity),
-    route: parseFloat(getComputedStyle(document.querySelector(".at-l--route")!).opacity),
-    // Nothing on the plate animates forever.
-    infinite: document
+    .poll(async () => {
+      const state = await read();
+      return state.route < 0.01 && state.bee > 0.99 && state.label > 0.99;
+    }, { message: "route drawn, bee and route label settled", timeout: 8000 })
+    .toBe(true);
+  // Nothing on the plate animates forever.
+  const infinite = await page.evaluate(() =>
+    document
       .getAnimations()
       .filter((a) => (a.effect as KeyframeEffect | null)?.target?.closest?.(".delivery-map") && a.effect?.getTiming().iterations === Infinity).length,
-  }));
-  expect(settled.bee).toBeGreaterThan(0.99);
-  expect(settled.route).toBeGreaterThan(0.99);
-  expect(settled.infinite).toBe(0);
+  );
+  expect(infinite).toBe(0);
   assertClean();
 });

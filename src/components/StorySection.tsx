@@ -1,4 +1,5 @@
 import { story } from "@/src/data/siteContent";
+import { bindShortWords } from "@/src/lib/typography";
 
 export function StorySection() {
   return (
@@ -6,10 +7,10 @@ export function StorySection() {
       <div className="shell story-layout">
         <div className="story-copy">
           <p className="eyebrow"><span />{story.eyebrow}</p>
-          <h2>{story.title}</h2>
-          <p className="story-copy__lede">Nije počelo kao brend. Počelo je kao porodična navika — traženje jednostavnijih kombinacija ukusa koje bismo rado stavili i na sopstveni sto.</p>
+          <h2>{bindShortWords(story.title)}</h2>
+          <p className="story-copy__lede">{bindShortWords("Pre brenda bila je porodična navika — potraga za jednostavnim ukusima koje bismo rado stavili na sopstveni sto.")}</p>
           <div className="story-copy__paragraphs">
-            {story.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+            {story.paragraphs.map((paragraph) => <p key={paragraph}>{bindShortWords(paragraph)}</p>)}
           </div>
           <div className="story-signature" role="group" aria-label="Osnivači i poreklo">
             <div><span>Osnivači</span><strong>Anita &amp; Laslo Toth</strong></div>
@@ -20,7 +21,7 @@ export function StorySection() {
             {story.timeline.map((item) => (
               <div key={item.year} role="listitem">
                 <span>{item.year}</span>
-                <p>{item.text}</p>
+                <p>{bindShortWords(item.text)}</p>
               </div>
             ))}
           </div>
@@ -108,7 +109,7 @@ export function StorySection() {
           </svg>
           <div className="story-art__note">
             <span>Budisava</span>
-            <p>Od avgusta 2025. ovde su i dom, i uzgoj, i proizvodnja.</p>
+            <p>{bindShortWords("Ovde su danas dom, uzgoj i proizvodnja.")}</p>
           </div>
         </div>
       </div>

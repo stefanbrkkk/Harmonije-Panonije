@@ -1,4 +1,5 @@
 import { contact, delivery } from "@/src/data/siteContent";
+import { bindShortWords } from "@/src/lib/typography";
 import { DeliveryMapArt } from "./DeliveryMapArt";
 
 const FACADE =
@@ -11,12 +12,12 @@ export function DeliverySection() {
         <div className="delivery-copy">
           <p className="eyebrow"><span />Dostava i preuzimanje</p>
           <h2>{delivery.title}</h2>
-          <p className="delivery-copy__lead">{delivery.visibleCopy}</p>
+          <p className="delivery-copy__lead">{bindShortWords(delivery.visibleCopy)}</p>
           <div className="delivery-actions">
             <a className="button button--dark" href={`mailto:${contact.email}?subject=${encodeURIComponent("Upit za dostavu — Harmonije Panonije")}`}>Pitaj za dostavu</a>
             <a className="text-link" href={`tel:${contact.phoneHref}`}>{contact.phoneDisplay}<span aria-hidden="true">↗</span></a>
           </div>
-          <p className="delivery-copy__note">{delivery.note}</p>
+          <p className="delivery-copy__note">{bindShortWords(delivery.note)}</p>
         </div>
 
         <figure className="delivery-map atlas-plate">

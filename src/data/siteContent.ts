@@ -187,7 +187,7 @@ export const products: Product[] = [
   toConfirm({ id: "cvet-zove-djumbir", name: "Cvet zove · đumbir", category: "djumbir", ingredients: ["cvet zove", "đumbir", "limun", "med"], volume: "0,75 l", description: "Cvetna nežnost zove i topla oštrina đumbira u istoj boci.", visual: { liquid: "#d29f22", band: "#d9d49c", cap: "#e6dfd0", capPattern: "linen", line: "Craft sirupi" } }),
 
   toConfirm({ id: "booster-kurkuma-djumbir", name: "Kurkuma · đumbir", category: "busteri", ingredients: ["kurkuma", "đumbir", "pulpa limuna", "med"], volume: "tegla", description: "Zlatna, začinska tegla kurkume i đumbira sa pulpom limuna i medom.", visual: { liquid: "#dc9414", band: "#ebc318", cap: "#e6dfd0", capPattern: "linen", line: "Immuno Booster" } }),
-  toConfirm({ id: "booster-kupina-moringa", name: "Divlja kupina · moringa", category: "busteri", ingredients: ["divlja kupina", "moringa", "pulpa limuna", "med"], volume: "tegla", description: "Divlja kupina i zelena moringa, sa pulpom limuna i medom.", visual: { liquid: "#6e1f35", band: "#8c2c68", cap: "#e6dfd0", capPattern: "linen", line: "Immuno Booster" } }),
+  toConfirm({ id: "booster-kupina-moringa", name: "Divlja kupina · moringa", category: "busteri", ingredients: ["divlja kupina", "moringa", "pulpa limuna", "med"], volume: "tegla", description: "Bobičasta tegla divlje kupine i zelene moringe sa pulpom limuna i medom.", visual: { liquid: "#6e1f35", band: "#8c2c68", cap: "#e6dfd0", capPattern: "linen", line: "Immuno Booster" } }),
   toConfirm({ id: "booster-cvekla-sargarepa-jabuka-rogac", name: "Cvekla · šargarepa · jabuka · rogač", category: "busteri", ingredients: ["cvekla", "šargarepa", "jabuka", "rogač", "pulpa limuna", "livadski med"], volume: "tegla", description: "Zemljani tonovi cvekle i šargarepe, zaobljeni jabukom i rogačem.", visual: { liquid: "#8a3b22", band: "#a51f3a", cap: "#e6dfd0", capPattern: "linen", line: "Immuno Booster" } }),
 ];
 
@@ -195,27 +195,27 @@ export const products: Product[] = [
 export const usage = {
   eyebrow: "Kako se pije sirup",
   statement: { lead: "Jedna boca,", amount: "3–3,5 litra", tail: "napitka." },
-  note: "Sirup se razblažuje po ukusu, a pije kad vam prija.",
+  note: "Sirup se razblažuje po ukusu i pije kad god poželite.",
   ways: [
-    { key: "spoon", title: "Na kašiku", text: "Nerazblaženo, pravo iz boce — posebno sirupi za decu." },
-    { key: "water", title: "Sa vodom", text: "Toplom, hladnom ili mineralnom, u razmeri koja vam prija." },
+    { key: "spoon", title: "Na kašiku", text: "Nerazblaženo, bez vode — naročito sirupi za decu; pitajte nas koji." },
+    { key: "water", title: "Sa vodom", text: "Toplom, hladnom ili mineralnom — u razmeri koja vam odgovara." },
     { key: "coupe", title: "U koktelima i kolačima", text: "Za aromu u čaši, kremu ili testu." },
     { key: "morning", title: "Ujutru, pre jela", text: "Neke ukuse najbolje je piti tako — pitajte nas koje." },
   ],
-  storage: "Posle otvaranja čuvajte bocu u frižideru, do mesec dana. Pre svake upotrebe promućkajte.",
+  storage: "Posle otvaranja čuvajte bocu u frižideru do mesec dana. Pre svake upotrebe promućkajte.",
   sourceStatus: "CLIENT_CONFIRMED" as SourceStatus,
 };
 
 export const delivery = {
   title: "Iz Budisave do vaše trpeze.",
   visibleCopy: "Sve što pravimo nastaje na našem porodičnom gazdinstvu u Budisavi, nadomak Novog Sada. Dostavu i preuzimanje dogovaramo direktno — javite se i naći ćemo najjednostavniju opciju.",
-  note: "Od avgusta 2025. živimo u Budisavi — ovde su i proizvodnja i uzgoj. Počeli smo u Novom Sadu, koji nam je i dalje najbliži grad. Za adresu, preuzimanje i termin javite se direktno.",
+  note: "Počeli smo u Novom Sadu, a danas su dom, uzgoj i proizvodnja na jednom mestu — u Budisavi. Za adresu, preuzimanje i termin javite nam se.",
   sourceStatus: "CLIENT_CONFIRMED" as SourceStatus,
 };
 
 export const testimonials = [
-  { quote: "Kupci se vraćaju zbog ukusa Immuno Craft sirupa.", detail: "Sažetak javnog utiska kupca", sourceStatus: "PUBLIC_VERIFIED" as SourceStatus },
-  { quote: "U javnim utiscima posebno se pominju dizajn, ukus i kvalitet.", detail: "Sažetak javnog utiska kupca", sourceStatus: "PUBLIC_VERIFIED" as SourceStatus },
+  { quote: "Kupci se vraćaju zbog ukusa Immuno Craft sirupa.", detail: "Sažetak javnih utisaka kupaca", sourceStatus: "PUBLIC_VERIFIED" as SourceStatus },
+  { quote: "U javnim utiscima posebno se pominju dizajn, ukus i kvalitet.", detail: "Sažetak javnih utisaka kupaca", sourceStatus: "PUBLIC_VERIFIED" as SourceStatus },
 ];
 
 export const press = [

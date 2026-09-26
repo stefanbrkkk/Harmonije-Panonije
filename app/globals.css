@@ -187,6 +187,13 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .mobile-menu__nav > a span { min-width: 26px; font-family: var(--sans); font-size: .65rem; font-weight: 800; letter-spacing: .12em; color: var(--muted); }
 .mobile-menu__inner .button { margin-top: 24px; justify-self: start; }
 
+/* 404 */
+.not-found { min-height: 100svh; display: grid; place-items: center; padding: 48px 20px; background: radial-gradient(circle at 72% 42%, #285242 0, var(--forest) 32%, var(--forest-2) 100%); color: #fbf7ec; }
+.not-found__inner { width: min(640px, 100%); }
+.not-found__brand { display: inline-flex; margin-bottom: 56px; color: #fbf7ec; }
+.not-found h1 { margin: 0; font-family: var(--serif); font-size: clamp(3rem, 9vw, 5.6rem); font-weight: 400; line-height: .9; letter-spacing: -.05em; text-wrap: balance; }
+.not-found__lead { margin: 24px 0 36px; color: rgba(251,247,236,.75); font-size: 1.05rem; line-height: 1.7; }
+
 /* Hero */
 .hero-section { position: relative; min-height: 100svh; overflow: hidden; padding: 146px 0 92px; background: radial-gradient(circle at 72% 42%, #285242 0, var(--forest) 32%, var(--forest-2) 100%); }
 .hero-section__grain { position: absolute; inset: 0; opacity: .15; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E"); mix-blend-mode: soft-light; }
@@ -195,8 +202,10 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .hero-section__orb--two { width: 760px; height: 760px; right: -285px; top: -20px; }
 .hero-grid { position: relative; z-index: 2; display: grid; grid-template-columns: .92fr 1.08fr; gap: clamp(36px, 6vw, 92px); align-items: center; }
 .hero-grid > * { min-width: 0; }
-.hero-copy { max-width: 600px; padding-top: 12px; min-width: 0; width: 100%; }
-.hero-copy h1 { max-width: 760px; margin: 0; font-family: var(--serif); font-size: min(clamp(4.8rem, 7.3vw, 7.2rem), 8.6vw); font-weight: 400; line-height: .82; letter-spacing: -.06em; text-wrap: balance; overflow-wrap: break-word; }
+.hero-copy { max-width: 600px; padding-top: 12px; min-width: 0; width: 100%; container-type: inline-size; }
+/* 21cqi keeps "Harmonija" on one line in its column at any text size (it
+   broke as "Harmonij / a" at 200%); it never binds at 100%. */
+.hero-copy h1 { max-width: 760px; margin: 0; font-family: var(--serif); font-size: min(clamp(4.8rem, 7.3vw, 7.2rem), 8.6vw, 21cqi); font-weight: 400; line-height: .82; letter-spacing: -.06em; text-wrap: balance; overflow-wrap: break-word; }
 .hero-copy__lead { max-width: 570px; margin: 36px 0 0; color: rgba(251,247,236,.75); font-size: clamp(1.02rem, 1.35vw, 1.22rem); line-height: 1.72; }
 .hero-copy__actions { display: flex; align-items: center; gap: 28px; margin-top: 36px; }
 .hero-trust { margin-top: 62px; display: flex; flex-wrap: wrap; gap: 11px 20px; color: rgba(251,247,236,.57); font-size: .72rem; letter-spacing: .035em; }
@@ -218,11 +227,12 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .hero-bottle--green .hero-bottle__glass { background: linear-gradient(90deg,rgba(255,255,255,.1),transparent 22% 71%,rgba(255,255,255,.16)), linear-gradient(180deg,#78966e,#294738); }
 .hero-bottle__glass::before { content: ""; position: absolute; left: 10px; top: 40px; width: 8px; height: 64%; border-radius: 999px; background: linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0)); opacity: .45; }
 .hero-bottle__label { position: absolute; z-index: 5; top: 42%; left: 50%; width: 83%; min-height: 134px; transform: translate(-50%,-50%); padding: 23px 10px 16px; display: grid; justify-items: center; align-content: center; clip-path: polygon(50% 0,100% 25%,100% 100%,0 100%,0 25%); background: #efe6d2; color: var(--forest-2); text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,.08); }
-.hero-bottle__label small { font-size: .45rem; font-weight: 800; letter-spacing: .08em; }
-.hero-bottle__label strong { margin-top: 8px; display: grid; font-family: var(--serif); font-size: 1.2rem; font-weight: 500; line-height: .82; letter-spacing: -.03em; }
-.hero-bottle__label i { margin-top: 10px; font-size: .43rem; font-style: normal; letter-spacing: .05em; }
+.hero-bottle__label small { font-size: 7.2px; font-weight: 800; letter-spacing: .08em; }
+/* Painted label art (aria-hidden): sized in px like the bottle itself. */
+.hero-bottle__label strong { margin-top: 8px; display: grid; font-family: var(--serif); font-size: 19.2px; font-weight: 500; line-height: .82; letter-spacing: -.03em; }
+.hero-bottle__label i { margin-top: 10px; font-size: 6.9px; font-style: normal; letter-spacing: .05em; }
 .hero-bottle--small .hero-bottle__label { min-height: 108px; padding-top: 18px; }
-.hero-bottle--small .hero-bottle__label strong { font-size: .9rem; }
+.hero-bottle--small .hero-bottle__label strong { font-size: 14.4px; }
 .hero-art__ingredient { position: absolute; z-index: 2; filter: drop-shadow(0 14px 18px rgba(0,0,0,.18)); }
 .hero-art__ingredient--lemon { width: 100px; height: 78px; left: 3%; top: 28%; border-radius: 50%; border: 2px solid #e2bd65; background: rgba(225,184,85,.12); transform: rotate(-22deg); }
 .hero-art__ingredient--lemon::before, .hero-art__ingredient--lemon::after { content: ""; position: absolute; background: #e2bd65; opacity: .7; }
@@ -238,7 +248,9 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .hero-art__ingredient--flower { right: 3%; bottom: 16%; width: 84px; height: 84px; }
 .hero-art__ingredient--flower span { position:absolute;left:32px;top:14px;width:23px;height:34px;border:1px solid #d8c98f;border-radius:50%;transform-origin:50% 28px; }
 .hero-art__ingredient--flower span:nth-child(2){transform:rotate(72deg)}.hero-art__ingredient--flower span:nth-child(3){transform:rotate(144deg)}.hero-art__ingredient--flower span:nth-child(4){transform:rotate(216deg)}.hero-art__ingredient--flower span:nth-child(5){transform:rotate(288deg)}
-.hero-art__caption { position: absolute; left: 0; bottom: 0; max-width: 310px; display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; color: rgba(251,247,236,.64); font-size: .72rem; line-height: 1.55; }
+/* Width in em: enlarged text keeps its line count and grows by line
+   height only, instead of wrapping up into the bottles. */
+.hero-art__caption { position: absolute; left: 0; bottom: 0; max-width: min(27em, 100%); display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; color: rgba(251,247,236,.64); font-size: .72rem; line-height: 1.55; }
 .hero-art__caption span { padding-top: 2px; color: var(--honey-bright); font-weight: 800; letter-spacing: .12em; }
 .hero-art__caption p { margin: 0; }
 .scroll-cue { position: absolute; z-index: 4; left: 50%; bottom: 22px; transform: translateX(-50%); display: grid; justify-items: center; gap: 10px; color: rgba(251,247,236,.65); font-size: .58rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
@@ -462,7 +474,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .product-card__visual { overflow: hidden; border-bottom: 1px solid rgba(28,47,40,.1); }
 .product-card__body { display: flex; flex-direction: column; padding: 24px 24px 20px; min-width: 0; }
 .product-card__meta { display: flex; justify-content: space-between; color: var(--muted); font-size: .64rem; font-weight: 750; letter-spacing: .075em; text-transform: uppercase; }
-.product-card h4 { margin: 22px 0 10px; font-family: var(--serif); font-size: clamp(1.65rem,2.2vw,2.4rem); font-weight: 400; line-height: .95; letter-spacing: -.035em; overflow-wrap: break-word; }
+.product-card h4 { margin: 22px 0 10px; font-family: var(--serif); font-size: clamp(1.65rem,2.2vw,2.4rem); font-weight: 400; line-height: .95; letter-spacing: -.035em; overflow-wrap: break-word; text-wrap: balance; }
 .product-card__body > p { margin: 0; color: #585e59; font-size: .8rem; line-height: 1.6; }
 .product-card ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 24px; padding: 0; list-style: none; }
 .product-card li { padding: 5px 8px; border: 1px solid rgba(28,47,40,.12); border-radius: 999px; color: #585e59; font-size: .63rem; }
@@ -542,7 +554,15 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .story-art__flight{fill:none;stroke:rgba(23,54,45,.25);stroke-width:1;stroke-dasharray:3 9}
 .story-art__bee{fill:var(--honey);stroke:var(--forest-2);stroke-width:1.2}
 .story-art__bee ellipse:nth-of-type(n+2){fill:rgba(255,255,255,.55)}
-.story-art__note { position:absolute;z-index:4;left:28px;right:28px;bottom:26px;display:grid;grid-template-columns:100px 1fr;gap:25px;align-items:start;padding:18px 0 0;border-top:1px solid rgba(28,47,40,.19); }
+/* The caption sits on its own paper band and the drawing ends at the band's
+   rule (xMidYMax keeps the ground on it): no stem or field line ever runs
+   through the text, at any width or text size. */
+.story-art { --note-band:58px; }
+/* An absolutely positioned <svg> sizes from its aspect ratio, not from
+   top+bottom insets, so the height is explicit. The band tracks the
+   caption's height per layout (one line here, two at 801-1080). */
+.story-art svg { height:calc(100% - var(--note-band)); }
+.story-art__note { position:absolute;z-index:4;left:0;right:0;bottom:0;min-height:var(--note-band);display:grid;grid-template-columns:minmax(100px,max-content) 1fr;gap:25px;align-items:start;padding:17px 28px 18px;background:#efe9dc;border-top:1px solid rgba(28,47,40,.19); }
 .story-art__note span { font-size:.66rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase; }
 .story-art__note p { margin:0;color:#3d4841;font-size:.78rem;line-height:1.55; }
 
@@ -617,8 +637,10 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .iplate-shelf { fill: none; stroke: rgba(251, 247, 236, .34); stroke-width: 1; }
 .iplate-tick { fill: none; stroke: rgba(239, 201, 110, .7); stroke-width: 1; }
 
-/* Short desktop windows: keep the whole spread inside one viewport. */
-@media (min-width: 901px) and (max-height: 820px) {
+/* Short desktop windows: keep the whole spread inside one viewport. Below
+   541px of height (large phones in landscape) that would shrink the plate
+   to ~160px, so those use the stacked tablet composition instead. */
+@media (min-width: 901px) and (max-height: 820px) and (min-height: 541px) {
   .ingredients-section { padding: clamp(48px, 7vh, 72px) 0; }
   .ingredients-head h2 { font-size: clamp(2.5rem, min(4.4vw, 7.6vh), 4.6rem); }
   .ingredients-head > p:last-child { margin-top: 14px; font-size: .86rem; line-height: 1.6; }
@@ -628,8 +650,9 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .ingredients-plate { width: min(100%, calc((100svh - var(--header-height) - 240px) * 1.23)); justify-self: center; }
   .ingredients-index p { margin-top: 3px; font-size: .76rem; }
 }
-/* Tablet: the plate leads, heading and index share the row beneath. */
-@media (max-width: 900px) {
+/* Tablet (and landscape phones wider than 900px): the plate leads,
+   heading and index share the row beneath. */
+@media (max-width: 900px), (orientation: landscape) and (max-height: 540px) {
   .ingredients-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "head head" "plate plate" "index index"; grid-template-rows: auto; }
   .ingredients-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 40px; align-items: end; margin-bottom: 34px; }
   .ingredients-head .eyebrow { grid-column: 1 / -1; }
@@ -782,7 +805,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .proof-quotes article p { margin:18px 0 26px;font-family:var(--serif);font-size:clamp(1.7rem,2.6vw,2.8rem);line-height:1.03;letter-spacing:-.03em; }
 .proof-quotes article footer { color:var(--muted);font-size:.63rem;font-weight:700;letter-spacing:.05em; }
 .proof-press { grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:40px;padding-top:24px;border-top:1px solid var(--line); }
-.proof-press p { margin:0;color:#585e59;font-size:.77rem; }
+.proof-press p { margin:0;color:#585e59;font-size:.77rem;line-height:1.6; }
 .proof-press > div { display:flex;gap:28px; }
 .proof-press a { display:inline-flex;gap:8px;align-items:center;font-family:var(--serif);font-size:1.2rem;border-bottom:1px solid rgba(28,47,40,.24);padding-bottom:4px; }
 .proof-press a span { font-family:var(--sans);font-size:.75rem; }
@@ -798,7 +821,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 /* Narrower desktops: the bee sits in the section's top padding, clear of the heading. */
 @media (max-width: 1180px) { .final-cta__bee { right:3%; top:5%; width:104px; } }
 .final-cta__inner { position:relative;z-index:3; }
-.final-cta h2 { max-width:960px;margin:0;font-family:var(--serif);font-size:clamp(4rem,8vw,9.2rem);font-weight:400;line-height:.8;letter-spacing:-.065em; }
+.final-cta h2 { max-width:960px;margin:0;font-family:var(--serif);font-size:clamp(4rem,8vw,9.2rem);font-weight:400;line-height:.84;letter-spacing:-.065em; }
 .final-cta h2 em { font-weight:400; }
 .final-cta__inner > p:not(.eyebrow) { max-width:550px;margin:36px 0 0;font-size:1rem;line-height:1.68; }
 .final-cta__actions { margin-top:34px;display:flex;gap:12px; }
@@ -856,7 +879,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .site-header__actions { grid-column:2; }
   .menu-button { display:block; }
   .hero-grid { grid-template-columns:1fr 1fr; gap:34px; }
-  .hero-copy h1 { font-size:clamp(4rem,7.8vw,6.5rem); }
+  .hero-copy h1 { font-size:min(clamp(4rem,7.8vw,6.5rem),21cqi); }
   .hero-art { min-height:580px; }
   .hero-art__bottles { transform:scale(.85); }
   .hero-art__ingredient--lemon{left:-3%;top:21%}.hero-art__ingredient--flower{right:-2%;bottom:5%}
@@ -864,7 +887,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .product-card,.product-card:nth-child(n) { grid-column:span 6; }
   .story-layout { grid-template-columns:1fr 1fr;gap:55px; }
   .story-copy__paragraphs { grid-template-columns:1fr; }
-  .story-art { min-height:680px; }
+  .story-art { min-height:680px;--note-band:78px; }
   .delivery-layout { grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:52px; }
 }
 
@@ -872,7 +895,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   :root { --shell: calc(100% - 34px); --header-height: 72px; }
   .hero-section { min-height:auto;padding:118px 0 70px; }
   .hero-grid { grid-template-columns:1fr; }
-  .hero-copy h1 { max-width:680px;font-size:clamp(4rem,14vw,7.4rem); }
+  .hero-copy h1 { max-width:680px;font-size:min(clamp(4rem,14vw,7.4rem),21cqi); }
   .hero-copy__lead { max-width:620px; }
   .hero-trust { margin-top:38px; }
   .hero-art { min-height:570px;margin-top:18px; }
@@ -931,10 +954,13 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .product-visual { min-height:100%; }
   .product-bottle { transform:scale(.78); }.product-jar{transform:scale(.78)}.product-card:hover .product-bottle,.product-card:hover .product-jar{transform:scale(.78)}
   .story-section { padding:90px 0; }
-  .story-copy h2 { font-size:clamp(3.5rem,14vw,5rem); }
+  /* Four-line phone headings need descender room: at .84 the "j" of "je"
+     sat on the "s" of "stolom" and read as "š". */
+  .story-copy h2 { font-size:clamp(3.5rem,14vw,5rem);line-height:.94; }
   .story-copy__paragraphs { grid-template-columns:1fr; }
   .story-art { min-height:560px; }
-  .story-art__note { grid-template-columns:1fr;gap:7px; }
+  .story-art { --note-band:112px; }
+  .story-art__note { grid-template-columns:1fr;gap:7px;padding:15px 22px 18px; }
   .delivery-section { padding:90px 0; }
   .delivery-copy h2 { font-size:min(clamp(3.5rem,14vw,5.2rem),14.5vw); }
   .delivery-actions { align-items:flex-start;flex-direction:column;gap:20px; }
@@ -943,7 +969,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .proof-quotes article,.proof-quotes article:nth-child(2){padding:26px 0;border-left:0}.proof-quotes article:nth-child(2){border-bottom:1px solid var(--line)}
   .proof-press > div { flex-direction:column;gap:14px; }
   .final-cta { padding-top:100px; }
-  .final-cta h2 { font-size:min(clamp(3.8rem,17vw,5.8rem),17.5vw); }
+  .final-cta h2 { font-size:min(clamp(3.8rem,17vw,5.8rem),17.5vw);line-height:.92; }
   .final-cta__actions { align-items:stretch;flex-direction:column; }.final-cta__actions .button{width:100%}
   .final-cta__contacts { margin-top:62px; }
   .site-footer { padding-bottom:92px; }
@@ -1001,6 +1027,10 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .page-bee__wings { transform-origin: 51% 55%; animation: pageBeeWing var(--flight-speed, .34s) linear infinite alternate; }
 /* Decorative flight recedes behind overlays. */
 body.has-overlay .page-bee { opacity: 0 !important; }
+/* A hidden bee does not flap: the infinite wing loop cost a style recalc
+   and a layout every frame while the bee was invisible. */
+.page-bee.is-resting .page-bee__wings,
+body.has-overlay .page-bee__wings { animation-play-state: paused; }
 .page-bee__shadow {
   position: absolute;
   z-index: -1;
@@ -1031,19 +1061,22 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   content: "";
   position: absolute;
   top: 4%;
-  left: -22%;
+  left: 0;
   width: 20%;
   height: 92%;
   border-radius: 999px;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,.28), transparent);
-  transform: skewX(-12deg);
+  /* Moved by transform (composited), not by left: the glint no longer
+     forces a layout on every frame of the landing view. Percentages are
+     of the glint's own 20% width: -110% = the former left:-22%. */
+  transform: translateX(-110%) skewX(-12deg);
   animation: bottleGlint 6.8s ease-in-out infinite;
 }
 @keyframes heroBottleGroup { to { translate: 0 -4px; rotate: .2deg; } }
 @keyframes heroFloatA { to { translate: 4px -6px; } }
 @keyframes heroFloatB { to { translate: -5px 5px; } }
 @keyframes heroHalo { to { transform: scale(1.03); opacity: .82; } }
-@keyframes bottleGlint { 0%,58% { left:-25%;opacity:0 } 67%{opacity:.85} 78%,100%{left:118%;opacity:0} }
+@keyframes bottleGlint { 0%,58% { transform:translateX(-125%) skewX(-12deg);opacity:0 } 67%{opacity:.85} 78%,100%{transform:translateX(590%) skewX(-12deg);opacity:0 } }
 
 /* Hero entrance (once, gated on .motion-ready so no-JS stays composed). */
 /* Hero entrance plays from the first paint (not from hydration, which
@@ -1129,6 +1162,14 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   border-bottom: 1px solid var(--line);
   padding: 18px 0;
 }
+/* Search results sit right under the field: the author display:grid would
+   otherwise override the hidden attribute. */
+.catalog-panel__intro[hidden] { display: none; }
+/* Programmatic focus target after "Prikaži svih" (keyboard users). */
+.product-card:focus { outline: none; }
+.product-card:focus-visible { outline: 2px solid var(--honey-dark); outline-offset: 4px; }
+/* The usage strip already closes with a rule: one hairline, not two. */
+.catalog-ritual + .catalog-assurance { margin-top: 0; border-top: 0; }
 .catalog-assurance p { margin: 0; color: var(--muted); font-size: .7rem; line-height: 1.6; }
 .catalog-assurance strong { color: var(--ink); }
 /* Two-column widths: an odd last card spans the row as a horizontal card. */
@@ -1414,7 +1455,8 @@ body.has-overlay .page-bee { opacity: 0 !important; }
 }
 @media (min-width: 561px) and (max-width: 800px) {
   .honey-harvest__macro { left: 2%; width: 88vw; }
-  .story-art { min-height: 0; aspect-ratio: 620 / 760; }
+  /* 760 art units plus the 58px caption band. */
+  .story-art { min-height: 0; aspect-ratio: 620 / 820; --note-band: 58px; }
 }
 
 @media (max-width: 560px) {
@@ -1422,7 +1464,9 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .hero-art__bottles { animation-duration: 10s; }
   .catalog-toolbar { margin-inline: -14px; }
   .catalog-search { margin-inline: 14px; }
-  .product-card__availability { right: 7px; bottom: 7px; padding: 5px 7px; font-size: .6rem; letter-spacing: .05em; white-space: nowrap; }
+  /* The art column is 113-156px wide here: the badge spans it and wraps to
+     two short lines rather than overflowing (and clipping) to the left. */
+  .product-card__availability { left: 7px; right: 7px; bottom: 7px; padding: 5px 6px; font-size: .6rem; line-height: 1.25; letter-spacing: .05em; text-align: center; text-wrap: balance; }
   .catalog-assurance { margin-top: 24px; }
   .story-copy__lede { margin: 24px 0 30px; padding-left: 18px; font-size: 1.2rem; }
   .story-signature { grid-template-columns: 1fr; }
@@ -1431,12 +1475,17 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .story-signature > div:last-child { border-bottom: 0; }
   .story-art__frame { left: 16px; right: 16px; }
   .honey-harvest { height: 190vh; min-height: 1250px; }
-  .honey-harvest__sticky { min-height: 640px; }
   .honey-harvest__chapter { top: max(10%, calc(var(--header-height) + 14px)); width: calc(100vw - 28px); }
   .honey-harvest__chapter h2 { font-size: clamp(3rem,14vw,4.7rem); }
   .honey-harvest__chapter > p:last-child { margin-top: 18px; font-size: .76rem; line-height: 1.58; }
   .honey-harvest__scene { inset: max(38%, 17.5rem) 0 -8% 0; }
   .honey-harvest__macro { width: 130vw; left: 0; top: 36%; }
+  /* The pinned frame is the screen: a 640px minimum outgrew short phones,
+     so the pin let go early and the last chapter slid under the header. */
+  .honey-harvest__sticky { min-height: 0; }
+  /* The scene is a band across the frame here: fade its top and bottom
+     edges so the clipped glow never shows as a hard horizontal seam. */
+  .honey-harvest__scene { -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%); }
   .order-contact-form { grid-template-columns: 1fr; }
   .order-contact-form__intro,
   .order-contact-form__full { grid-column: auto; }
@@ -1456,7 +1505,19 @@ body.has-overlay .page-bee { opacity: 0 !important; }
    it the solid treatment so the nav stays legible over paper sections. */
 @media (scripting: none) {
   .site-header { color: var(--ink); background: rgba(243,237,223,.96); }
+  /* Controls that need the script are hidden instead of left dead; the
+     catalog lists the whole range in its <noscript> block. */
+  .menu-button, .order-button, .mobile-order-bar, .catalog-toolbar, .catalog-more,
+  .product-card__add, .catalog-assurance button { display: none !important; }
 }
+.catalog-noscript { margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--line); }
+.catalog-noscript h3 { margin: 0 0 18px; font-family: var(--serif); font-size: 1.9rem; font-weight: 400; letter-spacing: -.03em; }
+.catalog-noscript h4 { margin: 22px 0 8px; font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--honey-dark); }
+.catalog-noscript ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.catalog-noscript li { display: grid; gap: 2px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.catalog-noscript li span { color: var(--muted); font-size: .8rem; }
+.catalog-noscript li em { color: var(--muted); font-size: .82rem; font-style: normal; }
+.catalog-noscript p { margin: 22px 0 0; font-size: .9rem; }
 
 /* Short windows: the drawer scrolls as one sheet instead of squeezing the
    item list between a fixed head and a tall fixed footer. */
@@ -1474,6 +1535,26 @@ body.has-overlay .page-bee { opacity: 0 !important; }
 }
 
 /* Short landscape: compact cinematic copy, same content, smaller type. */
+/* Tall screens (1920x1080, iPad Pro 1024x1366 portrait): the two-column
+   hero sat at the top with a 264-640px empty band below; centre it. */
+@media (min-width: 801px) {
+  .hero-section { display: grid; align-content: center; }
+}
+
+/* Short laptop screens (1280x720, 1366x768, 1280x800): the hero was at
+   least 908px tall, so the bottle bases, the trust row and the scroll cue
+   fell below the fold. Tighter vertical rhythm and a smaller bottle group
+   keep the whole first screen in view. */
+@media (min-width: 1081px) and (max-height: 820px) {
+  .hero-section { padding: 112px 0 80px; }
+  .hero-copy__lead { margin-top: 26px; }
+  .hero-copy__actions { margin-top: 28px; }
+  .hero-trust { margin-top: 36px; }
+  .hero-art { min-height: max(460px, calc(100svh - 192px)); }
+  .hero-art__bottles { scale: .8; top: -22px; }
+  .hero-art__caption { bottom: 18px; }
+}
+
 @media (max-height: 500px) and (orientation: landscape) {
   /* Phones on their side: a slimmer header (21% of the height was chrome),
      no scroll cue below the fold, and copy aligned to the top. */
@@ -1489,6 +1570,11 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .honey-harvest__chapter { top: calc(var(--header-height) + 10px); translate: none; width: min(480px, calc(43vw - 30px)); }
   .honey-harvest__chapter h2 { font-size: clamp(2rem, 5.6vw, 3rem); }
   .honey-harvest__chapter > p:last-child { margin-top: 12px; font-size: .72rem; }
+  /* Phones on their side (≤800px wide included) keep the side-by-side
+     composition: the ≤800 portrait stack put the flower and the bee on
+     the copy. The soft left mask replaces the hard top-edge clip. */
+  .honey-harvest__scene { inset: 0 0 0 43%; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 48px, #000 calc(100% - 24px), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 48px, #000 calc(100% - 24px), transparent 100%); }
+  .honey-harvest__macro { left: 0; top: 50%; width: min(760px, 57vw); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1497,6 +1583,13 @@ body.has-overlay .page-bee { opacity: 0 !important; }
   .hero-art__ingredient,
   .hero-art__halo,
   .hero-bottle__glass::after { animation: none !important; }
+}
+
+/* Short phones (≤700px tall): the comb and the pour stay above the fixed
+   order bar (70px) instead of sinking behind it. */
+@media (max-width: 560px) and (max-height: 700px) {
+  .honey-harvest__scene { inset: max(38%, 16rem) 0 calc(78px + env(safe-area-inset-bottom, 0px)) 0; }
+  .honey-harvest__macro { width: 112vw; top: 46%; }
 }
 
 /* Honey sequence without its scroll driver (no JavaScript, or reduced
@@ -1524,8 +1617,9 @@ body.has-overlay .page-bee { opacity: 0 !important; }
 .motion-ready .section-heading.reveal-target { translate: 0 20px; }
 .motion-ready .section-heading.reveal-target,
 .motion-ready .proof-quotes article.reveal-target { transition-duration: .8s; }
-.motion-ready .ingredients-index li.reveal-target,
-.motion-ready .delivery-copy.reveal-target { translate: 0 10px; }
+/* Hidden state only: at (0,3,1) this outranked the .is-inview reset, so
+   the index rows never moved and sat 10px low on the closing rule. */
+.motion-ready .ingredients-index li.reveal-target:not(.is-inview) { translate: 0 10px; }
 .motion-ready .story-art.reveal-target,
 .motion-ready .delivery-map.reveal-target { scale: .985; transition:
     translate .75s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms),
@@ -1635,7 +1729,9 @@ p, li, blockquote { text-wrap: pretty; }
 @supports (animation-timeline: scroll()) {
   html:not(.motion-ready) .site-header { animation: headerSolid linear both; animation-timeline: scroll(root); animation-range: 0 24px; }
 }
-@keyframes headerSolid { to { color: var(--ink); background-color: rgba(243,237,223,.92); } }
+/* Blur as well: without it (no JS, or before hydration) copy under the
+   header showed through as ghost text. */
+@keyframes headerSolid { to { color: var(--ink); background-color: rgba(243,237,223,.95); backdrop-filter: blur(12px); } }
 @media (max-width: 560px) {
   .order-button > span:first-child { display: none; }
   .order-button { padding-left: 6px; border: 0; background: transparent; }
@@ -1648,4 +1744,8 @@ p, li, blockquote { text-wrap: pretty; }
   .cart-toast { grid-template-columns: 34px minmax(0, 1fr); }
   .cart-toast > button:not(.cart-toast__close) { grid-column: 2; justify-self: start; }
   .cart-toast__copy strong { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+  /* 44px touch targets for the toast action and the header order button
+     (the underline stays on the text). */
+  .cart-toast > button:not(.cart-toast__close) { min-height: 44px; padding-block: 12px; border-bottom: 0; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(251,247,236,.4); }
+  .order-button { min-height: 44px; min-width: 44px; }
 }

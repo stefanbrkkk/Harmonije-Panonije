@@ -1,4 +1,5 @@
 import { contact } from "@/src/data/siteContent";
+import { bindShortWords } from "@/src/lib/typography";
 
 export function FinalCTA() {
   return (
@@ -9,7 +10,7 @@ export function FinalCTA() {
       <div className="shell final-cta__inner">
         <p className="eyebrow"><span />Kontakt</p>
         <h2>Pronađite svoju <em>harmoniju</em> ukusa.</h2>
-        <p>Javite se i proverite aktuelnu ponudu, cenu i najjednostavniji način dostave ili preuzimanja.</p>
+        <p>{bindShortWords("Javite se i proverite aktuelnu ponudu, cenu i najjednostavniji način dostave ili preuzimanja.")}</p>
         <div className="final-cta__actions">
           <a className="button button--dark" href="#proizvodi">Pogledaj proizvode</a>
           <a className="button button--ghost-dark" href={`mailto:${contact.email}`}>Pošalji mejl</a>

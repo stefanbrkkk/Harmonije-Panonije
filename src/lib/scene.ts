@@ -23,10 +23,13 @@ export function phaseProgress(progress: number, start: number, end: number) {
  * Applied through the CSS `translate` property so SVG `transform` attributes
  * and CSS `transform` rules keep their existing owners.
  */
-export function cameraShift(viewBoxX: number, viewBoxWidth: number, viewportWidth: number, artworkWidth: number) {
-  if (artworkWidth <= viewportWidth + 4) return 0;
+export function cameraShift(viewBoxX: number, viewBoxWidth: number, viewportWidth: number, artworkWidth: number, contentWidth = artworkWidth) {
+  // contentWidth: art drawn past the artwork box (overflow: visible) still
+  // has to be reachable, so the clamp uses the wider of the two.
+  const reach = Math.max(artworkWidth, contentWidth);
+  if (reach <= viewportWidth + 4) return 0;
   const landmarkPx = (viewBoxX / viewBoxWidth) * artworkWidth;
-  const maxShift = artworkWidth - viewportWidth;
+  const maxShift = reach - viewportWidth;
   return -Math.min(maxShift, Math.max(0, landmarkPx - viewportWidth * 0.5));
 }
 
@@ -156,7 +159,9 @@ export function createSceneLoop(
         raf = 0;
       }
     } else {
-      kick(true);
+      // Nothing scrolled while the tab was hidden: resume the glide from
+      // the state the visitor last saw (a snap would jump-cut on screen).
+      kick(false);
     }
   };
 

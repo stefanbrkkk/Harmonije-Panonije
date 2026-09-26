@@ -34,9 +34,16 @@ export function CartToast() {
     if (!notice) return;
     const active = document.activeElement;
     const frame = requestAnimationFrame(() => {
+      if (!(active instanceof HTMLElement) || active.closest(".cart-toast")) return;
+      // Compare with the toast's settled place, not its box mid-entrance
+      // (still 18px low): html.has-toast reserves exactly that band as
+      // scroll padding, which scrollIntoView then honours.
+      // A taller toast (enlarged text) is covered by its own box, corrected
+      // for the 18px entrance offset.
+      const reserved = parseFloat(getComputedStyle(root).scrollPaddingBottom) || 0;
       const toast = document.querySelector(".cart-toast")?.getBoundingClientRect();
-      if (!toast || !(active instanceof HTMLElement) || active.closest(".cart-toast")) return;
-      if (active.getBoundingClientRect().bottom > toast.top - 8) active.scrollIntoView({ block: "nearest" });
+      const band = Math.max(reserved, toast ? window.innerHeight - (toast.top - 18) + 8 : 0);
+      if (active.getBoundingClientRect().bottom > window.innerHeight - band) active.scrollIntoView({ block: "nearest" });
     });
     return () => cancelAnimationFrame(frame);
   }, [notice]);

@@ -1,4 +1,5 @@
 import { usage } from "@/src/data/siteContent";
+import { bindShortWords } from "@/src/lib/typography";
 
 /** 28px engraved hairline glyphs in the Botanical.tsx language. */
 function Glyph({ kind }: { kind: string }) {
@@ -52,18 +53,18 @@ export function UsageStrip() {
         <p className="catalog-ritual__statement">
           {usage.statement.lead} <em>{usage.statement.amount}</em> {usage.statement.tail}
         </p>
-        <p className="catalog-ritual__note">{usage.note}</p>
+        <p className="catalog-ritual__note">{bindShortWords(usage.note)}</p>
       </div>
       <dl className="catalog-ritual__ways">
         {usage.ways.map((way) => (
           <div key={way.key}>
             <Glyph kind={way.key} />
-            <dt>{way.title}</dt>
-            <dd>{way.text}</dd>
+            <dt>{bindShortWords(way.title)}</dt>
+            <dd>{bindShortWords(way.text)}</dd>
           </div>
         ))}
       </dl>
-      <p className="catalog-ritual__keep"><strong>Čuvanje</strong> {usage.storage}</p>
+      <p className="catalog-ritual__keep"><strong>Čuvanje</strong> {bindShortWords(usage.storage)}</p>
     </div>
   );
 }

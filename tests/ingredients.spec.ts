@@ -37,7 +37,8 @@ test("hierarchy: two illustrated foundations dominate a five-item index", async 
   expect(state.latin.every((text) => text.length > 2), "each layer carries its botanical name").toBe(true);
   expect(state.baseSize, "foundation names outrank index names").toBeGreaterThan(state.indexSize * 1.5);
   expect(state.plateArea, "the plate is the dominant element").toBeGreaterThan(state.indexArea * 1.4);
-  expect(state.headings[0], "section heading reads first").toBe("Šta ulazi u harmoniju?");
+  // Short words are bound with no-break spaces (Serbian typesetting).
+  expect(state.headings[0]?.replace(/\u00a0/g, " "), "section heading reads first").toBe("Šta ulazi u harmoniju?");
   assertClean();
 });
 

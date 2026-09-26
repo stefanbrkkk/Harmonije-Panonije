@@ -31,12 +31,11 @@ export function OrderDrawer() {
       name ? `Ime: ${name}` : "",
       phone ? `Telefon: ${phone}` : "",
       "",
-      "Zanima me dostupnost sledećih proizvoda:",
-      ...(lines.length ? lines : ["- Želeo/la bih preporuku proizvoda."]),
+      ...(lines.length ? ["Zanimaju me sledeći proizvodi:", ...lines] : ["Želeo/la bih preporuku proizvoda."]),
       "",
       note ? `Napomena: ${note}` : "",
       "",
-      "Molim Vas, javite aktuelne cene, dostupnost i opciju dostave/preuzimanja.",
+      "Molim Vas da mi javite aktuelne cene, dostupnost i mogućnosti dostave ili preuzimanja.",
       "",
       "Hvala!",
     ].filter((line, index, all) => !(line === "" && all[index - 1] === "")).join("\n");
@@ -260,7 +259,7 @@ export function OrderDrawer() {
 
           <div className="order-contact-form" role="group" aria-label="Podaci za upit">
             <div className="order-contact-form__intro">
-              <span>Opcionalno</span>
+              <span>Opciono</span>
               <p>Dodajte podatke da poruka bude spremna za slanje bez naknadnog dopisivanja.</p>
             </div>
             <label><span>Ime</span><input value={name} maxLength={80} onChange={(event: React.ChangeEvent<HTMLInputElement>) => setName(event.target.value)} autoComplete="name" placeholder="Vaše ime" /></label>
@@ -286,7 +285,7 @@ export function OrderDrawer() {
             <summary className="text-link">Prikaži tekst upita<span aria-hidden="true">↗</span></summary>
             <textarea readOnly rows={6} value={message} aria-label="Tekst upita za kopiranje" onFocus={(event) => event.target.select()} />
           </details>
-          <p>Finalnu cenu, dostupnost i način dostave potvrđujete direktno sa proizvođačem.</p>
+          <p>Konačnu cenu, dostupnost i način dostave dogovarate direktno sa proizvođačem.</p>
         </div>
       </div>
     </>

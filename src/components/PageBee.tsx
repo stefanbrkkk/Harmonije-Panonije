@@ -191,6 +191,7 @@ export function PageBee() {
 
     const paintStatic = () => {
       wrapper.style.opacity = "0";
+      wrapper.classList.add("is-resting");
     };
 
     const paint = (progress: number, dt: number) => {
@@ -279,6 +280,8 @@ export function PageBee() {
       busy = waiting || currentOpacity !== targetOpacity || speed > 0.5;
 
       wrapper.style.opacity = currentOpacity.toFixed(3);
+      // Invisible: pause the CSS wing loop (no per-frame style work).
+      wrapper.classList.toggle("is-resting", currentOpacity === 0);
       wrapper.style.transform = `translate3d(${currentX.toFixed(1)}px, ${currentY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${currentScale.toFixed(3)})`;
       bee.style.transform = `rotate(${currentAngle.toFixed(2)}deg) scaleX(${currentFacing})`;
 

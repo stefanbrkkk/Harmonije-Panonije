@@ -37,7 +37,10 @@ export function MotionOrchestrator() {
     const prepare = (root: ParentNode = document) => {
       // Read every position first, then write: interleaving a class write
       // with a layout read per node forced one full layout per node.
-      const nodes = Array.from(root.querySelectorAll<HTMLElement>(selector)).filter((node) => !observed.has(node));
+      // The added node itself counts too (e.g. the usage strip remounting
+      // when the catalog switches back from the Booster tab).
+      const self = root instanceof HTMLElement && root.matches(selector) ? [root] : [];
+      const nodes = [...self, ...Array.from(root.querySelectorAll<HTMLElement>(selector))].filter((node) => !observed.has(node));
       const visible = nodes.map((node) => reduced.matches || inViewport(node));
       nodes.forEach((node, index) => {
         observed.add(node);
@@ -100,7 +103,7 @@ export function MotionOrchestrator() {
       (entries) => {
         for (const entry of entries) entry.target.classList.toggle("is-offscreen", !entry.isIntersecting);
       },
-      { rootMargin: "100px 0px" },
+      { rootMargin: "0px" },
     );
     document.querySelectorAll(".hero-section, #put-pcele").forEach((node) => sleepers.observe(node));
 

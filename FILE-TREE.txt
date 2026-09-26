@@ -11,6 +11,7 @@ app/globals.css
 app/icon.svg
 app/layout.tsx
 app/manifest.ts
+app/not-found.tsx
 app/opengraph-image.tsx
 app/page.tsx
 app/robots.ts

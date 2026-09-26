@@ -43,7 +43,10 @@ Shown as confirmed, because the client's own label photos show them
 | Crna zova | Immuno craft |
 | Đumbir | Craft sirupi |
 
-Shown with an "availability to confirm" badge (`toConfirm()`):
+Still listed, but marked as awaiting confirmation in the data
+(`toConfirm()`, `clientConfirmed: false`). On the site every card, confirmed
+or not, carries the same neutral "Dostupnost po upitu" badge, because
+availability is seasonal and settled per inquiry anyway:
 
 - Divlja kupina, Jabuka (syrups)
 - Cvet zove · đumbir (ginger line)
@@ -94,7 +97,9 @@ the photos shows juices as a current product.
     ordering path? Is WhatsApp or Viber used for orders?
 14. **Health wording:** any health or nutrition statements they want
     published and are legally allowed to use. The site currently makes no
-    health claims.
+    health claims. The ingredient group is called "Lekovito bilje", the
+    client's own wording from the email; confirm it may stay, or switch to
+    plain "Bilje".
 
 ## Current prototype behaviour
 

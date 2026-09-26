@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { cameraShift, createSceneLoop, phaseProgress, smoothstep } from "@/src/lib/scene";
+import { bindShortWords } from "@/src/lib/typography";
 
 // Pre-paint scene ownership without tripping the SSR useLayoutEffect warning.
 const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
@@ -144,7 +145,9 @@ export function HoneyHarvestSection() {
         // flower shot, carry shot, pour shot with quick blends between.
         if (macroRef.current && window.innerWidth < 720) {
           const shot = lerp(lerp(140, 360, smoothstep((progress - 0.5) / 0.06)), 590, smoothstep((progress - 0.68) / 0.06));
-          const shift = cameraShift(shot, 760, window.innerWidth, macroWidth);
+          // The comb is drawn past the macro box: the pour shot may pan far
+          // enough to show its frame, 12px clear of the screen edge.
+          const shift = cameraShift(shot, 760, window.innerWidth, macroWidth, contentRight + 12);
           if (Math.abs(shift - lastShift) > 0.5) {
             macroRef.current.style.translate = `${shift.toFixed(1)}px 0`;
             lastShift = shift;
@@ -210,7 +213,10 @@ export function HoneyHarvestSection() {
       }
       if (streamRef.current) {
         const draw = phaseProgress(progress, 0.77, 0.89);
-        streamRef.current.style.opacity = draw > 0.02 ? Math.min(1, draw * 2).toFixed(3) : "0";
+        // Once the comb is full the pour ends: the stream fades during the
+        // settle instead of staying as a rod between bee and frame.
+        const ebb = 1 - phaseProgress(progress, 0.92, 0.98);
+        streamRef.current.style.opacity = draw > 0.02 ? (Math.min(1, draw * 2) * ebb).toFixed(3) : "0";
         streamRef.current.style.strokeDashoffset = String(140 - draw * 140);
       }
       // Comb presence + the single gold fill layer (one animated element).
@@ -305,18 +311,18 @@ export function HoneyHarvestSection() {
         <div className="honey-harvest__copy shell">
           <div ref={copyARef} className="honey-harvest__chapter honey-harvest__chapter--a">
             <p className="eyebrow"><span />Priča jednog sastojka</p>
-            <h2 id="honey-harvest-title">Od cveta do <em>meda.</em></h2>
-            <p>Pčela sleće na cvet, uzima nektar i nosi ga dalje. Taj prirodni put vodi do livadskog meda — osnove svakog Immuno Craft sirupa.</p>
+            <h2 id="honey-harvest-title">Od cveta do{"\u00a0"}<em>meda.</em></h2>
+            <p>{bindShortWords("Pčela sleće na cvet, uzima nektar i nosi ga dalje. Taj prirodni put vodi do livadskog meda — osnove svakog našeg sirupa.")}</p>
           </div>
           <div ref={copyBRef} className="honey-harvest__chapter honey-harvest__chapter--b">
             <p className="eyebrow"><span />Sakupljanje</p>
             <h2>Nektar postaje <em>zlatna osnova.</em></h2>
-            <p>U košnici pčele nektar pretvaraju u med. Kod nas livadski med čini trećinu svake boce sirupa.</p>
+            <p>{bindShortWords("U košnici pčele nektar pretvaraju u med. Kod nas livadski med čini trećinu svake boce sirupa.")}</p>
           </div>
           <div ref={copyCRef} className="honey-harvest__chapter honey-harvest__chapter--c">
             <p className="eyebrow"><span />Harmonija</p>
-            <h2>Med + limun + <em>karakter ukusa.</em></h2>
-            <p>Na toj osnovi grade se različite kombinacije voća, bobica, bilja, povrća i đumbira — svaki ukus sa sopstvenim karakterom.</p>
+            <h2>{"Med\u00a0+ limun\u00a0+"} <em>karakter ukusa.</em></h2>
+            <p>{bindShortWords("Na toj osnovi grade se različite kombinacije voća, bobica, bilja, povrća i đumbira — svaki ukus sa sopstvenim karakterom.")}</p>
           </div>
         </div>
 

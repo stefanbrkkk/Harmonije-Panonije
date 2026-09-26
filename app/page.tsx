@@ -31,7 +31,7 @@ export default function HomePage() {
         "@id": `${siteUrl}/#organization`,
         name: brand.name,
         brand: { "@type": "Brand", name: brand.productLine },
-        description: "Porodično gazdinstvo iz Budisave kod Novog Sada: ručno pravljeni Immuno Craft sirupi sa livadskim medom i ceđenim limunom i Immuno Booster tegle.",
+        description: "Porodično gazdinstvo iz Budisave kod Novog Sada: ručno pravljeni Immuno Craft sirupi sa livadskim medom i ceđenim limunom, kao i Immuno Booster tegle.",
         foundingDate: "2022",
         foundingLocation: { "@type": "Place", name: brand.origin },
         founder: [

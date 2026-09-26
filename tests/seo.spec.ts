@@ -24,6 +24,10 @@ test("metadata, sitemap, manifest, 404 and social images", async ({ page }) => {
 
   const notFound = await page.request.get("/nepostojeca-stranica-xyz");
   expect(notFound.status()).toBe(404);
+  // Serbian 404 on a sr-Latn site, never the framework's English default.
+  const notFoundHtml = await notFound.text();
+  expect(notFoundHtml).toContain("Stranica nije pronađena");
+  expect(notFoundHtml).not.toContain("This page could not be found");
 
   const sitemap = await page.request.get("/sitemap.xml");
   expect(sitemap.status()).toBe(200);

@@ -160,6 +160,17 @@ test("mobile honey keeps the action framed", async ({ page }) => {
     });
     expect(visible.flower > 0.5 || visible.bee > 0.5, `framed action at p=${fraction}`).toBe(true);
   }
+  // The pour: the whole comb, frame included, is on screen once it fills.
+  for (const fraction of [0.85, 0.95]) {
+    await scrollToStickyProgress(page, ".honey-harvest", fraction);
+    await page.waitForTimeout(1200);
+    const comb = await page.evaluate(() => {
+      const rect = document.querySelector(".honey-comb")!.getBoundingClientRect();
+      return { left: rect.left, right: rect.right, vw: document.documentElement.clientWidth };
+    });
+    expect(comb.right, `comb inside the screen at p=${fraction}`).toBeLessThanOrEqual(comb.vw);
+    expect(comb.left, `comb inside the screen at p=${fraction}`).toBeGreaterThanOrEqual(0);
+  }
   assertClean();
 });
 
@@ -234,6 +245,15 @@ test("generic reveal targets animate with a nonzero transition", async ({ page }
   expect(reveal.property, "reveal animates translate").toContain("translate");
   const seconds = reveal.duration.split(",").map((part) => parseFloat(part));
   expect(Math.max(...seconds), "nonzero reveal duration").toBeGreaterThan(0);
+  // ...and once revealed, the index rows settle in place (a higher-specificity
+  // offset once kept them 10px low for good).
+  await page.evaluate(() => document.querySelector("#sastojci")!.scrollIntoView({ block: "center", behavior: "instant" }));
+  await expect
+    .poll(() => page.evaluate(() => [...document.querySelectorAll(".ingredients-index li")].map((li) => getComputedStyle(li).translate)), {
+      message: "index rows settle",
+      timeout: 5000,
+    })
+    .toEqual(["0px", "0px", "0px", "0px", "0px"]);
   assertClean();
 });
 
