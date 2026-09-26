@@ -6,8 +6,9 @@ import { bindSeparators } from "@/src/lib/typography";
 import { categoryCopy, products, publishedPrice, type ProductCategory } from "@/src/data/siteContent";
 import { ProductVisual } from "./ProductVisual";
 import { useCart } from "./CartProvider";
+import { UsageStrip } from "./UsageStrip";
 
-const categories: ProductCategory[] = ["sirupi", "djumbir", "busteri", "sokovi"];
+const categories: ProductCategory[] = ["sirupi", "djumbir", "busteri"];
 const BASE_COUNT = 6;
 
 /**
@@ -34,7 +35,9 @@ function matchesQuery(product: (typeof products)[number], normalized: string) {
 function resultCountText(count: number, total: number, searching: boolean) {
   if (count === 0) return "Nema rezultata u ovoj kategoriji.";
   if (searching) return `${count} ${pluralSr(count, "rezultat", "rezultata", "rezultata")} pretrage.`;
-  return count >= total ? `Prikazano svih ${total}.` : `Prikazano ${count} od ${total}.`;
+  return count >= total
+    ? `Prikazano: ${total} ${pluralSr(total, "proizvod", "proizvoda", "proizvoda")}.`
+    : `Prikazano ${count} od ${total}.`;
 }
 
 export function ProductCatalog() {
@@ -93,10 +96,20 @@ export function ProductCatalog() {
   };
 
   // Jump to another category's matches; focus follows to its tab so the
-  // triggering button (which unmounts) never drops focus to <body>.
+  // triggering button (which unmounts) never drops focus to <body>. The
+  // browser counts a tab tucked under the fixed header as "visible", so the
+  // scroll that clears the header is done explicitly.
   const showElsewhere = (category: ProductCategory) => {
     switchCategory(category, true);
-    tabRefs.current[categories.indexOf(category)]?.focus();
+    const tab = tabRefs.current[categories.indexOf(category)];
+    if (!tab) return;
+    tab.focus({ preventScroll: true });
+    requestAnimationFrame(() => {
+      const header = document.querySelector(".site-header")?.getBoundingClientRect().bottom ?? 0;
+      const { top, bottom } = tab.getBoundingClientRect();
+      if (top < header + 12) window.scrollBy({ top: top - header - 16, behavior: "instant" as ScrollBehavior });
+      else if (bottom > window.innerHeight) window.scrollBy({ top: bottom - window.innerHeight + 24, behavior: "instant" as ScrollBehavior });
+    });
   };
 
   const elsewhereLinks = elsewhere.map(({ category, count }) => (
@@ -125,8 +138,18 @@ export function ProductCatalog() {
         });
       });
     } else {
+      // Expansion inserts cards above the toggle; focus moves to the first
+      // new card's action (already in view, where the toggle was) so the
+      // revealed products come next in keyboard order. No scroll: the
+      // viewport stays where the visitor is reading.
+      const firstNew = categoryProducts[baseCount]?.id;
       setEnterIds(categoryProducts.slice(baseCount).map((product) => product.id));
       setExpanded(true);
+      if (firstNew) {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          document.querySelector<HTMLElement>(`[data-product="${firstNew}"] .product-card__add`)?.focus({ preventScroll: true });
+        }));
+      }
     }
   };
 
@@ -150,7 +173,7 @@ export function ProductCatalog() {
             <p className="eyebrow"><span />Immuno Craft</p>
             <h2 id="proizvodi-heading" tabIndex={-1}>Ukusi koji imaju karakter.</h2>
           </div>
-          <p>Birajte kombinacije koje vas zanimaju i dodajte ih u upit. Aktuelnu dostupnost i cenu proizvođač potvrđuje direktno — bez checkouta, naloga ili skrivenih koraka.</p>
+          <p>Birajte kombinacije koje vas zanimaju i dodajte ih u upit. Ukusi prate sezonu, pa dostupnost i cenu potvrđujemo direktno — bez online plaćanja, registracije ili skrivenih koraka.</p>
         </div>
 
         <div className="catalog-toolbar">
@@ -180,14 +203,16 @@ export function ProductCatalog() {
               type="search"
               value={query}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
-              placeholder="npr. malina, đumbir, nana…"
+              placeholder="npr. kupina, đumbir, lavanda…"
               autoComplete="off"
             />
           </label>
         </div>
 
         <div id="catalog-panel" role="tabpanel" aria-labelledby={`tab-${active}`} className="catalog-panel">
-          <div className="catalog-panel__intro">
+          {/* While searching, results sit directly under the field (the
+              category intro would push them below a phone keyboard). */}
+          <div className="catalog-panel__intro" hidden={searching}>
             <p className="eyebrow eyebrow--quiet">{copy.label}</p>
             <h3>{copy.title}</h3>
             <p>{copy.note}</p>
@@ -206,8 +231,9 @@ export function ProductCatalog() {
                 const price = publishedPrice(product);
                 return (
                   <article
-                    className={`product-card ${product.featured ? "product-card--featured" : ""} ${isNew ? "product-card--new" : ""}`}
+                    className={`product-card ${isNew ? "product-card--new" : ""}`}
                     key={product.id}
+                    data-product={product.id}
                     style={isNew ? { animationDelay: `${Math.min(240, enterIds.indexOf(product.id) * 45)}ms` } : undefined}
                   >
                     <div className="product-card__visual">
@@ -221,14 +247,14 @@ export function ProductCatalog() {
                       </div>
                       <h4>{bindSeparators(product.name)}</h4>
                       <p>{product.description}</p>
-                      <ul aria-label={`Sastojci za ${product.name}`}>
+                      <ul aria-label={`Sastojci: ${product.name}`}>
                         {product.ingredients.map((ingredient) => <li key={ingredient}>{ingredient}</li>)}
                       </ul>
                       <button
                         type="button"
                         className={`product-card__add ${quantity ? "is-added" : ""}`}
                         onClick={() => add(product, { notify: true })}
-                        aria-label={quantity ? `${product.name}: u upitu ${quantity}, dodaj još` : `Dodaj ${product.name} u upit`}
+                        aria-label={quantity ? `U upitu · ${quantity}: ${product.name}, dodaj još` : `Dodaj u upit: ${product.name}`}
                       >
                         <span>{quantity ? `U upitu · ${quantity}` : "Dodaj u upit"}</span><i aria-hidden="true">{quantity ? "✓" : "+"}</i>
                       </button>
@@ -266,6 +292,8 @@ export function ProductCatalog() {
               </button>
             </div>
           )}
+
+          <UsageStrip />
 
           <div className="catalog-assurance">
             <p><strong>Bez online naplate.</strong> Izbor samo priprema jasan upit za aktuelnu cenu i dostupnost.</p>

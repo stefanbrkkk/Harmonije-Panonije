@@ -8,6 +8,7 @@ const selector = [
   ".section-heading",
   ".catalog-toolbar",
   ".catalog-panel__intro",
+  ".catalog-ritual",
   ".story-copy > *",
   ".story-art",
   ".ingredients-head",
@@ -34,9 +35,11 @@ export function MotionOrchestrator() {
     let observer: IntersectionObserver | null = null;
 
     const prepare = (root: ParentNode = document) => {
-      const nodes = Array.from(root.querySelectorAll<HTMLElement>(selector));
-      nodes.forEach((node) => {
-        if (observed.has(node)) return;
+      // Read every position first, then write: interleaving a class write
+      // with a layout read per node forced one full layout per node.
+      const nodes = Array.from(root.querySelectorAll<HTMLElement>(selector)).filter((node) => !observed.has(node));
+      const visible = nodes.map((node) => reduced.matches || inViewport(node));
+      nodes.forEach((node, index) => {
         observed.add(node);
         node.classList.add("reveal-target");
         // Local semantic order: position within the nearest section, never
@@ -56,7 +59,7 @@ export function MotionOrchestrator() {
                 ? 150
                 : 70;
         node.style.setProperty("--reveal-delay", `${Math.min(200, roleBase + localIndex * 20)}ms`);
-        if (reduced.matches || inViewport(node)) {
+        if (visible[index]) {
           // Above-the-fold content becomes visible in the same pre-paint
           // frame: never visible -> hidden -> visible.
           node.classList.add("is-inview", "is-initial");
@@ -90,8 +93,20 @@ export function MotionOrchestrator() {
     });
     mutations.observe(document.body, { childList: true, subtree: true });
 
+    // Decorative infinite loops (hero floats, the journey bee's wings) pause
+    // while their section is off-screen, so an idle page does no per-frame
+    // style work for art nobody can see.
+    const sleepers = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) entry.target.classList.toggle("is-offscreen", !entry.isIntersecting);
+      },
+      { rootMargin: "100px 0px" },
+    );
+    document.querySelectorAll(".hero-section, #put-pcele").forEach((node) => sleepers.observe(node));
+
     return () => {
       observer?.disconnect();
+      sleepers.disconnect();
       mutations.disconnect();
       document.documentElement.classList.remove("motion-ready");
     };

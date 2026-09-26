@@ -6,7 +6,7 @@ export function Footer() {
     <footer className="site-footer section-dark">
       <div className="shell site-footer__top">
         <BrandMark />
-        <p>Immuno Craft · Novi Sad · craft proizvodi sa medom, limunom, voćem i biljem.</p>
+        <p>Immuno Craft · porodično gazdinstvo iz Budisave · med, limun, voće i bilje.</p>
       </div>
       <div className="shell site-footer__bottom">
         <span>© {new Date().getFullYear()} {brand.name}</span>

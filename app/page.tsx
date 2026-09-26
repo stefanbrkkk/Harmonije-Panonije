@@ -18,6 +18,9 @@ import { MotionOrchestrator } from "@/src/components/MotionOrchestrator";
 import { brand, contact } from "@/src/data/siteContent";
 import { getSiteUrl } from "@/src/lib/siteUrl";
 
+// Regenerate at most daily so build-time values (the footer © year) never go stale.
+export const revalidate = 86400;
+
 export default function HomePage() {
   const siteUrl = getSiteUrl();
   const structuredData = {
@@ -28,8 +31,9 @@ export default function HomePage() {
         "@id": `${siteUrl}/#organization`,
         name: brand.name,
         brand: { "@type": "Brand", name: brand.productLine },
-        description: "Craft proizvodnja Immuno Craft sirupa, sokova i bustera iz Novog Sada.",
+        description: "Porodično gazdinstvo iz Budisave kod Novog Sada: ručno pravljeni Immuno Craft sirupi sa livadskim medom i ceđenim limunom i Immuno Booster tegle.",
         foundingDate: "2022",
+        foundingLocation: { "@type": "Place", name: brand.origin },
         founder: [
           { "@type": "Person", name: "Anita Toth" },
           { "@type": "Person", name: "Laslo Toth" },
@@ -38,7 +42,9 @@ export default function HomePage() {
         telephone: contact.phoneHref,
         address: {
           "@type": "PostalAddress",
-          addressLocality: "Novi Sad",
+          addressLocality: brand.location,
+          postalCode: brand.postalCode,
+          addressRegion: brand.region,
           addressCountry: "RS",
         },
         sameAs: [contact.instagramUrl, contact.facebookUrl],

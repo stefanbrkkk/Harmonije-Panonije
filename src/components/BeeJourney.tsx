@@ -36,7 +36,7 @@ const CHAPTERS = [
   {
     word: "Panonija",
     lead: "Vojvođanska kućica sa naše etikete — Harmonije Panonije.",
-    index: "Novi Sad · Vojvodina",
+    index: "Budisava · Vojvodina",
   },
 ] as const;
 
@@ -61,8 +61,12 @@ function chapterFor(progress: number, current: number) {
   let next = 0;
   for (const boundary of BOUNDARIES) if (progress >= boundary) next += 1;
   if (next === current || current < 0) return next;
-  const edge = next > current ? BOUNDARIES[next - 1] : BOUNDARIES[current - 1];
-  return Math.abs(progress - edge) > HYSTERESIS ? next : current;
+  // Hysteresis only ever holds back by one chapter, measured at the boundary
+  // nearest the landing point: a jump across several boundaries that lands
+  // near the last one settles next to it, never on the stale start.
+  const edge = next > current ? BOUNDARIES[next - 1] : BOUNDARIES[next];
+  if (Math.abs(progress - edge) > HYSTERESIS) return next;
+  return next > current ? next - 1 : next + 1;
 }
 
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -260,7 +264,12 @@ export function BeeJourney() {
       const snapped: Element[] = [];
       const place = (node: Element, i: number) => {
         const before = i < next;
-        if (skipped(i) && node.classList.contains("is-before") !== before) {
+        // A swept-past previous chapter keeps its side on a reverse sweep
+        // (it was "after" and stays "after"), so it must snap by identity,
+        // not by a side flip. Without animation (first paint, arrival from
+        // far away) everything takes its place instantly.
+        const flips = node.classList.contains("is-before") !== before || node.classList.contains("is-active") !== (i === next);
+        if (!animate ? flips : skipped(i) && (i === previous || flips)) {
           node.classList.add("is-snap");
           snapped.push(node);
         }
@@ -312,9 +321,12 @@ export function BeeJourney() {
       flight = requestAnimationFrame(step);
     };
 
-    const paint = (progress: number) => {
+    const paint = (progress: number, _dt = 1, snapped = false) => {
       section.classList.add("is-live");
-      setActive(chapterFor(readProgress(), active), active !== -1);
+      // A snapped frame (the loop resuming after the section was out of
+      // view) composes the chapter for the new position directly, with no
+      // hysteresis toward the last visit and no transition from it.
+      setActive(chapterFor(readProgress(), snapped ? -1 : active), active !== -1 && !snapped);
       // The horizon rule is the one scrubbed element: plates stay grounded.
       if (progressRef.current) progressRef.current.style.transform = `scaleX(${progress.toFixed(4)})`;
     };

@@ -26,14 +26,12 @@ test("no transient contrast failure during hero entrance", async ({ page }) => {
 test("axe clean mid-reveal while sections enter", async ({ page }) => {
   const assertClean = trackErrors(page);
   await page.goto("/", { waitUntil: "networkidle" });
-  // Scroll so several reveal targets are mid-transition, then scan.
-  await page.evaluate(() => document.querySelector("#proizvodi")!.scrollIntoView({ block: "center" }));
-  await page.waitForTimeout(250);
+  // Jump (no smooth scroll) so the section's reveal targets start their
+  // transitions, wait until they have, then scan while they are in flight.
+  await page.evaluate(() => document.querySelector("#proizvodi")!.scrollIntoView({ block: "start", behavior: "instant" }));
+  await expect.poll(() => page.evaluate(() => document.querySelectorAll("#proizvodi .is-inview").length)).toBeGreaterThan(0);
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
   expect(results.violations).toEqual([]);
-  // Sanity: the scan covered real reveal activity, not a static page.
-  const revealed = await page.evaluate(() => document.querySelectorAll("#proizvodi .is-inview").length);
-  expect(revealed).toBeGreaterThan(0);
   assertClean();
 });
 
@@ -91,7 +89,7 @@ test("keyboard-only journey reaches catalog and inquiry", async ({ page }) => {
   }
   expect(reached, "catalog add control reachable by Tab").toBe(true);
   const label = await page.evaluate(() => document.activeElement?.getAttribute("aria-label") ?? "");
-  expect(label, "add control names its product").toMatch(/^Dodaj .+ u upit$/);
+  expect(label, "add control names its product").toMatch(/^Dodaj u upit: .+$/);
   const box = await page.evaluate(() => {
     const rect = document.activeElement!.getBoundingClientRect();
     return { top: rect.top, bottom: rect.bottom, header: document.querySelector(".site-header")!.getBoundingClientRect().bottom };
@@ -129,5 +127,28 @@ test("phone: keyboard focus never hides behind the fixed order bar", async ({ pa
       .toBeLessThanOrEqual(bar!.y);
   }
   expect(checked).toBeGreaterThan(3);
+  assertClean();
+});
+
+test("phone: the add-to-inquiry toast never covers the button that raised it", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/#proizvodi", { waitUntil: "networkidle" });
+  // Put an add button low on the screen, where the toast appears.
+  const button = page.locator(".product-card__add").nth(1);
+  await button.evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    window.scrollBy({ top: rect.bottom - (window.innerHeight - 150), behavior: "instant" });
+  });
+  await button.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".cart-toast")).toHaveClass(/is-visible/);
+  await expect
+    .poll(async () => {
+      const toast = await page.locator(".cart-toast").boundingBox();
+      const focused = await page.evaluate(() => document.activeElement!.getBoundingClientRect().bottom);
+      return toast ? toast.y - focused : -1;
+    }, { message: "focused button clears the toast" })
+    .toBeGreaterThanOrEqual(0);
   assertClean();
 });

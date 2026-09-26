@@ -36,7 +36,7 @@ export function OrderDrawer() {
       "",
       note ? `Napomena: ${note}` : "",
       "",
-      "Molim Vas javite aktuelne cene, dostupnost i opciju dostave/preuzimanja.",
+      "Molim Vas, javite aktuelne cene, dostupnost i opciju dostave/preuzimanja.",
       "",
       "Hvala!",
     ].filter((line, index, all) => !(line === "" && all[index - 1] === "")).join("\n");
@@ -207,7 +207,15 @@ export function OrderDrawer() {
           <button ref={closeRef} type="button" className="icon-button" onClick={close} aria-label="Zatvori"><span>×</span></button>
         </div>
 
-        <div className="order-drawer__content">
+        <div
+          className="order-drawer__content"
+          onFocus={(event: React.FocusEvent<HTMLDivElement>) => {
+            // A field half-hidden behind the sticky footer counts as visible
+            // to the browser, so it would never scroll; bring it fully in.
+            const target = event.target;
+            if (target instanceof HTMLElement && target.matches("input, textarea")) target.scrollIntoView({ block: "nearest" });
+          }}
+        >
           {items.length === 0 ? (
             <div className="order-empty">
               <div className="order-empty__mark">HP</div>
@@ -236,13 +244,13 @@ export function OrderDrawer() {
                     <div className="order-item__info">
                       <span>{item.product.volume}</span>
                       <h3>{bindSeparators(item.product.name)}</h3>
-                      <div className="order-item__controls" role="group" aria-label={`Količina za ${productLabel(item.product)}`}>
-                        <button type="button" onClick={() => { decrement(item.product.id); rescueFocus(); }} aria-label={`Smanji količinu za ${productLabel(item.product)}`}>−</button>
+                      <div className="order-item__controls" role="group" aria-label={`Količina: ${productLabel(item.product)}`}>
+                        <button type="button" onClick={() => { decrement(item.product.id); rescueFocus(); }} aria-label={`Smanji količinu: ${productLabel(item.product)}`}>−</button>
                         <span aria-live="polite">{item.quantity}</span>
-                        <button type="button" onClick={() => add(item.product, { notify: false })} disabled={item.quantity >= MAX_QUANTITY} aria-label={`Povećaj količinu za ${productLabel(item.product)}`}>+</button>
+                        <button type="button" onClick={() => add(item.product, { notify: false })} disabled={item.quantity >= MAX_QUANTITY} aria-label={`Povećaj količinu: ${productLabel(item.product)}`}>+</button>
                       </div>
                     </div>
-                    <button type="button" className="order-item__remove" onClick={() => { remove(item.product.id); rescueFocus(); }} aria-label={`Ukloni ${productLabel(item.product)}`}>×</button>
+                    <button type="button" className="order-item__remove" onClick={() => { remove(item.product.id); rescueFocus(); }} aria-label={`Ukloni iz upita: ${productLabel(item.product)}`}>×</button>
                   </article>
                 ))}
               </div>
@@ -263,10 +271,12 @@ export function OrderDrawer() {
 
         <div className="order-drawer__foot">
           <div className="order-drawer__summary"><span>Ukupno izabranih komada</span><strong>{count}</strong></div>
-          <a className="button button--honey button--full" href={mailto}>Otvori pripremljen mejl</a>
-          {mailtoTooLong && (
-            <p className="order-drawer__notice">Upit je predugačak za automatsko popunjavanje mejla — kopirajte tekst upita i nalepite ga u poruku.</p>
-          )}
+          <a className="button button--honey button--full" href={mailto}>Otvori pripremljeni mejl</a>
+          {/* Always mounted, so screen readers hear when the mail link
+              switches to an empty message. */}
+          <p className="order-drawer__notice" role="status">
+            {mailtoTooLong ? "Upit je predugačak za automatsko popunjavanje mejla — kopirajte tekst upita i nalepite ga u poruku." : ""}
+          </p>
           <div className="order-drawer__alternatives">
             <button type="button" className="text-link" onClick={copyMessage}>{shownCopyState === "copied" ? "Upit kopiran ✓" : shownCopyState === "failed" ? "Kopiranje nije uspelo" : "Kopiraj tekst upita"}<span aria-hidden="true">↗</span></button>
             <a className="text-link" href={`tel:${contact.phoneHref}`}>Pozovi {contact.phoneDisplay}<span aria-hidden="true">↗</span></a>

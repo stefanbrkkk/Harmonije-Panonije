@@ -78,9 +78,15 @@ export function HoneyHarvestSection() {
     let macroWidth = 0;
     let sceneWidth = 0;
     let lastShift = 0;
+    // The comb is drawn past the macro's own box (overflow: visible), so the
+    // pan must bring its real right edge into the scene, not just the box.
+    let contentRight = 0;
     const measureMacro = () => {
+      const scene = macroRef.current?.parentElement;
       macroWidth = macroRef.current?.getBoundingClientRect().width ?? 0;
-      sceneWidth = macroRef.current?.parentElement?.getBoundingClientRect().width ?? 0;
+      sceneWidth = scene?.getBoundingClientRect().width ?? 0;
+      const comb = combRef.current?.getBoundingClientRect();
+      contentRight = comb && scene ? comb.right - lastShift - scene.getBoundingClientRect().left : macroWidth;
     };
 
     // Ambient flap clock (frame units). Pose stays a pure function of
@@ -145,10 +151,14 @@ export function HoneyHarvestSection() {
           }
         } else if (macroRef.current) {
           // Mid-size desktops: the macro can overflow its scene column, so
-          // pan once from the flower framing to the pour framing during
-          // align — never chasing, one intentional move per pass.
-          const overflow = Math.min(0, sceneWidth - macroWidth);
-          const shift = overflow * smoothstep((progress - 0.66) / 0.08);
+          // pan once from the flower framing to the pour framing across
+          // carry and align — never chasing, one intentional move per pass.
+          // 26px keeps the comb clear of the scene's 24px right mask ramp.
+          const overflow = Math.min(0, sceneWidth - 26 - Math.max(macroWidth, contentRight));
+          // Spread over .2 of progress (late carry through align): the
+          // comb-aware pan is longer, and the camera must glide with the
+          // bee, never jump.
+          const shift = overflow * smoothstep((progress - 0.6) / 0.2);
           if (Math.abs(shift - lastShift) > 0.5) {
             macroRef.current.style.translate = shift ? `${shift.toFixed(1)}px 0` : "";
             lastShift = shift;
@@ -238,7 +248,8 @@ export function HoneyHarvestSection() {
     };
 
     const paintStatic = () => {
-      beeRef.current?.setAttribute("transform", "translate(420 246) rotate(4) scale(.96)");
+      // The final pour pose, so the static stream hangs from the bee.
+      beeRef.current?.setAttribute("transform", "translate(596 272) rotate(6) scale(.98)");
       if (wingLRef.current) wingLRef.current.setAttribute("transform", "rotate(0 -8 -5)");
       if (wingRRef.current) wingRRef.current.setAttribute("transform", "rotate(0 19 -7)");
       if (probRef.current) probRef.current.style.opacity = "0";
@@ -295,12 +306,12 @@ export function HoneyHarvestSection() {
           <div ref={copyARef} className="honey-harvest__chapter honey-harvest__chapter--a">
             <p className="eyebrow"><span />Priča jednog sastojka</p>
             <h2 id="honey-harvest-title">Od cveta do <em>meda.</em></h2>
-            <p>Pčela sleće na cvet, uzima nektar i nosi ga dalje. Taj prirodni put vodi do livadskog meda — jednog od osnovnih sastojaka mnogih Immuno Craft kombinacija.</p>
+            <p>Pčela sleće na cvet, uzima nektar i nosi ga dalje. Taj prirodni put vodi do livadskog meda — osnove svakog Immuno Craft sirupa.</p>
           </div>
           <div ref={copyBRef} className="honey-harvest__chapter honey-harvest__chapter--b">
             <p className="eyebrow"><span />Sakupljanje</p>
             <h2>Nektar postaje <em>zlatna osnova.</em></h2>
-            <p>U košnici pčele nektar pretvaraju u med. U Harmonijama Panonije livadski med zatim ulazi kao jedan od osnovnih sastojaka mnogih kombinacija.</p>
+            <p>U košnici pčele nektar pretvaraju u med. Kod nas livadski med čini trećinu svake boce sirupa.</p>
           </div>
           <div ref={copyCRef} className="honey-harvest__chapter honey-harvest__chapter--c">
             <p className="eyebrow"><span />Harmonija</p>

@@ -51,6 +51,8 @@ const forbidden = [
   ["detoks", "unconfirmed health claim (CLIENT-CONFIRMATION.md)"],
   ["detox", "unconfirmed health claim (CLIENT-CONFIRMATION.md)"],
   ["Besplatna dostava širom Srbije", "unsupported nationwide delivery claim"],
+  ["0,8 l", "outdated syrup volume (client email 26 Sep 2026: 0,75 l)"],
+  ["podizanja imuniteta", "health claim (AI promo image, never client copy)"],
 ];
 for (const [needle, label] of forbidden) {
   if (source.toLocaleLowerCase("sr").includes(needle.toLocaleLowerCase("sr"))) errors.push(`Found ${label}: ${needle}`);
@@ -72,8 +74,20 @@ for (const file of sourceFiles.filter((name) => /\.(ts|tsx)$/.test(name) && name
   if (/\(\?<[=!]/.test(fs.readFileSync(file, "utf8"))) errors.push(`Regex lookbehind in ${path.relative(root, file)} (breaks Safari < 16.4).`);
 }
 
-const productMatches = navSource.match(/legacy\(\{/g)?.length ?? 0;
-if (productMatches < 30) errors.push(`Expected at least 30 legacy catalog entries; found ${productMatches}.`);
+// The catalogue follows the client's current labels (email + photos, 26 Sep
+// 2026): every entry is either on a current label or awaiting
+// reconfirmation, and every category has products.
+const productMatches = navSource.match(/(?:onLabel|toConfirm)\(\{/g)?.length ?? 0;
+if (productMatches < 10) errors.push(`Expected at least 10 catalog entries; found ${productMatches}.`);
+if (/\blegacy\(\{/.test(navSource)) errors.push("Legacy (scraped) catalog entries are back; the range must follow the client's labels.");
+if (/"sokovi"/.test(navSource)) errors.push("The discontinued 0,3 l sokovi category is back in the catalog.");
+const categoryKeys = [...navSource.matchAll(/^  (\w+): \{\n    label:/gm)].map((match) => match[1]);
+for (const key of categoryKeys) {
+  if (!navSource.includes(`category: "${key}"`)) errors.push(`Category ${key} has no products.`);
+}
+for (const match of navSource.matchAll(/category: "(\w+)"/g)) {
+  if (!categoryKeys.includes(match[1])) errors.push(`Product category ${match[1]} has no categoryCopy entry.`);
+}
 if (!navSource.includes("showLegacyPublicPricing: false")) errors.push("Legacy public pricing must remain disabled by default.");
 
 // Structural regression tripwires (HP-46). Each guards a confirmed, fixed
@@ -134,7 +148,9 @@ const tripwires = [
   // HP-11: compact thumbnails use explicit geometry, not scaled full art.
   ["compact geometry", css.includes(".product-visual--compact .product-bottle {") && !css.includes("scale(.31)")],
   // HP-12: desktop 6n feature-row reset at tablet.
-  ["tablet 6n reset", css.includes(".product-card:nth-child(6n) { grid-template-columns: none;")],
+  // The every-6th feature card and the row-closing rules exist only at desktop
+  // widths, so they can never leak into the two-column or phone layouts.
+  ["feature card scoped to desktop", /@media \(min-width: 1081px\) \{\s*\.product-card:nth-child\(6n\),/.test(css) && !/^\.product-card:nth-child\(6n\) \{/m.test(css)],
   // HP-03/05/09: camera-framed responsive scenes.
   ["scene camera", honey.includes("cameraShift(")],
   // HP-04: sequential chapter handoff aligned to visual actions (never a
@@ -159,7 +175,9 @@ const tripwires = [
   ["journey four chapters", (journey.match(/ word: "/g) ?? []).length === 4],
   ["translate-only reveals", !css.includes("opacity .6s cubic-bezier(.22,.8,.24,1) var(--reveal-delay")],
   ["semantic reveal roles", read("src/components/MotionOrchestrator.tsx").includes("roleBase")],
-  ["reduced route drift", css.includes(".delivery-map__route { animation: none !important; }")],
+  // Delivery atlas: the route draws once and the bee bobs three times, then
+  // rests; reduced motion shows the finished plate with no motion at all.
+  ["map motion finite and reduced-static", css.includes(".delivery-map .at-bee__bob { animation:none !important; }") && css.includes("atBeeBob 3.4s ease-in-out 1.8s 3") && !/routeDrift|mapPulse/.test(css)],
   ["valid reveal transition", css.includes("transition: translate .7s cubic-bezier(.22,.8,.24,1) var(--reveal-delay,0ms);")],
   // Ingredients: foundation vs flavour layers come from data roles; the two
   // foundations are captioned on the plate; no decorative numbering.

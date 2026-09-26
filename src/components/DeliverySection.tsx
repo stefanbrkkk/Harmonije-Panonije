@@ -1,4 +1,8 @@
 import { contact, delivery } from "@/src/data/siteContent";
+import { DeliveryMapArt } from "./DeliveryMapArt";
+
+const FACADE =
+  "M-13 0V-16C-13-19-9.6-19.4-9.6-22.2C-9.6-23.8-11.6-24-11.6-25.6C-11.6-28-7.6-28.8-6.8-31.2C-6-34.6-3.4-36.2 0-36.2C3.4-36.2 6-34.6 6.8-31.2C7.6-28.8 11.6-28 11.6-25.6C11.6-24 9.6-23.8 9.6-22.2C9.6-19.4 13-19 13-16V0Z";
 
 export function DeliverySection() {
   return (
@@ -12,38 +16,51 @@ export function DeliverySection() {
             <a className="button button--dark" href={`mailto:${contact.email}?subject=${encodeURIComponent("Upit za dostavu — Harmonije Panonije")}`}>Pitaj za dostavu</a>
             <a className="text-link" href={`tel:${contact.phoneHref}`}>{contact.phoneDisplay}<span aria-hidden="true">↗</span></a>
           </div>
-          <p className="delivery-copy__note">Novi Sad je polazna tačka. Za adresu, preuzimanje i termin javite se direktno — dogovor ostaje jednostavan i ličan.</p>
+          <p className="delivery-copy__note">{delivery.note}</p>
         </div>
 
-        <div className="delivery-map">
-          <svg viewBox="0 0 720 470" role="img" aria-label="Apstraktna mapa Panonije sa rutom od Novog Sada">
-            <path className="delivery-map__land" d="M56 73c101-49 170-12 242 2 77 15 140-22 211-3 75 20 115 82 111 151-4 73-58 104-86 164-31 67-88 55-155 38-73-18-131 9-204-14C93 385 37 329 33 249c-3-67-21-139 23-176Z" />
-            <path className="delivery-map__contour" d="M110 130c90-40 170-14 250 0 70 12 130-14 200 2" />
-            <path className="delivery-map__contour" d="M90 330c90 30 170-4 260 12 70 13 140-8 210 6" />
-            <path className="delivery-map__river" d="M129-5c17 80 91 85 124 141 38 64-30 109 8 167 39 59 121 61 168 140" />
-            <text className="delivery-map__water-label" x="150" y="120" transform="rotate(62 150 120)">Dunav</text>
-            <path className="delivery-map__route" d="M267 243c83-21 141-79 226-56 45 13 70 45 111 82" />
-            <circle className="delivery-map__halo" cx="267" cy="243" r="16" />
-            <circle className="delivery-map__point delivery-map__point--origin" cx="267" cy="243" r="9" />
-            <circle className="delivery-map__pulse" cx="267" cy="243" r="22" />
-            <circle className="delivery-map__point" cx="604" cy="269" r="6" />
-            <text x="280" y="228">Novi Sad</text>
-            <text x="542" y="301">po dogovoru</text>
-            <g className="delivery-map__sprig" aria-hidden="true">
-              <path d="M640 120c-2-22-1-40 3-58M638 100c-14-6-20-18-15-28 13 3 19 13 15 28Z" />
-              <circle cx="643" cy="58" r="2.6" />
-              <circle cx="650" cy="64" r="2.2" />
-            </g>
-            <g className="delivery-map__compass" aria-hidden="true">
-              <circle cx="668" cy="52" r="13" />
-              <path d="M668 44v13M663 49l5-6 5 6" />
-            </g>
-          </svg>
-          <div className="delivery-map__legend">
-            <span><i />Polazna tačka</span>
-            <span><i />Dogovorena ruta</span>
+        <figure className="delivery-map atlas-plate">
+          <div className="atlas-plate__head" aria-hidden="true">
+            <span className="atlas-plate__title">Južna Bačka · Šajkaška</span>
+            <span className="atlas-plate__coords">45°17′ s. g. š. · 20°00′ i. g. d.</span>
           </div>
-        </div>
+          <div className="atlas-plate__frame">
+            <div className="atlas-plate__canvas">
+              <DeliveryMapArt />
+            </div>
+          </div>
+          <figcaption>
+            <span className="sr-only">Legenda mape:</span>
+            <ul className="atlas-plate__legend">
+              <li>
+                <svg viewBox="0 0 26 18" aria-hidden="true" focusable="false">
+                  <g transform="translate(13 17) scale(.44)">
+                    <path d={FACADE} fill="#fbf7ec" stroke="#7a4f0e" strokeWidth="2" />
+                    <path d="M-13-4.4H13V0H-13Z" fill="#d8a248" />
+                  </g>
+                </svg>
+                <span><b>Budisava</b><em>naše gazdinstvo</em></span>
+              </li>
+              <li>
+                <svg viewBox="0 0 26 18" aria-hidden="true" focusable="false">
+                  <defs>
+                    <pattern id="lgCity" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(22)">
+                      <rect x=".5" y=".5" width="2" height="2" fill="rgba(15,40,33,.3)" />
+                    </pattern>
+                  </defs>
+                  <path d="M5 11c-1-4 2-7 6-7 3 0 4 2 7 1 3 0 4 3 3 6-1 3-4 4-8 4-4 0-7-1-8-4Z" fill="url(#lgCity)" stroke="rgba(15,40,33,.6)" strokeWidth=".8" />
+                </svg>
+                <span><b>Novi Sad</b><em>gde smo počeli</em></span>
+              </li>
+              <li>
+                <svg viewBox="0 0 26 18" aria-hidden="true" focusable="false">
+                  <path d="M2 9H24" stroke="#7a4f0e" strokeWidth="2.2" strokeLinecap="round" strokeDasharray="0 5" />
+                </svg>
+                <span><b>Dostava i preuzimanje</b><em>po dogovoru</em></span>
+              </li>
+            </ul>
+          </figcaption>
+        </figure>
       </div>
     </section>
   );

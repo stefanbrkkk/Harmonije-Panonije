@@ -43,13 +43,13 @@ export function Hero() {
           <div className="hero-art__ingredient hero-art__ingredient--leaf" aria-hidden="true"><span /><span /><span /></div>
           <div className="hero-art__ingredient hero-art__ingredient--flower" aria-hidden="true"><span /><span /><span /><span /><span /></div>
           <div className="hero-art__bottles">
-            <Bottle size="small" tone="gold" label={"IMMU\nNO"} />
+            <Bottle size="small" tone="gold" label={"CRAFT\nSIRUP"} />
             <Bottle size="large" tone="berry" />
-            <Bottle size="small" tone="green" label={"CRAFT\nSOK"} />
+            <Bottle size="small" tone="green" label={"SA\nMEDOM"} />
           </div>
           <div className="hero-art__caption">
             <span>01</span>
-            <p>Voće, bilje, ceđeni limun i livadski med — osnova mnogih Immuno Craft kombinacija.</p>
+            <p>Livadski med i ceđeni limun osnova su svakog Immuno Craft sirupa — voće i bilje daju mu karakter.</p>
           </div>
         </div>
       </div>

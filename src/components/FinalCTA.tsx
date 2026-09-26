@@ -4,7 +4,7 @@ export function FinalCTA() {
   return (
     <section id="kontakt" data-page-bee="hide" className="final-cta section-honey">
       <div className="final-cta__bee" aria-hidden="true">
-        <svg viewBox="0 0 120 90"><ellipse cx="58" cy="47" rx="22" ry="14"/><path d="M42 44h32M47 35l10 24M63 34l9 21"/><ellipse cx="43" cy="25" rx="18" ry="9" transform="rotate(-27 43 25)"/><ellipse cx="71" cy="25" rx="18" ry="9" transform="rotate(27 71 25)"/><path d="M34 45c-16-13-25-5-26 6M82 44c15-14 24-7 25 4"/></svg>
+        <svg viewBox="0 0 120 90"><ellipse cx="58" cy="47" rx="22" ry="14"/><path d="M49 35l8 24M62 34l8 22"/><ellipse cx="43" cy="25" rx="18" ry="9" transform="rotate(-27 43 25)"/><ellipse cx="71" cy="25" rx="18" ry="9" transform="rotate(27 71 25)"/><path d="M34 45c-16-13-25-5-26 6M82 44c15-14 24-7 25 4"/></svg>
       </div>
       <div className="shell final-cta__inner">
         <p className="eyebrow"><span />Kontakt</p>
@@ -16,7 +16,7 @@ export function FinalCTA() {
         </div>
         <div className="final-cta__contacts">
           <a href={`tel:${contact.phoneHref}`}><span>Telefon</span><strong>{contact.phoneDisplay}</strong></a>
-          <a href={`mailto:${contact.email}`}><span>Mejl</span><strong>{contact.email}</strong></a>
+          <a href={`mailto:${contact.email}`}><span>Mejl</span><strong>{contact.email.split("@")[0]}@<wbr />{contact.email.split("@")[1]}</strong></a>
           <a href={contact.instagramUrl} target="_blank" rel="noreferrer"><span>Instagram</span><strong>{contact.instagramHandle}</strong></a>
         </div>
       </div>

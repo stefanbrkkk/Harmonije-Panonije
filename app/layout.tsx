@@ -1,8 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { getSiteUrl, isIndexable } from "@/src/lib/siteUrl";
+// Self-hosted web serif (Georgia metrics, Latin + Latin Extended) for
+// devices without Iowan or Palatino — most Android phones. Listed after
+// them in --serif, so Apple and Windows never download it.
+import "@fontsource/gelasio/400.css";
+import "@fontsource/gelasio/400-italic.css";
 import "./globals.css";
 
-const description = "Ručno pravljeni Immuno Craft proizvodi iz Novog Sada — sirupi, sokovi i busteri sa livadskim medom, ceđenim limunom, voćem i biljem.";
+const description = "Ručno pravljeni Immuno Craft sirupi i Immuno Booster tegle sa porodičnog gazdinstva u Budisavi kod Novog Sada — livadski med, ceđeni limun, sezonsko voće i bilje.";
 const siteUrl = getSiteUrl();
 // Indexing policy depends ONLY on the deployment environment (HP-24):
 // previews stay noindex/disallow even when NEXT_PUBLIC_SITE_URL is set;
@@ -13,7 +18,7 @@ const shouldIndex = isIndexable();
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Harmonije Panonije | Immuno Craft sirupi, sokovi i busteri",
+    default: "Harmonije Panonije | Immuno Craft sirupi sa medom",
     template: "%s | Harmonije Panonije",
   },
   description,
@@ -25,11 +30,12 @@ export const metadata: Metadata = {
   keywords: [
     "Harmonije Panonije",
     "Immuno Craft",
-    "sirupi Novi Sad",
-    "craft sirupi",
+    "Immuno Booster",
     "sirupi sa medom",
-    "sokovi Novi Sad",
-    "busteri",
+    "craft sirupi",
+    "sirupi Novi Sad",
+    "Budisava",
+    "porodično gazdinstvo",
     "livadski med",
     "ceđeni limun",
   ],

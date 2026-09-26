@@ -136,7 +136,7 @@ export function Header() {
         </nav>
 
         <div className="site-header__actions">
-          <button className="order-button" type="button" onClick={open} aria-label={`Otvori upit za porudžbinu. ${itemsLabel(count)}`}>
+          <button className="order-button" type="button" onClick={open} aria-label={`Poruči — u upitu ${itemsLabel(count)}`}>
             <span>Poruči</span>
             <span className="order-button__count" aria-hidden="true">{count}</span>
           </button>

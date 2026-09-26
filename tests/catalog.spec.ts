@@ -9,11 +9,11 @@ test("product tabs: arrows, Home, End", async ({ page }) => {
   await expect(page.locator("#tab-djumbir")).toBeFocused();
   expect(await page.locator("#tab-djumbir").getAttribute("aria-selected")).toBe("true");
   await page.keyboard.press("End");
-  await expect(page.locator("#tab-sokovi")).toBeFocused();
+  await expect(page.locator("#tab-busteri")).toBeFocused();
   await page.keyboard.press("Home");
   await expect(page.locator("#tab-sirupi")).toBeFocused();
   await page.keyboard.press("ArrowLeft");
-  await expect(page.locator("#tab-sokovi")).toBeFocused();
+  await expect(page.locator("#tab-busteri")).toBeFocused();
   assertClean();
 });
 
@@ -65,7 +65,7 @@ test("search offers matches from the other categories and keeps the query", asyn
   await expect(search).toHaveValue("đumbir");
   await expect(page.locator(".product-card")).toHaveCount(promised);
   // Ordinary tab switching still starts a fresh browse.
-  await page.locator("#tab-sokovi").click();
+  await page.locator("#tab-busteri").click();
   await expect(search).toHaveValue("");
   assertClean();
 });
@@ -114,14 +114,69 @@ test("tablet sixth card uses the standard stacked layout", async ({ page }) => {
 test("artwork identity is stable across filter and tab changes", async ({ page }) => {
   const assertClean = trackErrors(page);
   await page.goto("/", { waitUntil: "networkidle" });
+  // Each card's artwork identity (product id + its label band colour).
   const labels = () =>
-    page.locator(".product-card__visual .product-bottle__label strong, .product-card__visual .product-jar__label strong").allTextContents();
+    page.locator(".product-card__visual .product-visual").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-artwork")));
   const snapshot = await labels();
   await page.locator(".catalog-search input").fill("a");
   await page.locator(".catalog-search input").fill("");
   expect(await labels()).toEqual(snapshot);
-  await page.locator("#tab-sokovi").click();
+  await page.locator("#tab-busteri").click();
   await page.locator("#tab-sirupi").click();
   expect(await labels()).toEqual(snapshot);
+  expect(new Set(snapshot).size, "every card has its own artwork").toBe(snapshot.length);
+  assertClean();
+});
+
+test("the range follows the current labels: three categories, 0,75 l syrups", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.goto("/#proizvodi", { waitUntil: "networkidle" });
+  await expect(page.locator(".catalog-tabs [role=tab]")).toHaveCount(3);
+  for (const tab of ["#tab-sirupi", "#tab-djumbir"]) {
+    await page.locator(tab).click();
+    if (await page.locator(".catalog-more button").count()) await page.locator(".catalog-more button").click();
+    const volumes = await page.locator(".product-card__meta span:first-child").allTextContents();
+    expect(volumes.length).toBeGreaterThan(0);
+    expect(volumes.every((volume) => volume === "0,75 l"), `${tab} volumes`).toBe(true);
+  }
+  expect(await page.locator("body").innerText()).not.toMatch(/0[,.]8\s*l\b|sokovi/i);
+  assertClean();
+});
+
+test("a category with a short last row closes it cleanly", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 768, height: 1024 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/#proizvodi", { waitUntil: "networkidle" });
+    await page.locator("#tab-busteri").click();
+    const layout = await page.evaluate(() => {
+      const grid = document.querySelector(".product-grid")!.getBoundingClientRect();
+      const cards = [...document.querySelectorAll(".product-card")].map((card) => card.getBoundingClientRect());
+      return { grid: grid.width, last: cards[cards.length - 1].width, count: cards.length };
+    });
+    expect(layout.count).toBe(3);
+    expect(layout.last / layout.grid, `last card spans the row at ${viewport.width}`).toBeGreaterThan(0.97);
+  }
+  assertClean();
+});
+
+test("how to enjoy and store a syrup is on the page, at every width", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  for (const width of [1440, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/#proizvodi", { waitUntil: "networkidle" });
+    const strip = page.locator(".catalog-ritual");
+    await strip.scrollIntoViewIfNeeded();
+    await expect(strip).toBeVisible();
+    await expect(strip).toContainText("3–3,5 litra");
+    await expect(strip).toContainText("frižideru, do mesec dana");
+    await expect(strip).toContainText("promućkajte");
+    await expect(strip.locator("dt")).toHaveText(["Na kašiku", "Sa vodom", "U koktelima i kolačima", "Ujutru, pre jela"]);
+    const overflow = await page.evaluate(() => {
+      const box = document.querySelector(".catalog-ritual")!.getBoundingClientRect();
+      return { right: box.right, vw: document.documentElement.clientWidth };
+    });
+    expect(overflow.right, `strip fits at ${width}`).toBeLessThanOrEqual(overflow.vw + 1);
+  }
   assertClean();
 });

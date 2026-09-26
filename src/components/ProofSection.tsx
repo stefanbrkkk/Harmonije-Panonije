@@ -9,7 +9,7 @@ export function ProofSection() {
         <div className="proof-intro">
           <p className="eyebrow"><span />Utisci i priča</p>
           <h2>Mali brend. Stvarna priča.</h2>
-          <p>Javni utisci kupaca izdvajaju ukus, dizajn i kvalitet, dok urednički tekstovi beleže priču o nastanku i razvoju brenda.</p>
+          <p>Kratko iz javnih utisaka kupaca, uz uredničke tekstove o nastanku i razvoju brenda.</p>
         </div>
 
         {siteConfig.showTestimonials && (

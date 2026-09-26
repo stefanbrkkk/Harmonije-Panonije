@@ -146,7 +146,7 @@ export function IngredientsSection() {
         <div className="ingredients-head">
           <p className="eyebrow eyebrow--light"><span />Sastojci</p>
           <h2 id="sastojci-naslov">Šta ulazi u harmoniju?</h2>
-          <p>{bindShortWords("Livadski med i ceđeni limun povezuju mnoge Immuno Craft kombinacije. Ukusi se zatim grade voćem, bobicama, povrćem, đumbirom i biljem.")}</p>
+          <p>{bindShortWords("Livadski med i ceđeni limun osnova su svakog Immuno Craft sirupa. Ukusi se zatim grade sezonskim voćem, bobicama, povrćem, biljem, začinima i đumbirom.")}</p>
         </div>
 
         <figure className="ingredients-plate">

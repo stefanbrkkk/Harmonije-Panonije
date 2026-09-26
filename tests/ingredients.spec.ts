@@ -7,7 +7,7 @@ import { trackErrors } from "./helpers";
  * must read as one complete composition and never collide or overflow.
  */
 
-const layers = ["Đumbir", "Bobičasto voće", "Voće", "Lekovito bilje", "Povrće"];
+const layers = ["Đumbir i začini", "Bobičasto voće", "Voće", "Lekovito bilje", "Povrće"];
 
 test("hierarchy: two illustrated foundations dominate a five-item index", async ({ page }) => {
   const assertClean = trackErrors(page);

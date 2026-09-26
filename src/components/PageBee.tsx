@@ -52,7 +52,8 @@ function sample(points: Waypoint[], progress: number) {
 }
 
 // Text and controls the decorative bee must never sit on.
-const PROTECTED = "main :is(h1, h2, h3, h4, p, li, a, button, input, label, blockquote, figcaption, summary)";
+// Card meta and availability tags, and the hero bottle labels, are text too.
+const PROTECTED = "main :is(h1, h2, h3, h4, p, li, a, button, input, label, blockquote, figcaption, summary, .product-card__meta, .product-card__availability, .hero-bottle__label)";
 // On phones the single-column product cards leave only slivers of gap
 // between their labels and bottle art, which made the bee flicker in and
 // out: there the whole card counts as content.
@@ -130,15 +131,22 @@ export function PageBee() {
       localScenes = Array.from(document.querySelectorAll<HTMLElement>("#put-pcele, .honey-harvest"), band);
       // The journey's pinned frame (word, index) stays on screen until the
       // section's end scrolls past the top: keep the handoff until then.
-      if (document.querySelector("#put-pcele") && localScenes[0]) localScenes[0] = { ...localScenes[0], bottom: localScenes[0].bottom + window.innerHeight * 0.52 };
+      // It also starts early, so the global bee has faded before the
+      // journey's own bee is on screen (never two bees at once).
+      if (document.querySelector("#put-pcele") && localScenes[0]) {
+        localScenes[0] = { top: localScenes[0].top - window.innerHeight * 0.35, bottom: localScenes[0].bottom + window.innerHeight * 0.52 };
+      }
       // Sections with strong dedicated artwork opt out of the global bee so
       // it never competes with a local composition or covers its copy.
       hideSections = Array.from(document.querySelectorAll<HTMLElement>('[data-page-bee="hide"]'), band);
       protectedBoxes = [];
       const compact = Math.min(window.innerWidth, window.innerHeight * 1.6) < 720;
       document.querySelectorAll<HTMLElement>(compact ? PROTECTED_COMPACT : PROTECTED).forEach((node) => {
-        // Pinned scenes and opted-out sections already hide the bee.
-        if (node.closest('#put-pcele, .honey-harvest, [data-page-bee="hide"]')) return;
+        // Pinned scenes move with scroll, so their text can't be cached in
+        // document space (their handoff hides the bee instead). Opted-out
+        // sections stay protected: their bottom edge is still on screen
+        // after the handoff line has left them.
+        if (node.closest("#put-pcele, .honey-harvest")) return;
         const r = node.getBoundingClientRect();
         if (r.width === 0 || r.height === 0) return;
         protectedBoxes.push({ left: r.left + sx, top: r.top + sy, right: r.right + sx, bottom: r.bottom + sy });

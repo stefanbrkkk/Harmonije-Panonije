@@ -41,6 +41,15 @@ test("metadata, sitemap, manifest, 404 and social images", async ({ page }) => {
   const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').first().textContent()) ?? "{}");
   const org = ld["@graph"]?.find((node: { "@type": string }) => node["@type"] === "Organization");
   expect(org?.brand, "brand is a typed Brand node").toEqual({ "@type": "Brand", name: "Immuno Craft" });
+  // Client email (26 Sep 2026): home, growing and production in Budisava
+  // since August 2025; the brand began in Novi Sad.
+  expect(org?.address?.addressLocality).toBe("Budisava");
+  expect(org?.foundingLocation?.name).toBe("Novi Sad");
+  const manifestBody = await (await page.request.get("/manifest.webmanifest")).json();
+  expect(manifestBody.description).toContain("Budisavi");
+  expect(manifestBody.icons.map((icon: { sizes: string }) => icon.sizes)).toEqual(expect.arrayContaining(["192x192", "512x512"]));
+  expect((await page.request.get("/favicon.ico")).status(), "favicon.ico").toBe(200);
+  expect(await page.locator('meta[name="description"]').getAttribute("content")).toContain("Budisavi");
 
   for (const route of ["/opengraph-image", "/twitter-image"]) {
     const response = await page.request.get(route);
