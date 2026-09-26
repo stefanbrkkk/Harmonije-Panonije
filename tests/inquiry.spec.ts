@@ -111,7 +111,7 @@ test("inquiry draft: fields, mailto inspection, clipboard stubs", async ({ page 
   expect(decodeURIComponent(mailto ?? "")).toContain("Test Ime");
   expect(decodeURIComponent(mailto ?? "")).toContain("060123456");
   expect(mailto, "RFC 6068 line breaks").toContain("%0D%0A");
-  await expect(page.locator(".order-drawer__notice")).toHaveCount(0);
+  await expect(page.locator(".order-drawer__notice")).toBeEmpty();
   // Clipboard success stub (simulated: never sends anything).
   await page.evaluate(() => {
     Object.defineProperty(navigator, "clipboard", {
@@ -176,18 +176,21 @@ test("an over-long inquiry opens a bare mail and asks to paste the copied text",
   const assertClean = trackErrors(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await page.locator("#proizvodi").scrollIntoViewIfNeeded();
-  for (const tab of ["#tab-sirupi", "#tab-djumbir", "#tab-sokovi"]) {
+  for (const tab of ["#tab-sirupi", "#tab-djumbir", "#tab-busteri"]) {
     await page.locator(tab).click();
     if (await page.locator(".catalog-more button").count()) await page.locator(".catalog-more button").click();
     const adds = page.locator(".product-card__add");
     for (let i = 0; i < (await adds.count()); i += 1) await adds.nth(i).click();
   }
   await page.locator(".order-button").first().click();
-  await page.locator(".order-contact-form__full textarea").first().fill("Pitanje o ukusu, dostavi i preuzimanju. ".repeat(12));
+  // Diacritics triple in percent-encoding: a realistic Serbian draft with
+  // the whole range selected clearly exceeds the mail-handler limit.
+  await page.locator('.order-contact-form input[autocomplete="name"]').fill("Đurđica Šćepanović-Živković");
+  await page.locator(".order-contact-form__full textarea").first().fill("Pitanje o ukusu, čuvanju, dostavi i preuzimanju — Budisava ili Novi Sad? ".repeat(6));
   const mailto = (await page.locator(".order-drawer__foot a.button").getAttribute("href")) ?? "";
   expect(mailto.length, "stays under the mail-handler limit").toBeLessThanOrEqual(1900);
   expect(mailto).not.toContain("body=");
-  await expect(page.locator(".order-drawer__notice")).toBeVisible();
+  await expect(page.locator(".order-drawer__notice")).toHaveText(/predugačak/);
   assertClean();
 });
 
@@ -201,6 +204,11 @@ test("the quantity cap disables + and adds nothing more", async ({ page }) => {
   for (let i = 1; i < 99; i += 1) await plus.click();
   await expect(page.locator(".order-drawer__summary strong")).toHaveText("99");
   await expect(plus).toBeDisabled();
+  // Still focusable at the cap: keyboard users keep their place.
+  await plus.focus();
+  await page.keyboard.press("Enter");
+  await expect(plus).toBeFocused();
+  await expect(page.locator(".order-drawer__summary strong")).toHaveText("99");
   assertClean();
 });
 

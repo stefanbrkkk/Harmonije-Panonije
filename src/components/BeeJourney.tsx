@@ -36,7 +36,7 @@ const CHAPTERS = [
   {
     word: "Panonija",
     lead: "Vojvođanska kućica sa naše etikete — Harmonije Panonije.",
-    index: "Novi Sad · Vojvodina",
+    index: "Budisava · Vojvodina",
   },
 ] as const;
 
@@ -61,8 +61,12 @@ function chapterFor(progress: number, current: number) {
   let next = 0;
   for (const boundary of BOUNDARIES) if (progress >= boundary) next += 1;
   if (next === current || current < 0) return next;
-  const edge = next > current ? BOUNDARIES[next - 1] : BOUNDARIES[current - 1];
-  return Math.abs(progress - edge) > HYSTERESIS ? next : current;
+  // Hysteresis only ever holds back by one chapter, measured at the boundary
+  // nearest the landing point: a jump across several boundaries that lands
+  // near the last one settles next to it, never on the stale start.
+  const edge = next > current ? BOUNDARIES[next - 1] : BOUNDARIES[next];
+  if (Math.abs(progress - edge) > HYSTERESIS) return next;
+  return next > current ? next - 1 : next + 1;
 }
 
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -157,14 +161,16 @@ function PlateCraft() {
       <path className="jart-liquid" d="M310 292c40 10 76-6 128 4v204a16 16 0 0 1-16 16H326a16 16 0 0 1-16-16Z" />
       <path className="jart-shade" d="M310 292c40 10 76-6 128 4v204a16 16 0 0 1-16 16H326a16 16 0 0 1-16-16Z" fill="url(#journeyHatch)" mask="url(#journeyShade)" />
       <path className="jart-glint" d="M320 300v176" />
-      <rect className="jart-cap" x="340" y="108" width="68" height="46" rx="6" />
-      <path className="jart-cap-rib" d="M352 114v34M364 114v34M376 114v34M388 114v34M400 114v34" />
+      {/* Gingham cloth over the mouth, pinked skirt, jute twine: the real closure. */}
+      <path className="jart-cloth" d="M342 162C341 142 342 126 346 119C352 112 396 112 402 119C406 126 407 142 406 162" fill="url(#journeyGingham)" />
+      <path className="jart-cloth" d="M342 160C334 164 328 172 326 182L332 180 334 188 340 183 344 190 350 184 356 191 362 185 368 191 374 185 380 191 386 185 392 190 398 184 402 189 408 182 414 186 416 180 422 182C420 172 414 164 406 160C388 166 360 166 342 160Z" fill="url(#journeyGingham)" />
+      <path className="jart-twine" d="M342 162C360 168 388 168 406 162" />
       <path className="jart-label" d="M374 330l54 24v104H320V354Z" />
       <text className="jart-label-small" x="374" y="380" textAnchor="middle">HARMONIJE PANONIJE</text>
       <text className="jart-label-big" x="374" y="408" textAnchor="middle">IMMUNO</text>
       <text className="jart-label-big" x="374" y="428" textAnchor="middle">CRAFT</text>
       <path className="jart-label-rule" d="M350 440h48" />
-      <path className="jart-string" d="M346 184c10 8 46 8 56 0M352 188c-4 14-12 26-22 32" />
+      <path className="jart-string" d="M352 188c-4 14-12 26-22 32" />
       <g transform="rotate(-18 316 236)">
         <rect className="jart-tag" x="290" y="218" width="48" height="30" rx="2" />
         <circle className="jart-tag-hole" cx="332" cy="233" r="2.4" />
@@ -260,7 +266,12 @@ export function BeeJourney() {
       const snapped: Element[] = [];
       const place = (node: Element, i: number) => {
         const before = i < next;
-        if (skipped(i) && node.classList.contains("is-before") !== before) {
+        // A swept-past previous chapter keeps its side on a reverse sweep
+        // (it was "after" and stays "after"), so it must snap by identity,
+        // not by a side flip. Without animation (first paint, arrival from
+        // far away) everything takes its place instantly.
+        const flips = node.classList.contains("is-before") !== before || node.classList.contains("is-active") !== (i === next);
+        if (!animate ? flips : skipped(i) && (i === previous || flips)) {
           node.classList.add("is-snap");
           snapped.push(node);
         }
@@ -312,9 +323,12 @@ export function BeeJourney() {
       flight = requestAnimationFrame(step);
     };
 
-    const paint = (progress: number) => {
+    const paint = (progress: number, _dt = 1, snapped = false) => {
       section.classList.add("is-live");
-      setActive(chapterFor(readProgress(), active), active !== -1);
+      // A snapped frame (the loop resuming after the section was out of
+      // view) composes the chapter for the new position directly, with no
+      // hysteresis toward the last visit and no transition from it.
+      setActive(chapterFor(readProgress(), snapped ? -1 : active), active !== -1 && !snapped);
       // The horizon rule is the one scrubbed element: plates stay grounded.
       if (progressRef.current) progressRef.current.style.transform = `scaleX(${progress.toFixed(4)})`;
     };
@@ -379,6 +393,12 @@ export function BeeJourney() {
               <defs>
                 <pattern id="journeyHatch" width="4.5" height="4.5" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
                   <path d="M0 0V4.5" stroke="rgba(15,40,33,.34)" strokeWidth=".9" />
+                </pattern>
+                {/* Engraved gingham for the bottle's cloth cap. */}
+                <pattern id="journeyGingham" width="8" height="8" patternUnits="userSpaceOnUse">
+                  <rect width="8" height="8" fill="#e9d6c9" />
+                  <rect width="4" height="8" fill="rgba(138,42,60,.34)" />
+                  <rect width="8" height="4" fill="rgba(138,42,60,.34)" />
                 </pattern>
                 <pattern id="journeySunLines" width="8" height="7" patternUnits="userSpaceOnUse">
                   <path d="M0 3.5H8" stroke="rgba(122,79,14,.42)" strokeWidth="1" />

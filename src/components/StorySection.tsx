@@ -1,4 +1,5 @@
 import { story } from "@/src/data/siteContent";
+import { bindShortWords } from "@/src/lib/typography";
 
 export function StorySection() {
   return (
@@ -6,21 +7,21 @@ export function StorySection() {
       <div className="shell story-layout">
         <div className="story-copy">
           <p className="eyebrow"><span />{story.eyebrow}</p>
-          <h2>{story.title}</h2>
-          <p className="story-copy__lede">Nije počelo kao brend. Počelo je kao porodična navika — traženje jednostavnijih kombinacija ukusa koje bi rado stavili i na sopstveni sto.</p>
+          <h2>{bindShortWords(story.title)}</h2>
+          <p className="story-copy__lede">{bindShortWords("Pre brenda bila je porodična navika — potraga za jednostavnim ukusima koje bismo rado stavili na sopstveni sto.")}</p>
           <div className="story-copy__paragraphs">
-            {story.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+            {story.paragraphs.map((paragraph) => <p key={paragraph}>{bindShortWords(paragraph)}</p>)}
           </div>
           <div className="story-signature" role="group" aria-label="Osnivači i poreklo">
             <div><span>Osnivači</span><strong>Anita &amp; Laslo Toth</strong></div>
-            <div><span>Početak</span><strong>Proleće 2022.</strong></div>
-            <div><span>Mesto</span><strong>Novi Sad · Budisava</strong></div>
+            <div><span>Početak</span><strong>Novi Sad · 2022.</strong></div>
+            <div><span>Gazdinstvo</span><strong>Budisava · od 2025.</strong></div>
           </div>
           <div className="story-timeline" role="list" aria-label="Kratka vremenska linija">
             {story.timeline.map((item) => (
               <div key={item.year} role="listitem">
                 <span>{item.year}</span>
-                <p>{item.text}</p>
+                <p>{bindShortWords(item.text)}</p>
               </div>
             ))}
           </div>
@@ -29,7 +30,7 @@ export function StorySection() {
         <div className="story-art">
           <div className="story-art__sun" aria-hidden="true" />
           <div className="story-art__frame" aria-hidden="true"><span>Porodična priča</span><i>2022 → danas</i></div>
-          <svg viewBox="0 0 620 760" role="img" aria-label="Stilizovana vojvođanska kuća, voćnjak i bilje">
+          <svg viewBox="0 0 620 760" preserveAspectRatio="xMidYMax meet" role="img" aria-label="Stilizovana vojvođanska kuća, voćnjak i bilje">
             {/* Distant sky contours */}
             <path className="story-art__sky" d="M-10 118C120 96 260 128 380 108c90-15 170-8 250 6" />
             <path className="story-art__sky" d="M-10 158C110 140 250 168 380 150c90-12 170-4 250 8" />
@@ -41,7 +42,7 @@ export function StorySection() {
               <circle cx="470" cy="206" r="10" />
               <circle cx="548" cy="208" r="12" />
             </g>
-            <path className="story-art__land" d="M-10 590C95 529 180 569 271 536c84-30 151-95 245-70 54 15 89 47 124 73v231H-10Z" />
+            <path className="story-art__land" d="M-10 590C95 529 180 569 271 536c84-30 151-95 245-70 54 15 89 47 124 73v420H-10Z" />
             {/* Field rows in front of the house */}
             <g className="story-art__field" aria-hidden="true">
               <path d="M-10 640C120 612 260 640 400 618c80-12 150-8 230 2" />
@@ -85,13 +86,13 @@ export function StorySection() {
             </g>
             {/* Foreground elderflower sprigs */}
             <g className="story-art__foreground">
-              <path d="M60 740C72 668 84 622 104 574" />
+              <path d="M66 690C76 650 86 616 104 574" />
               <path d="M78 668c-34-8-52-30-44-52 32 1 50 20 44 52ZM92 624c34-10 52-32 42-52-30 4-48 22-42 52Z" />
               <g className="story-art__blossom">
                 <circle cx="104" cy="556" r="7" /><circle cx="88" cy="566" r="6" /><circle cx="120" cy="566" r="6" />
                 <circle cx="96" cy="580" r="6" /><circle cx="112" cy="580" r="6" /><circle cx="104" cy="570" r="5" />
               </g>
-              <path d="M560 740C548 668 536 622 516 574" />
+              <path d="M554 690C544 650 534 616 516 574" />
               <path d="M542 668c34-8 52-30 44-52-32 1-50 20-44 52ZM528 624c-34-10-52-32-42-52 30 4 48 22 42 52Z" />
               <g className="story-art__blossom">
                 <circle cx="516" cy="556" r="7" /><circle cx="500" cy="566" r="6" /><circle cx="532" cy="566" r="6" />
@@ -108,7 +109,7 @@ export function StorySection() {
           </svg>
           <div className="story-art__note">
             <span>Budisava</span>
-            <p>Voćnjak, zova i porodično imanje postali su deo priče o brendu.</p>
+            <p>{bindShortWords("Ovde su danas dom, uzgoj i proizvodnja.")}</p>
           </div>
         </div>
       </div>

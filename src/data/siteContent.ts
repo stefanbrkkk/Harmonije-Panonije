@@ -5,7 +5,20 @@ export type SourceStatus =
   | "CREATIVE_COPY"
   | "PENDING_CONFIRMATION";
 
-export type ProductCategory = "sirupi" | "djumbir" | "busteri" | "sokovi";
+export type ProductCategory = "sirupi" | "djumbir" | "busteri";
+
+/**
+ * Packaging identity for the illustrated bottle/jar, sampled from the
+ * client's label photos: liquid colour, the flavour's label band, and the
+ * fabric cap tied over the neck.
+ */
+export type ProductVisualSpec = {
+  liquid: string;
+  band: string;
+  cap: string;
+  capPattern: "gingham" | "plain" | "linen";
+  line: "Immuno craft" | "Craft sirupi" | "Immuno Booster";
+};
 
 export type Product = {
   id: string;
@@ -13,15 +26,11 @@ export type Product = {
   category: ProductCategory;
   ingredients: string[];
   volume: string;
-  legacyPriceRsd?: number;
   /** Set only from client-confirmed data (see CLIENT-CONFIRMATION.md). */
   confirmedPriceRsd?: number;
-  priceStatus: "hidden" | "confirmed" | "legacy";
-  available: boolean | null;
-  featured: boolean;
-  image?: string;
-  alt: string;
+  priceStatus: "hidden" | "confirmed";
   description: string;
+  visual: ProductVisualSpec;
   clientConfirmed: boolean;
   sourceStatus: SourceStatus;
 };
@@ -36,12 +45,17 @@ export const siteConfig = {
   showPress: true,
 } as const;
 
+/** Client email, 26 Sep 2026: home, growing and production in Budisava since August 2025. */
 export const brand = {
   name: "Harmonije Panonije",
   productLine: "Immuno Craft",
-  location: "Novi Sad, Srbija",
+  location: "Budisava",
+  region: "Vojvodina",
+  postalCode: "21242",
+  origin: "Novi Sad",
+  legalForm: "porodično gazdinstvo",
   since: "2022",
-  status: "PUBLIC_VERIFIED" as SourceStatus,
+  status: "CLIENT_CONFIRMED" as SourceStatus,
 };
 
 export const contact = {
@@ -64,11 +78,11 @@ export const navigation = [
 ];
 
 export const hero = {
-  eyebrow: "Novi Sad · od 2022.",
+  eyebrow: "Budisava · Vojvodina",
   headline: "Harmonija prirode u svakoj flaši.",
   subheadline:
-    "Ručno pravljeni Immuno Craft sirupi, sokovi i busteri sa livadskim medom, ceđenim limunom, voćem i biljem.",
-  trustPoints: ["Med · limun · voće i bilje", "Craft proizvodnja", "Pažljivo birani sastojci"],
+    "Ručno pravljeni Immuno Craft sirupi i Immuno Booster tegle sa livadskim medom, ceđenim limunom, sezonskim voćem i biljem.",
+  trustPoints: ["Med · limun · voće i bilje", "Porodično gazdinstvo", "Pažljivo birani sastojci"],
   primaryCta: "Pogledaj ukuse",
   secondaryCta: "Naša priča",
   sourceStatus: "CREATIVE_COPY" as SourceStatus,
@@ -78,30 +92,32 @@ export const story = {
   eyebrow: "Naša priča",
   title: "Počelo je za našim stolom.",
   paragraphs: [
-    "U proleće 2022. Anita i Laslo Toth počeli su u Novom Sadu da prave sirupe za svoju porodicu — od zove i bilja, uz ceđeni limun i livadski med. Ideja nije nastala iz poslovnog plana, već iz želje za jednostavnijim, pažljivo biranim sastojcima u svakodnevnoj ishrani.",
-    "Pozitivne reakcije ljudi oko njih pretvorile su kućni recept u mali craft brend. Deo priče vezan je i za porodično imanje u Budisavi, nadomak Novog Sada, sa voćnjakom, biljem i zovom. Danas se ukusi Harmonija Panonije grade spajanjem voća, bobica, povrća, đumbira, bilja, limuna i meda — u kombinacijama koje ostaju prepoznatljivo njihove.",
+    "U proleće 2022. počeli smo u Novom Sadu da pravimo sirupe za svoju porodicu — od zove i bilja, uz ceđeni limun i livadski med. Ideja nije nastala iz poslovnog plana, već iz želje za jednostavnijim, pažljivo biranim sastojcima u svakodnevnoj ishrani.",
+    "Pozitivne reakcije ljudi oko nas pretvorile su kućni recept u mali craft brend. Od avgusta 2025. živimo u Budisavi, nadomak Novog Sada, gde su sada i uzgoj i proizvodnja — radimo kao porodično gazdinstvo. Ukuse gradimo od sezonskog voća, povrća, bobica, lekovitog bilja, začina i đumbira, uz limun i med, a sirovine beremo sami ili biramo one koje nisu tretirane hemikalijama.",
   ],
   timeline: [
-    { year: "2022", text: "Počelo kao porodični recept." },
+    { year: "2022", text: "Počelo kao porodični recept u Novom Sadu." },
     { year: "Zatim", text: "Preraslo u mali craft brend." },
-    { year: "Danas", text: "Ukusi se grade kroz sklad voća, bilja, limuna i meda." },
+    { year: "2025", text: "Preselili smo se u Budisavu — dom, uzgoj i proizvodnja na jednom mestu." },
   ],
-  sourceStatus: "PUBLIC_VERIFIED" as SourceStatus,
+  sourceStatus: "CLIENT_CONFIRMED" as SourceStatus,
 };
 
 /**
  * Honey and lemon are the foundation (`role: "base"`); everything else builds
- * the flavour on top. Latin names are botanical references for the
- * herbarium-style index (pharmacopoeia names for the foundation, genus names
- * in the order of each note for the layers), not product claims.
+ * the flavour on top. Base composition confirmed by the client: one third of
+ * every syrup bottle is meadow honey, plus 1 dl of squeezed lemon. Latin
+ * names are botanical references for the herbarium-style index
+ * (pharmacopoeia names for the foundation, genus names in the order of each
+ * note for the layers), not product claims.
  */
 export const ingredients = [
-  { name: "Livadski med", latin: "Mel", note: "Topla, cvetna osnova većine Immuno Craft sirupa.", kind: "honey", role: "base" },
-  { name: "Ceđeni limun", latin: "Citri succus", note: "Svežina koja povezuje brojne kombinacije.", kind: "lemon", role: "base" },
-  { name: "Đumbir", latin: "Zingiber", note: "Ljut i aromatičan — srce naših sirupa sa đumbirom.", kind: "ginger", role: "layer" },
-  { name: "Bobičasto voće", latin: "Rubus · Aronia · Rosa canina", note: "Kupina, malina, aronija i šipurak donose dubinu ukusa.", kind: "berry", role: "layer" },
-  { name: "Voće", latin: "Malus · Cydonia · Pyrus · Prunus", note: "Jabuka, dunja, kruška, kajsija i drugo sezonsko voće.", kind: "fruit", role: "layer" },
-  { name: "Lekovito bilje", latin: "Mentha · Salvia · Urtica · Matricaria · Lavandula · Melissa", note: "Nana, žalfija, kopriva, kamilica, lavanda i matičnjak.", kind: "herb", role: "layer" },
+  { name: "Livadski med", latin: "Mel", note: "Trećina svake boce — topla, cvetna osnova sirupa.", kind: "honey", role: "base" },
+  { name: "Ceđeni limun", latin: "Citri succus", note: "Po 1 dl ceđenog limuna u svakoj boci sirupa.", kind: "lemon", role: "base" },
+  { name: "Đumbir i začini", latin: "Zingiber · Curcuma · Capsicum", note: "Đumbir, kurkuma i kajenska paprika daju toplinu i oštrinu.", kind: "ginger", role: "layer" },
+  { name: "Bobičasto voće", latin: "Rubus · Sambucus · Rosa canina", note: "Divlja kupina, crna zova i šipurak donose dubinu ukusa.", kind: "berry", role: "layer" },
+  { name: "Voće", latin: "Malus · Ananas · Ceratonia", note: "Jabuka, ananas, rogač i drugo voće koje donosi sezona.", kind: "fruit", role: "layer" },
+  { name: "Lekovito bilje", latin: "Lavandula · Melissa · Urtica · Mentha · Geranium · Moringa", note: "Lavanda, matičnjak, kopriva, menta, zdravac i moringa.", kind: "herb", role: "layer" },
   { name: "Povrće", latin: "Beta · Daucus", note: "Cvekla i šargarepa ulaze u odabrane recepture.", kind: "vegetable", role: "layer" },
 ] as const;
 
@@ -109,31 +125,36 @@ export const categoryCopy: Record<ProductCategory, { label: string; title: strin
   sirupi: {
     label: "Sirupi",
     title: "Immuno Craft sirupi sa medom",
-    note: "Voćne, biljne i bobičaste kombinacije u staklenim bocama od 0,8 l. Za trenutnu dostupnost pojedinačnih ukusa pošaljite upit.",
+    note: "Voćne, biljne i bobičaste kombinacije u staklenim bocama od 0,75 l. Osnova svakog sirupa je livadski med — trećina boce — i 1 dl ceđenog limuna.",
   },
   djumbir: {
     label: "Đumbir",
     title: "Sirupi sa đumbirom",
-    note: "Aromatičnije kombinacije sa đumbirom, limunom i medom. Za trenutnu dostupnost pojedinačnih ukusa pošaljite upit.",
+    note: "Topliji, aromatičniji ukusi: đumbir sa limunom i medom — sam ili uz cvet zove. Boce od 0,75 l.",
   },
   busteri: {
-    label: "Busteri",
-    title: "Immuno Boosteri",
-    note: "Koncentrisanije kombinacije u teglicama od 320 g, sa voćem, limunovom pulpom, medom i odabranim dodacima.",
-  },
-  sokovi: {
-    label: "Sokovi",
-    title: "Immuno Craft sokovi",
-    note: "Manje boce od 0,3 l sa jednostavnijim kombinacijama voća, limuna, meda i odabranih aromatičnih sastojaka.",
+    label: "Booster",
+    title: "Immuno Booster tegle",
+    note: "Gušće, koncentrisanije kombinacije u staklenim teglama — voće ili povrće, pulpa limuna i med, uz odabrane dodatke.",
   },
 };
 
-const legacy = (product: Omit<Product, "priceStatus" | "available" | "clientConfirmed" | "sourceStatus">): Product => ({
+type ProductInput = Omit<Product, "priceStatus" | "clientConfirmed" | "sourceStatus">;
+
+/** On a current (2025) label the client sent: confirmed product, price still hidden. */
+const onLabel = (product: ProductInput): Product => ({
   ...product,
-  priceStatus: "legacy",
-  available: null,
+  priceStatus: "hidden",
+  clientConfirmed: true,
+  sourceStatus: "CLIENT_CONFIRMED",
+});
+
+/** Seen only on the client's May 2024 market photo: shown, but awaiting reconfirmation. */
+const toConfirm = (product: ProductInput): Product => ({
+  ...product,
+  priceStatus: "hidden",
   clientConfirmed: false,
-  sourceStatus: "LEGACY_PUBLIC",
+  sourceStatus: "PENDING_CONFIRMATION",
 });
 
 /**
@@ -148,73 +169,56 @@ export function publishedPrice(product: Product): number | null {
   return null;
 }
 
+/**
+ * The range as it appears on the client's current labels (email and photos,
+ * 26 Sep 2026). Order is the display order within each category.
+ */
 export const products: Product[] = [
-  legacy({ id: "divlja-kupina", name: "Divlja kupina", category: "sirupi", ingredients: ["divlja kupina", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 800, featured: true, alt: "Ilustracija boce Immuno Craft sirupa od divlje kupine", description: "Dubok bobičasti ukus sa limunom i medom." }),
-  legacy({ id: "cvekla-sargarepa-jabuka", name: "Cvekla · šargarepa · jabuka", category: "sirupi", ingredients: ["cvekla", "šargarepa", "jabuka", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 850, featured: true, alt: "Ilustracija boce sirupa sa cveklom, šargarepom i jabukom", description: "Zemljani i voćni tonovi u jednoj upečatljivoj kombinaciji." }),
-  legacy({ id: "kamilica", name: "Cvet kamilice", category: "sirupi", ingredients: ["cvet kamilice", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 800, featured: false, alt: "Ilustracija boce sirupa sa kamilicom", description: "Nežna biljna aroma, limun i med." }),
-  legacy({ id: "lavanda-maticnjak", name: "Lavanda · matičnjak", category: "sirupi", ingredients: ["lavanda angustifolia", "matičnjak", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 800, featured: true, alt: "Ilustracija boce sirupa sa lavandom i matičnjakom", description: "Mirisna biljna kompozicija sa citrusnom svežinom." }),
-  legacy({ id: "kajsija", name: "Kajsija", category: "sirupi", ingredients: ["kajsija", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 800, featured: false, alt: "Ilustracija boce sirupa od kajsije", description: "Mek, voćni ukus kajsije sa limunom i medom." }),
-  legacy({ id: "sipurak-jabuka", name: "Šipurak · jabuka", category: "sirupi", ingredients: ["šipurak", "jabuka", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 800, featured: true, alt: "Ilustracija boce sirupa od šipurka i jabuke", description: "Voćna kombinacija šipurka i jabuke sa toplom mednom završnicom." }),
-  legacy({ id: "zalfija-nana-kopriva", name: "Žalfija · nana · kopriva", category: "sirupi", ingredients: ["žalfija", "nana", "kopriva", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 800, featured: false, alt: "Ilustracija boce biljnog Immuno Craft sirupa", description: "Izraženo biljna kombinacija sa osvežavajućim limunom." }),
-  legacy({ id: "dunja", name: "Dunja", category: "sirupi", ingredients: ["dunja", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 800, featured: true, alt: "Ilustracija boce sirupa od dunje", description: "Mirisna dunja u jednostavnoj kombinaciji sa limunom i medom." }),
-  legacy({ id: "kruska-ruzmarin", name: "Kruška · ruzmarin", category: "sirupi", ingredients: ["kruška", "ruzmarin", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 850, featured: true, alt: "Ilustracija boce sirupa od kruške i ruzmarina", description: "Voćna slatkoća kruške presečena aromom ruzmarina." }),
-  legacy({ id: "aronija", name: "Aronija", category: "sirupi", ingredients: ["aronija", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 900, featured: false, alt: "Ilustracija boce sirupa od aronije", description: "Pun ukus aronije uz limun i livadski med." }),
-  legacy({ id: "organska-malina", name: "Organska malina", category: "sirupi", ingredients: ["organska malina", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 1100, featured: true, alt: "Ilustracija boce sirupa od organske maline", description: "Malina, citrusna svežina i med u raskošnoj voćnoj kombinaciji." }),
-  legacy({ id: "jabuka", name: "Jabuka", category: "sirupi", ingredients: ["jabuka", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 800, featured: false, alt: "Ilustracija boce sirupa od jabuke", description: "Čist, poznat ukus jabuke sa limunom i medom." }),
+  onLabel({ id: "lavanda-maticnjak", name: "Lavanda · matičnjak", category: "sirupi", ingredients: ["lavanda angustifolia", "matičnjak", "limun", "med"], volume: "0,75 l", description: "Mirisna, cvetna kombinacija lavande i matičnjaka sa citrusnom svežinom.", visual: { liquid: "#eec84a", band: "#a86aa8", cap: "#b58fd0", capPattern: "gingham", line: "Craft sirupi" } }),
+  onLabel({ id: "sargarepa-ananas-kurkuma", name: "Šargarepa · ananas · kurkuma", category: "sirupi", ingredients: ["šargarepa", "ananas", "kurkuma", "limun", "med"], volume: "0,75 l", description: "Sunčana kombinacija šargarepe i ananasa sa toplom notom kurkume.", visual: { liquid: "#ec7c10", band: "#f08c0c", cap: "#e8742a", capPattern: "gingham", line: "Immuno craft" } }),
+  onLabel({ id: "kopriva-moringa", name: "Kopriva · moringa", category: "sirupi", ingredients: ["kopriva", "moringa", "limun", "med"], volume: "0,75 l", description: "Zelena, biljna kombinacija koprive i moringe sa limunom i medom.", visual: { liquid: "#4f4a22", band: "#2d5a40", cap: "#3f7a4a", capPattern: "gingham", line: "Immuno craft" } }),
+  onLabel({ id: "maticnjak-zdravac-kopriva-menta", name: "Matičnjak · zdravac · kopriva · menta", category: "sirupi", ingredients: ["matičnjak", "zdravac", "kopriva", "menta", "limun", "med"], volume: "0,75 l", description: "Biljna mešavina matičnjaka, zdravca i koprive, osvežena mentom i limunom.", visual: { liquid: "#c9bd7e", band: "#a4bf45", cap: "#e8742a", capPattern: "gingham", line: "Craft sirupi" } }),
+  onLabel({ id: "sipurak-kajenska-paprika", name: "Šipurak · kajenska paprika", category: "sirupi", ingredients: ["šipurak", "kajenska paprika", "limun", "med"], volume: "0,75 l", description: "Voćni šipurak sa iskrom kajenske paprike i mednom završnicom.", visual: { liquid: "#b8381a", band: "#d7294f", cap: "#c23a58", capPattern: "gingham", line: "Craft sirupi" } }),
+  onLabel({ id: "crna-zova", name: "Crna zova", category: "sirupi", ingredients: ["crna zova", "limun", "med"], volume: "0,75 l", description: "Tamne bobice zove u dubokom, baršunastom spoju sa limunom i medom.", visual: { liquid: "#2b1a1f", band: "#433d39", cap: "#8a2a3c", capPattern: "gingham", line: "Immuno craft" } }),
+  toConfirm({ id: "divlja-kupina", name: "Divlja kupina", category: "sirupi", ingredients: ["divlja kupina", "limun", "med"], volume: "0,75 l", description: "Dubok bobičasti ukus divlje kupine sa limunom i medom.", visual: { liquid: "#5a0f1c", band: "#8e4987", cap: "#8a2a3c", capPattern: "gingham", line: "Immuno craft" } }),
+  toConfirm({ id: "jabuka", name: "Jabuka", category: "sirupi", ingredients: ["jabuka", "limun", "med"], volume: "0,75 l", description: "Čist, poznat ukus jabuke sa limunom i medom.", visual: { liquid: "#b86e1a", band: "#a5b00f", cap: "#c8372d", capPattern: "gingham", line: "Immuno craft" } }),
 
-  legacy({ id: "dunja-djumbir", name: "Dunja · đumbir", category: "djumbir", ingredients: ["dunja", "đumbir", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 850, featured: true, alt: "Ilustracija boce sirupa od dunje i đumbira", description: "Mirisna dunja sa toplijim završetkom đumbira." }),
-  legacy({ id: "kajsija-djumbir", name: "Kajsija · đumbir", category: "djumbir", ingredients: ["kajsija", "đumbir", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 850, featured: true, alt: "Ilustracija boce sirupa od kajsije i đumbira", description: "Voćna mekoća i aromatična oštrina u ravnoteži." }),
-  legacy({ id: "djumbir-jaci", name: "Đumbir · jači", category: "djumbir", ingredients: ["đumbir", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 850, featured: true, alt: "Ilustracija boce jačeg sirupa sa đumbirom", description: "Direktna kombinacija đumbira, limuna i meda." }),
-  legacy({ id: "kurkuma-djumbir", name: "Organska kurkuma · đumbir", category: "djumbir", ingredients: ["organska kurkuma", "đumbir", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 850, featured: true, alt: "Ilustracija boce sirupa sa kurkumom i đumbirom", description: "Zlatna, začinska kombinacija kurkume i đumbira." }),
-  legacy({ id: "sipurak-jabuka-djumbir", name: "Šipurak · jabuka · đumbir", category: "djumbir", ingredients: ["šipurak", "jabuka", "đumbir", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 850, featured: false, alt: "Ilustracija boce sirupa od šipurka, jabuke i đumbira", description: "Slojevita voćna kombinacija sa aromatičnim đumbirom." }),
-  legacy({ id: "biljni-djumbir", name: "Žalfija · nana · kopriva · đumbir", category: "djumbir", ingredients: ["žalfija", "nana", "kopriva", "đumbir", "limun", "med"], volume: "0,8 l", legacyPriceRsd: 850, featured: false, alt: "Ilustracija biljnog sirupa sa đumbirom", description: "Biljni karakter pojačan đumbirom, uz limun i med." }),
+  onLabel({ id: "djumbir", name: "Đumbir", category: "djumbir", ingredients: ["đumbir", "limun", "med"], volume: "0,75 l", description: "Direktna, aromatična kombinacija đumbira, limuna i meda.", visual: { liquid: "#e3b56a", band: "#c9a24a", cap: "#c8372d", capPattern: "gingham", line: "Craft sirupi" } }),
+  toConfirm({ id: "cvet-zove-djumbir", name: "Cvet zove · đumbir", category: "djumbir", ingredients: ["cvet zove", "đumbir", "limun", "med"], volume: "0,75 l", description: "Cvetna nežnost zove i topla oštrina đumbira u istoj boci.", visual: { liquid: "#d29f22", band: "#d9d49c", cap: "#e6dfd0", capPattern: "linen", line: "Craft sirupi" } }),
 
-  legacy({ id: "buster-kurkuma", name: "Kurkuma · đumbir", category: "busteri", ingredients: ["organska kurkuma", "đumbir", "pulpa limuna", "med"], volume: "320 g", legacyPriceRsd: 500, featured: true, alt: "Ilustracija Immuno Boostera sa kurkumom i đumbirom", description: "Koncentrisana teglica sa kurkumom, đumbirom, limunovom pulpom i medom." }),
-  legacy({ id: "buster-kupina-bilje", name: "Divlja kupina · bilje", category: "busteri", ingredients: ["divlja kupina", "žalfija", "nana", "kopriva", "pulpa limuna", "med"], volume: "320 g", legacyPriceRsd: 500, featured: true, alt: "Ilustracija Immuno Boostera sa divljom kupinom i biljem", description: "Bobičasti ukus u spoju sa žalfijom, nanom i koprivom." }),
-  legacy({ id: "buster-kupina-djumbir", name: "Divlja kupina · đumbir", category: "busteri", ingredients: ["divlja kupina", "đumbir", "pulpa limuna", "med"], volume: "320 g", legacyPriceRsd: 500, featured: true, alt: "Ilustracija Immuno Boostera sa kupinom i đumbirom", description: "Kupina, đumbir, limunova pulpa i med u maloj teglici." }),
-  legacy({ id: "buster-aronija-malina", name: "Aronija · malina", category: "busteri", ingredients: ["aronija", "organska malina", "pulpa limuna", "livadski med"], volume: "320 g", legacyPriceRsd: 600, featured: true, alt: "Ilustracija Immuno Boostera od aronije i maline", description: "Dubok bobičasti profil sa limunovom pulpom i livadskim medom." }),
-  legacy({ id: "buster-aronija-malina-djumbir", name: "Aronija · malina · đumbir", category: "busteri", ingredients: ["aronija", "organska malina", "đumbir", "pulpa limuna", "livadski med"], volume: "320 g", legacyPriceRsd: 600, featured: false, alt: "Ilustracija Immuno Boostera od aronije, maline i đumbira", description: "Bobičasta osnova sa dodatnim aromatičnim slojem đumbira." }),
-
-  legacy({ id: "sok-jabuka", name: "Jabuka", category: "sokovi", ingredients: ["jabuka", "limun", "med"], volume: "0,3 l", legacyPriceRsd: 210, featured: true, alt: "Ilustracija Immuno Craft soka od jabuke", description: "Jednostavan spoj jabuke, limuna i meda." }),
-  legacy({ id: "sok-kruska-ruzmarin", name: "Kruška · ruzmarin", category: "sokovi", ingredients: ["kruška", "ruzmarin", "limun", "med"], volume: "0,3 l", legacyPriceRsd: 240, featured: true, alt: "Ilustracija soka od kruške i ruzmarina", description: "Kruška i ruzmarin u osvežavajućoj manjoj boci." }),
-  legacy({ id: "sok-cvekla-sargarepa-jabuka", name: "Cvekla · šargarepa · jabuka", category: "sokovi", ingredients: ["cvekla", "šargarepa", "jabuka", "limun", "med"], volume: "0,3 l", legacyPriceRsd: 260, featured: true, alt: "Ilustracija soka od cvekle, šargarepe i jabuke", description: "Povrtno-voćna kombinacija sa limunom i medom." }),
-  legacy({ id: "sok-malina", name: "Malina", category: "sokovi", ingredients: ["malina", "limun", "med"], volume: "0,3 l", legacyPriceRsd: 280, featured: true, alt: "Ilustracija soka od maline", description: "Malina u čistoj, jarkoj kombinaciji sa limunom i medom." }),
-  legacy({ id: "sok-aronija", name: "Aronija", category: "sokovi", ingredients: ["aronija", "limun", "med"], volume: "0,3 l", legacyPriceRsd: 240, featured: false, alt: "Ilustracija soka od aronije", description: "Izražen ukus aronije u praktičnoj boci od 0,3 l." }),
-  legacy({ id: "sok-djumbir", name: "Đumbir", category: "sokovi", ingredients: ["đumbir", "limun", "med"], volume: "0,3 l", legacyPriceRsd: 230, featured: true, alt: "Ilustracija soka sa đumbirom", description: "Đumbir, limun i med za aromatičniji profil." }),
-  legacy({ id: "sok-kurkuma-djumbir", name: "Organska kurkuma · đumbir", category: "sokovi", ingredients: ["organska kurkuma", "đumbir", "limun", "med"], volume: "0,3 l", legacyPriceRsd: 240, featured: false, alt: "Ilustracija soka sa kurkumom i đumbirom", description: "Začinska kombinacija kurkume i đumbira uz limun i med." }),
+  toConfirm({ id: "booster-kurkuma-djumbir", name: "Kurkuma · đumbir", category: "busteri", ingredients: ["kurkuma", "đumbir", "pulpa limuna", "med"], volume: "tegla", description: "Zlatna, začinska tegla kurkume i đumbira sa pulpom limuna i medom.", visual: { liquid: "#dc9414", band: "#ebc318", cap: "#e6dfd0", capPattern: "linen", line: "Immuno Booster" } }),
+  toConfirm({ id: "booster-kupina-moringa", name: "Divlja kupina · moringa", category: "busteri", ingredients: ["divlja kupina", "moringa", "pulpa limuna", "med"], volume: "tegla", description: "Bobičasta tegla divlje kupine i zelene moringe sa pulpom limuna i medom.", visual: { liquid: "#6e1f35", band: "#8c2c68", cap: "#e6dfd0", capPattern: "linen", line: "Immuno Booster" } }),
+  toConfirm({ id: "booster-cvekla-sargarepa-jabuka-rogac", name: "Cvekla · šargarepa · jabuka · rogač", category: "busteri", ingredients: ["cvekla", "šargarepa", "jabuka", "rogač", "pulpa limuna", "livadski med"], volume: "tegla", description: "Zemljani tonovi cvekle i šargarepe, zaobljeni jabukom i rogačem.", visual: { liquid: "#8a3b22", band: "#a51f3a", cap: "#e6dfd0", capPattern: "linen", line: "Immuno Booster" } }),
 ];
 
-export const delivery = {
-  title: "Od\u00a0Novog\u00a0Sada do vaše trpeze.",
-  visibleCopy: "Za dostavu i preuzimanje kontaktirajte nas — dogovorićemo najjednostavniju opciju.",
-  legacyRule: [
-    "Istorijski: besplatna dostava u Novom Sadu za dva ili više proizvoda.",
-    "Istorijski: preuzimanje prema dogovoru.",
-    "Istorijski: druga mesta kurirskom službom ili drugim dogovorenim kanalom za veće porudžbine.",
+/** Serving and storage, from the client's email (26 Sep 2026). Syrups only. */
+export const usage = {
+  eyebrow: "Kako se pije sirup",
+  statement: { lead: "Jedna boca,", amount: "3–3,5 litra", tail: "napitka." },
+  note: "Sirup se razblažuje po ukusu i pije kad god poželite.",
+  ways: [
+    { key: "spoon", title: "Na kašiku", text: "Nerazblaženo, bez vode — naročito sirupi za decu; pitajte nas koji." },
+    { key: "water", title: "Sa vodom", text: "Toplom, hladnom ili mineralnom — u razmeri koja vam odgovara." },
+    { key: "coupe", title: "U koktelima i kolačima", text: "Za aromu u čaši, kremu ili testu." },
+    { key: "morning", title: "Ujutru, pre jela", text: "Neke ukuse najbolje je piti tako — pitajte nas koje." },
   ],
-  sourceStatus: "PENDING_CONFIRMATION" as SourceStatus,
+  storage: "Posle otvaranja čuvajte bocu u frižideru do mesec dana. Pre svake upotrebe promućkajte.",
+  sourceStatus: "CLIENT_CONFIRMED" as SourceStatus,
+};
+
+export const delivery = {
+  title: "Iz Budisave do vaše trpeze.",
+  visibleCopy: "Sve što pravimo nastaje na našem porodičnom gazdinstvu u Budisavi, nadomak Novog Sada. Dostavu i preuzimanje dogovaramo direktno — javite se i naći ćemo najjednostavniju opciju.",
+  note: "Počeli smo u Novom Sadu, a danas su dom, uzgoj i proizvodnja na jednom mestu — u Budisavi. Za adresu, preuzimanje i termin javite nam se.",
+  sourceStatus: "CLIENT_CONFIRMED" as SourceStatus,
 };
 
 export const testimonials = [
-  { quote: "Kupci se vraćaju zbog ukusa Immuno Craft sirupa i sokova.", detail: "Sažetak javnog utiska kupca", sourceStatus: "PUBLIC_VERIFIED" as SourceStatus },
-  { quote: "U javnim utiscima posebno se pominju dizajn, ukus i kvalitet.", detail: "Sažetak javnog utiska kupca", sourceStatus: "PUBLIC_VERIFIED" as SourceStatus },
+  { quote: "Kupci se vraćaju zbog ukusa Immuno Craft sirupa.", detail: "Sažetak javnih utisaka kupaca", sourceStatus: "PUBLIC_VERIFIED" as SourceStatus },
+  { quote: "U javnim utiscima posebno se pominju dizajn, ukus i kvalitet.", detail: "Sažetak javnih utisaka kupaca", sourceStatus: "PUBLIC_VERIFIED" as SourceStatus },
 ];
 
 export const press = [
-  { label: "Mali Proizvođači", href: "https://maliproizvodjaci.rs/harmonije-panonije-proizvodnja-immuno-craft-sirupa/" },
+  { label: "Mali proizvođači", href: "https://maliproizvodjaci.rs/harmonije-panonije-proizvodnja-immuno-craft-sirupa/" },
   { label: "Dnevnik", href: "https://www.dnevnik.rs/lat/novi-sad/prirodni-put-do-imuniteta-proizvodi-harmonije-panonije-pruzaju-zdrava-resenja-bez-kompromisa-2024-12-29" },
-];
-
-export const pendingConfirmations = [
-  "Aktuelan asortiman i sezonska dostupnost",
-  "Aktuelne cene",
-  "Aktuelna pravila dostave i preuzimanja",
-  "Primarni kanal za poručivanje",
-  "Da li se koriste WhatsApp ili Viber za porudžbine",
-  "Aktuelan proces proizvodnje i poreklo sirovina",
-  "Sve nutritivne i zdravstvene tvrdnje",
-  "Finalna verzija priče o osnivačima",
-  "Pravni/podaci o gazdinstvu koje žele javno prikazati",
-  "Originalni logo i brend fajlovi",
-  "Originalne fotografije proizvoda, osnivača i procesa",
 ];

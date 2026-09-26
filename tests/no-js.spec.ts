@@ -44,6 +44,13 @@ test("meaningful content is visible without JavaScript", async ({ browser }) => 
   await expect(page.locator(".ingredients-index li")).toHaveCount(5);
   await expect(page.locator("#proizvodi .product-card").first()).toBeVisible();
   await expect(page.locator("#kontakt")).toContainText(/063 727 4392/);
+  // Tabs and "show all" need the script: the whole range is listed instead,
+  // and controls that would do nothing are not shown.
+  await expect(page.locator(".catalog-noscript li")).toHaveCount(13);
+  await expect(page.locator(".catalog-noscript")).toContainText(/Kurkuma\s·\sđumbir/);
+  for (const selector of [".catalog-toolbar", ".catalog-more", ".mobile-order-bar", ".order-button", ".product-card__add"]) {
+    await expect(page.locator(selector).first(), `${selector} hidden without JavaScript`).toBeHidden();
+  }
   expect(await page.locator("h2").count()).toBeGreaterThan(3);
   await context.close();
 });

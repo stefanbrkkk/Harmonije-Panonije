@@ -78,3 +78,29 @@ test("catalog, header bar and drawer fit small viewports", async ({ page }) => {
   assertClean();
 });
 
+
+test("the story caption sits on its own band, clear of the drawing", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 1024, height: 768 },
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+    { width: 320, height: 568 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/#prica", { waitUntil: "networkidle" });
+    const box = await page.evaluate(() => {
+      const art = document.querySelector(".story-art")!;
+      const svg = art.querySelector("svg")!.getBoundingClientRect();
+      const note = art.querySelector(".story-art__note")!.getBoundingClientRect();
+      const frame = art.getBoundingClientRect();
+      return { svgBottom: svg.bottom, noteTop: note.top, noteBottom: note.bottom, frameBottom: frame.bottom };
+    });
+    const label = `${viewport.width}x${viewport.height}`;
+    // Every stem and field line ends above the caption's rule.
+    expect(box.svgBottom, `${label}: drawing ends at the caption`).toBeLessThanOrEqual(box.noteTop + 1);
+    expect(box.noteBottom, `${label}: caption inside the plate`).toBeLessThanOrEqual(box.frameBottom + 1);
+  }
+  assertClean();
+});

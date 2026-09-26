@@ -178,6 +178,29 @@ test("jumps and sweeps never flash the skipped chapters' words", async ({ page }
   await peaks();
   expect(await page.evaluate(() => (window as unknown as { crowded: number }).crowded), "frames with two words in the slot").toBe(0);
   await expectChapter(page, 3, "sweep settles on Panonija");
+
+  // The same sweep in reverse: a passed-through chapter keeps its side, so
+  // it must still leave the slot without a trip.
+  await record();
+  for (let i = 29; i >= 1; i -= 1) {
+    await to(i / 30);
+    await page.waitForTimeout(16);
+  }
+  await peaks();
+  expect(await page.evaluate(() => (window as unknown as { crowded: number }).crowded), "frames with two words in the slot (reverse)").toBe(0);
+  assertClean();
+});
+
+test("a jump across several chapters never lands on the stale start", async ({ page }) => {
+  const assertClean = trackErrors(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await scrollToStickyProgress(page, "#put-pcele", 0.1);
+  await expectChapter(page, 0, "start at Priroda");
+  // Lands just past the last boundary (inside its hysteresis band): the
+  // stage shows the neighbour of the landing point, never Priroda.
+  await scrollToStickyProgress(page, "#put-pcele", 0.755);
+  await expectChapter(page, 2, "settles beside the landing boundary");
   assertClean();
 });
 

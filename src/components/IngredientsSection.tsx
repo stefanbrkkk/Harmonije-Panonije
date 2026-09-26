@@ -1,5 +1,5 @@
 import { ingredients } from "@/src/data/siteContent";
-import { bindShortWords } from "@/src/lib/typography";
+import { bindSeparators, bindShortWords } from "@/src/lib/typography";
 import { hexPath, Leaf, Lemon, LemonHalf } from "./Botanical";
 
 /*
@@ -145,8 +145,8 @@ export function IngredientsSection() {
       <div className="shell ingredients-layout">
         <div className="ingredients-head">
           <p className="eyebrow eyebrow--light"><span />Sastojci</p>
-          <h2 id="sastojci-naslov">Šta ulazi u harmoniju?</h2>
-          <p>{bindShortWords("Livadski med i ceđeni limun povezuju mnoge Immuno Craft kombinacije. Ukusi se zatim grade voćem, bobicama, povrćem, đumbirom i biljem.")}</p>
+          <h2 id="sastojci-naslov">{bindShortWords("Šta ulazi u harmoniju?")}</h2>
+          <p>{bindShortWords("Livadski med i ceđeni limun osnova su svakog našeg sirupa. Ukusi se zatim grade sezonskim voćem, bobicama, povrćem, biljem, začinima i đumbirom.")}</p>
         </div>
 
         <figure className="ingredients-plate">
@@ -156,7 +156,7 @@ export function IngredientsSection() {
             {base.map((item) => (
               <div key={item.name} className={`ingredients-base ingredients-base--${item.kind}`}>
                 <h3>{item.name}</h3>
-                <span lang="la">{item.latin}</span>
+                <span lang="la">{bindSeparators(item.latin)}</span>
                 <p>{bindShortWords(item.note)}</p>
               </div>
             ))}
@@ -169,7 +169,7 @@ export function IngredientsSection() {
             {layers.map((item) => (
               <li key={item.name}>
                 <h3>{item.name}</h3>
-                <span lang="la">{item.latin}</span>
+                <span lang="la">{bindSeparators(item.latin)}</span>
                 <p>{bindShortWords(item.note)}</p>
               </li>
             ))}

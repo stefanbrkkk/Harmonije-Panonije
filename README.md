@@ -111,9 +111,13 @@ That includes:
 - delivery text,
 - testimonials/press,
 - content-source statuses,
-- pending confirmations.
+- the per-product packaging spec (`visual`) that drives the bottle/jar art,
+- the "Kako se pije" usage and storage copy.
 
-Update this file first when the client completes the questionnaire.
+Open questions for the client live in `CLIENT-CONFIRMATION.md`, not in the
+data file. Products still awaiting confirmation are created with the
+`toConfirm()` helper; products whose label was seen with `onLabel()`.
+Update this file first when the client answers.
 
 ### Prices
 
@@ -127,7 +131,11 @@ Do not expose old pricing as current. Update the product data with client-confir
 
 ### Delivery
 
-Update the `delivery` object after the client reconfirms the current Novi Sad / pickup / courier policy. The visible website deliberately uses neutral wording until then.
+Production and growing moved to the family farm in Budisava in August 2025
+(client email, 26 Sep 2026); Novi Sad is where the business started and the
+nearest city. The `delivery` object carries that copy. Delivery and pickup
+terms are still "po dogovoru" — update the object once the client confirms
+concrete rules (areas, courier, pickup address/time).
 
 ## Product inquiry flow
 
@@ -161,7 +169,9 @@ The motion hierarchy is intentional:
 3. **Persistent page bee** — travels in the page margins between scenes,
    hands off to the local scenes, and fades out whenever it would sit on
    text or a control (occlusion test against cached document boxes).
-4. **Section reveals and tactile microinteractions** — secondary only.
+4. **Delivery atlas plate** — the route from Budisava draws once when the
+   plate enters view and the farm vignette settles; nothing on it loops.
+5. **Section reveals and tactile microinteractions** — secondary only.
 
 Performance rules:
 
@@ -178,6 +188,15 @@ Performance rules:
   persistent bee is removed and long sequences collapse to readable states.
 
 ## Illustration system
+
+Product art (`ProductVisual.tsx`) is drawn from each product's `visual`
+spec — liquid colour, label band, fabric cap colour/pattern and label line
+(Immuno craft / Craft sirupi / Immuno Booster) — so every bottle and jar
+matches its real packaging without photographs. The delivery map
+(`DeliveryMapArt.tsx` + `public/atlas/juzna-backa-podloga.svg`) is an
+engraved atlas plate of southern Bačka projected from real coordinates
+(12 units = 1 km); the relief is a separate static SVG so the inline map
+stays small.
 
 `src/components/Botanical.tsx` holds the shared, deterministic drawing
 primitives (leaves, daisies, elder umbels, lemons, rosehips, poplars, comb
@@ -210,7 +229,13 @@ public/images/ingredients/
 
 The current build uses custom SVG/CSS artwork instead of unrelated stock photography. Replace those visuals with client-approved photography/cutouts when supplied.
 
-See `public/images/README.md` for the replacement map.
+The photo set the client shared in September 2026 was used as a colour and
+packaging reference only (label colours, cap fabrics, label lines). Most
+frames are phone snapshots on mixed backgrounds, and two are AI promotional
+composites that must not be published. The client wrote that better
+photographs and the logo will follow.
+
+See `docs/images.md` for the replacement map.
 
 ## Logo
 

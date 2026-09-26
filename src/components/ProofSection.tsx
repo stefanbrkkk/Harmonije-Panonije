@@ -1,4 +1,5 @@
 import { press, siteConfig, testimonials } from "@/src/data/siteContent";
+import { bindShortWords } from "@/src/lib/typography";
 
 export function ProofSection() {
   if (!siteConfig.showTestimonials && !siteConfig.showPress) return null;
@@ -9,7 +10,7 @@ export function ProofSection() {
         <div className="proof-intro">
           <p className="eyebrow"><span />Utisci i priča</p>
           <h2>Mali brend. Stvarna priča.</h2>
-          <p>Javni utisci kupaca izdvajaju ukus, dizajn i kvalitet, dok urednički tekstovi beleže priču o nastanku i razvoju brenda.</p>
+          <p>{bindShortWords("Ukratko šta kupci javno ističu, uz uredničke tekstove o tome kako je brend nastao i rastao.")}</p>
         </div>
 
         {siteConfig.showTestimonials && (
@@ -17,7 +18,7 @@ export function ProofSection() {
             {testimonials.map((item, index) => (
               <article key={item.quote}>
                 <span aria-hidden="true">0{index + 1}</span>
-                <p>{item.quote}</p>
+                <p>{bindShortWords(item.quote)}</p>
                 <footer>{item.detail}</footer>
               </article>
             ))}
@@ -26,7 +27,7 @@ export function ProofSection() {
 
         {siteConfig.showPress && (
           <div className="proof-press">
-            <p>Priča o Harmonijama Panonije pojavila se u uredničkim tekstovima:</p>
+            <p>{bindShortWords("Priča o Harmonijama Panonije pojavila se u uredničkim tekstovima:")}</p>
             <div>
               {press.map((item) => (
                 <a href={item.href} target="_blank" rel="noreferrer" key={item.label}>{item.label}<span aria-hidden="true">↗</span></a>

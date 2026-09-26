@@ -146,6 +146,11 @@ test("critical zones stay smooth at 0.005 resolution", async ({ page }) => {
     [0.65, 0.93],
   ];
   for (const [start, end] of zones) {
+    // Each zone starts from a parked scene: the move from one zone's end to
+    // the next zone's start is a 0.1 jump, and its catch-up is not a
+    // 0.005 step. Without this, the second zone's first comparison measured
+    // that jump's catch-up against wall-clock sampling (load-dependent).
+    await pollParked(page, start);
     let previous: HoneySample | null = null;
     for (let f = start; f <= end + 1e-9; f += 0.005) {
       await gotoFraction(page, f);

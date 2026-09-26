@@ -24,6 +24,10 @@ test("metadata, sitemap, manifest, 404 and social images", async ({ page }) => {
 
   const notFound = await page.request.get("/nepostojeca-stranica-xyz");
   expect(notFound.status()).toBe(404);
+  // Serbian 404 on a sr-Latn site, never the framework's English default.
+  const notFoundHtml = await notFound.text();
+  expect(notFoundHtml).toContain("Stranica nije pronađena");
+  expect(notFoundHtml).not.toContain("This page could not be found");
 
   const sitemap = await page.request.get("/sitemap.xml");
   expect(sitemap.status()).toBe(200);
@@ -41,6 +45,15 @@ test("metadata, sitemap, manifest, 404 and social images", async ({ page }) => {
   const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').first().textContent()) ?? "{}");
   const org = ld["@graph"]?.find((node: { "@type": string }) => node["@type"] === "Organization");
   expect(org?.brand, "brand is a typed Brand node").toEqual({ "@type": "Brand", name: "Immuno Craft" });
+  // Client email (26 Sep 2026): home, growing and production in Budisava
+  // since August 2025; the brand began in Novi Sad.
+  expect(org?.address?.addressLocality).toBe("Budisava");
+  expect(org?.foundingLocation?.name).toBe("Novi Sad");
+  const manifestBody = await (await page.request.get("/manifest.webmanifest")).json();
+  expect(manifestBody.description).toContain("Budisavi");
+  expect(manifestBody.icons.map((icon: { sizes: string }) => icon.sizes)).toEqual(expect.arrayContaining(["192x192", "512x512"]));
+  expect((await page.request.get("/favicon.ico")).status(), "favicon.ico").toBe(200);
+  expect(await page.locator('meta[name="description"]').getAttribute("content")).toContain("Budisavi");
 
   for (const route of ["/opengraph-image", "/twitter-image"]) {
     const response = await page.request.get(route);

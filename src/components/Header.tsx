@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BrandMark } from "./BrandMark";
 import { navigation } from "@/src/data/siteContent";
 import { useCart } from "./CartProvider";
@@ -34,6 +34,17 @@ export function Header() {
       ".drawer-backdrop",
     ],
   );
+
+  // The first scrolled state is set before paint, in the same commit in
+  // which MotionOrchestrator ends the pre-hydration solid header: otherwise
+  // the header flashed transparent (white nav over cream) for ~0.4s on a
+  // reload or deep link below the top.
+  const headerRef = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    // Class written directly for this first frame; the scroll listener below
+    // brings React state into line on the next animation frame.
+    if (window.scrollY > 24) headerRef.current?.classList.add("site-header--scrolled");
+  }, []);
 
   useEffect(() => {
     let raf = 0;
@@ -123,7 +134,7 @@ export function Header() {
     <>
     {/* While the cream menu panel is open the header takes its solid
         (scrolled) colours, so the close control stays visible at page top. */}
-    <header className={`site-header ${scrolled || menuOpen ? "site-header--scrolled" : ""} ${menuOpen ? "site-header--menu-open" : ""}`}>
+    <header ref={headerRef} className={`site-header ${scrolled || menuOpen ? "site-header--scrolled" : ""} ${menuOpen ? "site-header--menu-open" : ""}`}>
       <div className="site-header__inner shell">
         <a href="#vrh" className="site-header__logo" aria-label="Harmonije Panonije — početna">
           <BrandMark compact />
@@ -136,7 +147,7 @@ export function Header() {
         </nav>
 
         <div className="site-header__actions">
-          <button className="order-button" type="button" onClick={open} aria-label={`Otvori upit za porudžbinu. ${itemsLabel(count)}`}>
+          <button className="order-button" type="button" onClick={open} aria-label={`Poruči — u upitu ${itemsLabel(count)}`}>
             <span>Poruči</span>
             <span className="order-button__count" aria-hidden="true">{count}</span>
           </button>

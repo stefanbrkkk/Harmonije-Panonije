@@ -27,11 +27,11 @@ export function createSocialImage() {
           {/* LEFT: Text column, fixed width with wrapping headline */}
           <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", gap: 30, width: 620, flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 18, letterSpacing: 3, textTransform: "uppercase", color: "#efc96e" }}>
-              <span style={{ width: 48, height: 1, background: "#efc96e" }} /> Novi Sad · od 2022.
+              <span style={{ width: 48, height: 1, background: "#efc96e" }} /> Budisava · Vojvodina
             </div>
             <div style={{ fontSize: 76, lineHeight: 1.02, letterSpacing: -3, width: 620 }}>Harmonija prirode u svakoj flaši.</div>
             <div style={{ width: 600, fontSize: 22, lineHeight: 1.45, color: "rgba(251,247,236,.72)" }}>
-              Immuno Craft sirupi, sokovi i busteri sa livadskim medom, ceđenim limunom, voćem i biljem.
+              Immuno Craft sirupi i Immuno Booster tegle sa livadskim medom, ceđenim limunom, voćem i biljem.
             </div>
           </div>
 
@@ -52,10 +52,10 @@ export function createSocialImage() {
                 }}
               >
                 <div style={{ position: "absolute", left: "26%", right: "26%", top: -25, height: 35, borderRadius: 7, background: "#d9c28b" }} />
-                <div style={{ position: "absolute", left: 9, right: 9, top: "36%", height: 124, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#efe6d2", color: "#17362d" }}>
-                  <span style={{ fontSize: 10, letterSpacing: 1.4 }}>HARMONIJE</span>
-                  <span style={{ marginTop: 8, fontSize: item === 1 ? 24 : 18 }}>IMMUNO</span>
-                  <span style={{ fontSize: item === 1 ? 24 : 18 }}>CRAFT</span>
+                <div style={{ position: "absolute", left: item === 1 ? 9 : 5, right: item === 1 ? 9 : 5, top: "36%", height: 124, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#efe6d2", color: "#17362d" }}>
+                  <span style={{ fontSize: 10, letterSpacing: item === 1 ? 1.4 : 0.8 }}>HARMONIJE</span>
+                  <span style={{ marginTop: 8, fontSize: item === 1 ? 24 : 15 }}>IMMUNO</span>
+                  <span style={{ fontSize: item === 1 ? 24 : 15 }}>CRAFT</span>
                 </div>
               </div>
             ))}

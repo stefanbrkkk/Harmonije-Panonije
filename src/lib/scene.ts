@@ -23,16 +23,23 @@ export function phaseProgress(progress: number, start: number, end: number) {
  * Applied through the CSS `translate` property so SVG `transform` attributes
  * and CSS `transform` rules keep their existing owners.
  */
-export function cameraShift(viewBoxX: number, viewBoxWidth: number, viewportWidth: number, artworkWidth: number) {
-  if (artworkWidth <= viewportWidth + 4) return 0;
+export function cameraShift(viewBoxX: number, viewBoxWidth: number, viewportWidth: number, artworkWidth: number, contentWidth = artworkWidth) {
+  // contentWidth: art drawn past the artwork box (overflow: visible) still
+  // has to be reachable, so the clamp uses the wider of the two.
+  const reach = Math.max(artworkWidth, contentWidth);
+  if (reach <= viewportWidth + 4) return 0;
   const landmarkPx = (viewBoxX / viewBoxWidth) * artworkWidth;
-  const maxShift = artworkWidth - viewportWidth;
+  const maxShift = reach - viewportWidth;
   return -Math.min(maxShift, Math.max(0, landmarkPx - viewportWidth * 0.5));
 }
 
 export type SceneLoopHandlers = {
-  /** Full paint for an explicit progress value (used for init + resync). */
-  paint: (progress: number, dtUnits: number) => void;
+  /**
+   * Full paint for an explicit progress value (used for init + resync).
+   * `snapped` is true on the first frame after the loop (re)starts at a
+   * position it did not animate to.
+   */
+  paint: (progress: number, dtUnits: number, snapped: boolean) => void;
   /** Current scroll-derived target progress. */
   readTarget: () => number;
   /** Damped state advance. */
@@ -73,6 +80,7 @@ export function createSceneLoop(
     const dt = lastT === 0 ? 1 : Math.min(4, Math.max(0.25, (t - lastT) / 16.667));
     lastT = t;
     const target = handlers.readTarget();
+    const snapped = !settled;
     if (!settled) {
       current = target;
       settled = true;
@@ -88,7 +96,7 @@ export function createSceneLoop(
         stillFrames = 0;
       }
     }
-    handlers.paint(current, dt);
+    handlers.paint(current, dt, snapped);
     if (handlers.busy?.()) stillFrames = 0;
     // Park after ~1s of stillness; scroll/resize/visibility wakes the loop.
     if (stillFrames > 60) {
@@ -151,7 +159,9 @@ export function createSceneLoop(
         raf = 0;
       }
     } else {
-      kick(true);
+      // Nothing scrolled while the tab was hidden: resume the glide from
+      // the state the visitor last saw (a snap would jump-cut on screen).
+      kick(false);
     }
   };
 

@@ -17,5 +17,5 @@ export const itemsLabel = (count: number) => `${count} ${pluralSr(count, "komad"
 export const selectedItemsLabel = (count: number) =>
   `${count} ${pluralSr(count, "izabran komad", "izabrana komada", "izabranih komada")}`;
 
-/** Product name as announced: syrups and juices share some names. */
+/** Product name with its size, e.g. "Jabuka (0,75 l)". */
 export const productLabel = (product: { name: string; volume: string }) => `${product.name} (${product.volume})`;

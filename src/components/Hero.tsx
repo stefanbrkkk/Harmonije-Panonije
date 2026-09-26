@@ -1,4 +1,5 @@
 import { hero } from "@/src/data/siteContent";
+import { bindShortWords } from "@/src/lib/typography";
 
 function Bottle({ size = "large", tone = "berry", label = "IMMUNO\nCRAFT" }: { size?: "large" | "small"; tone?: string; label?: string }) {
   return (
@@ -23,8 +24,8 @@ export function Hero() {
       <div className="shell hero-grid">
         <div className="hero-copy">
           <p className="eyebrow eyebrow--light"><span />{hero.eyebrow}</p>
-          <h1>{hero.headline}</h1>
-          <p className="hero-copy__lead">{hero.subheadline}</p>
+          <h1>{bindShortWords(hero.headline)}</h1>
+          <p className="hero-copy__lead">{bindShortWords(hero.subheadline)}</p>
           <div className="hero-copy__actions">
             <a className="button button--honey" href="#proizvodi">{hero.primaryCta}</a>
             <a className="text-link text-link--light" href="#prica">{hero.secondaryCta}<span aria-hidden="true">↘</span></a>
@@ -43,17 +44,17 @@ export function Hero() {
           <div className="hero-art__ingredient hero-art__ingredient--leaf" aria-hidden="true"><span /><span /><span /></div>
           <div className="hero-art__ingredient hero-art__ingredient--flower" aria-hidden="true"><span /><span /><span /><span /><span /></div>
           <div className="hero-art__bottles">
-            <Bottle size="small" tone="gold" label={"IMMU\nNO"} />
+            <Bottle size="small" tone="gold" label={"CRAFT\nSIRUP"} />
             <Bottle size="large" tone="berry" />
-            <Bottle size="small" tone="green" label={"CRAFT\nSOK"} />
+            <Bottle size="small" tone="green" label={"SA\nMEDOM"} />
           </div>
           <div className="hero-art__caption">
             <span>01</span>
-            <p>Voće, bilje, ceđeni limun i livadski med — osnova mnogih Immuno Craft kombinacija.</p>
+            <p>{bindShortWords("Livadski med i ceđeni limun osnova su svakog našeg sirupa — voće i bilje daju mu karakter.")}</p>
           </div>
         </div>
       </div>
-      <a className="scroll-cue" href="#put-pcele" aria-label="Nastavi skrolovanje">
+      <a className="scroll-cue" href="#put-pcele" aria-label="Skroluj dalje">
         <span>skroluj</span><i aria-hidden="true" />
       </a>
     </section>
