@@ -161,14 +161,16 @@ function PlateCraft() {
       <path className="jart-liquid" d="M310 292c40 10 76-6 128 4v204a16 16 0 0 1-16 16H326a16 16 0 0 1-16-16Z" />
       <path className="jart-shade" d="M310 292c40 10 76-6 128 4v204a16 16 0 0 1-16 16H326a16 16 0 0 1-16-16Z" fill="url(#journeyHatch)" mask="url(#journeyShade)" />
       <path className="jart-glint" d="M320 300v176" />
-      <rect className="jart-cap" x="340" y="108" width="68" height="46" rx="6" />
-      <path className="jart-cap-rib" d="M352 114v34M364 114v34M376 114v34M388 114v34M400 114v34" />
+      {/* Gingham cloth over the mouth, pinked skirt, jute twine: the real closure. */}
+      <path className="jart-cloth" d="M342 162C341 142 342 126 346 119C352 112 396 112 402 119C406 126 407 142 406 162" fill="url(#journeyGingham)" />
+      <path className="jart-cloth" d="M342 160C334 164 328 172 326 182L332 180 334 188 340 183 344 190 350 184 356 191 362 185 368 191 374 185 380 191 386 185 392 190 398 184 402 189 408 182 414 186 416 180 422 182C420 172 414 164 406 160C388 166 360 166 342 160Z" fill="url(#journeyGingham)" />
+      <path className="jart-twine" d="M342 162C360 168 388 168 406 162" />
       <path className="jart-label" d="M374 330l54 24v104H320V354Z" />
       <text className="jart-label-small" x="374" y="380" textAnchor="middle">HARMONIJE PANONIJE</text>
       <text className="jart-label-big" x="374" y="408" textAnchor="middle">IMMUNO</text>
       <text className="jart-label-big" x="374" y="428" textAnchor="middle">CRAFT</text>
       <path className="jart-label-rule" d="M350 440h48" />
-      <path className="jart-string" d="M346 184c10 8 46 8 56 0M352 188c-4 14-12 26-22 32" />
+      <path className="jart-string" d="M352 188c-4 14-12 26-22 32" />
       <g transform="rotate(-18 316 236)">
         <rect className="jart-tag" x="290" y="218" width="48" height="30" rx="2" />
         <circle className="jart-tag-hole" cx="332" cy="233" r="2.4" />
@@ -391,6 +393,12 @@ export function BeeJourney() {
               <defs>
                 <pattern id="journeyHatch" width="4.5" height="4.5" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
                   <path d="M0 0V4.5" stroke="rgba(15,40,33,.34)" strokeWidth=".9" />
+                </pattern>
+                {/* Engraved gingham for the bottle's cloth cap. */}
+                <pattern id="journeyGingham" width="8" height="8" patternUnits="userSpaceOnUse">
+                  <rect width="8" height="8" fill="#e9d6c9" />
+                  <rect width="4" height="8" fill="rgba(138,42,60,.34)" />
+                  <rect width="8" height="4" fill="rgba(138,42,60,.34)" />
                 </pattern>
                 <pattern id="journeySunLines" width="8" height="7" patternUnits="userSpaceOnUse">
                   <path d="M0 3.5H8" stroke="rgba(122,79,14,.42)" strokeWidth="1" />

@@ -42,7 +42,9 @@ function CapPattern({ id, spec }: { id: string; spec: ProductVisualSpec }) {
 
 /** The label: a white die-cut Vojvodina gable facade with a gold hairline, bee mark and colour band. */
 function Label({ spec, jar }: { spec: ProductVisualSpec; jar: boolean }) {
-  const [first, second] = spec.line === "Immuno Booster" ? ["Immuno", "Booster"] : [spec.line, "sa medom"];
+  // As printed: "Immuno craft / sirup sa medom", "Craft sirupi / sa medom", "Immuno / Booster".
+  const [first, second] =
+    spec.line === "Immuno Booster" ? ["Immuno", "Booster"] : spec.line === "Immuno craft" ? [spec.line, "sirup sa medom"] : [spec.line, "sa medom"];
   return (
     <g className="pv-label">
       <path
@@ -102,7 +104,7 @@ export function ProductVisual({ category, id, compact = false }: { category: Pro
             <path className="pv-glint" d="M20 58v76" />
             <rect className="pv-shade" x="92" y="46" width="14" height="98" rx="6" />
             <rect className="pv-glass" x="9" y="42" width="102" height="106" rx="11" />
-            <g transform="translate(60 72) scale(.86)">
+            <g transform="translate(60 76) scale(.86)">
               <Label spec={spec} jar />
             </g>
             <path
@@ -137,10 +139,11 @@ export function ProductVisual({ category, id, compact = false }: { category: Pro
             <g transform="translate(40 126)">
               <Label spec={spec} jar={false} />
             </g>
-            <path className="pv-cloth" d="M24 56C23 36 30 22 40 22S57 36 56 56" fill={`url(#${capFill})`} />
+            {/* Flat-topped cloth stretched over the mouth, flared skirt under the twine. */}
+            <path className="pv-cloth" d="M23 57C22 47 23 37 26 34C30 30.5 50 30.5 54 34C57 37 58 47 57 57" fill={`url(#${capFill})`} />
             <path
               className="pv-cloth"
-              d="M24 53C18 56 14 61 12 67L17 66 18 71 23 68 26 73 30 69 34 74 37 69 41 74 45 69 49 73 52 68 57 71 58 66 63 67C61 61 57 56 51 53Z"
+              d="M24 55C18 57 14 61 12 67L17 66 18 71 23 68 26 73 30 69 34 74 37 69 41 74 45 69 49 73 52 68 57 71 58 66 63 67C61 61 58 57 56 55C46 59 34 59 24 55Z"
               fill={`url(#${capFill})`}
             />
             <path className="pv-twine" d="M24 55C34 59 46 59 56 55" />

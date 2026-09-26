@@ -204,6 +204,11 @@ test("the quantity cap disables + and adds nothing more", async ({ page }) => {
   for (let i = 1; i < 99; i += 1) await plus.click();
   await expect(page.locator(".order-drawer__summary strong")).toHaveText("99");
   await expect(plus).toBeDisabled();
+  // Still focusable at the cap: keyboard users keep their place.
+  await plus.focus();
+  await page.keyboard.press("Enter");
+  await expect(plus).toBeFocused();
+  await expect(page.locator(".order-drawer__summary strong")).toHaveText("99");
   assertClean();
 });
 

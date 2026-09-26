@@ -124,10 +124,14 @@ button { color: inherit; }
 /* Sections focused programmatically (menu navigation) show no ring: the
    focus only sets the reading position for the next Tab. */
 section[tabindex="-1"]:focus { outline: none; }
-/* Fixed-header clearance for anchor navigation. */
-section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-clearance)); }
-/* Keyboard focus scrolling keeps controls clear of the fixed header. */
-:is(a, button, input, textarea, summary):focus-visible { scroll-margin-top: calc(var(--header-height) + 16px); scroll-margin-bottom: 16px; }
+/* Fixed-header clearance lives on the scroll container: native focus
+   scrolling (Tab / Shift+Tab) honours it, while a :focus-visible
+   scroll-margin applied too late and left controls under the header. */
+html { scroll-padding-top: var(--header-height); }
+/* Anchor navigation lands just below the header. */
+section[id] { scroll-margin-top: var(--anchor-clearance); }
+/* Keyboard focus keeps a little air above and below controls. */
+:is(a, button, input, textarea, summary) { scroll-margin-top: 16px; scroll-margin-bottom: 16px; }
 .text-link span { transition: transform .2s ease; }
 .text-link:hover span { transform: translate(3px, -3px); }
 .text-link--light { border-color: rgba(255,255,255,.25); }
@@ -221,17 +225,25 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .hero-bottle--small { height: 345px; width: 106px; opacity: .96; }
 .hero-bottle--small:first-child { transform: translateY(-2px) rotate(-7deg); }
 .hero-bottle--small:last-child { transform: translateY(9px) rotate(8deg); }
-.hero-bottle__cap { position: absolute; z-index: 4; top: 0; left: 50%; width: 50%; height: 39px; transform: translateX(-50%); border-radius: 8px 8px 4px 4px; background: linear-gradient(90deg,#b89b63,#efe2b8 45%,#9a7f51); box-shadow: inset 0 2px rgba(255,255,255,.45); }
+/* The real closure: a gingham cloth over the mouth, pinked skirt, jute
+   twine (client photos; same as the catalog art), not a metal screw cap. */
+.hero-bottle { --cloth: #8a2a3c; --band: #5b2437; }
+.hero-bottle--gold { --cloth: #e8742a; --band: #f08c0c; }
+.hero-bottle--green { --cloth: #3f7a4a; --band: #2d5a40; }
+.hero-bottle__cap { position: absolute; z-index: 4; top: -4px; left: 50%; width: 66%; height: 58px; transform: translateX(-50%); background: linear-gradient(90deg, rgba(0,0,0,.2), transparent 32% 66%, rgba(0,0,0,.24)), linear-gradient(90deg, rgba(255,255,255,.42) 50%, transparent 0) 0 0 / 8px 8px, linear-gradient(rgba(255,255,255,.42) 50%, transparent 0) 0 0 / 8px 8px, var(--cloth); clip-path: polygon(17% 34%, 20% 12%, 33% 1%, 67% 1%, 80% 12%, 83% 34%, 86% 60%, 100% 76%, 95% 82%, 93% 100%, 85% 88%, 77% 100%, 69% 88%, 61% 100%, 53% 88%, 45% 100%, 37% 88%, 29% 100%, 21% 88%, 13% 100%, 7% 82%, 0 76%, 14% 60%); }
+.hero-bottle__cap::after { content: ""; position: absolute; left: 14%; right: 14%; top: 58%; height: 2px; border-radius: 2px; background: #a9834e; box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+.hero-bottle--small .hero-bottle__cap { height: 50px; }
 .hero-bottle__glass { position: absolute; inset: 31px 3px 0; border-radius: 34px 34px 23px 23px / 60px 60px 23px 23px; border: 1px solid rgba(255,255,255,.26); background: linear-gradient(90deg,rgba(255,255,255,.1),transparent 22% 71%,rgba(255,255,255,.15)), linear-gradient(180deg,rgba(255,255,255,.12),rgba(80,19,42,.85)); box-shadow: inset 11px 0 18px rgba(255,255,255,.09), inset -12px 0 20px rgba(0,0,0,.15); overflow: hidden; }
 .hero-bottle--gold .hero-bottle__glass { background: linear-gradient(90deg,rgba(255,255,255,.1),transparent 22% 71%,rgba(255,255,255,.16)), linear-gradient(180deg,#d3a24b,#805521); }
 .hero-bottle--green .hero-bottle__glass { background: linear-gradient(90deg,rgba(255,255,255,.1),transparent 22% 71%,rgba(255,255,255,.16)), linear-gradient(180deg,#78966e,#294738); }
 .hero-bottle__glass::before { content: ""; position: absolute; left: 10px; top: 40px; width: 8px; height: 64%; border-radius: 999px; background: linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0)); opacity: .45; }
-.hero-bottle__label { position: absolute; z-index: 5; top: 42%; left: 50%; width: 83%; min-height: 134px; transform: translate(-50%,-50%); padding: 23px 10px 16px; display: grid; justify-items: center; align-content: center; clip-path: polygon(50% 0,100% 25%,100% 100%,0 100%,0 25%); background: #efe6d2; color: var(--forest-2); text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,.08); }
+/* Label: the white die-cut baroque gable with a colour band, as printed. */
+.hero-bottle__label { position: absolute; z-index: 5; top: 44%; left: 50%; width: 83%; min-height: 140px; transform: translate(-50%,-50%); padding: 40px 10px 22px; display: grid; justify-items: center; align-content: center; clip-path: polygon(0 30%, 0 23.1%, 10.7% 19.7%, 16.1% 18.2%, 14.3% 13.3%, 19.6% 10.8%, 25% 8.9%, 30.4% 10.8%, 33.9% 6.9%, 37.5% 2.5%, 42.9% 0, 57.1% 0, 62.5% 2.5%, 66.1% 6.9%, 69.6% 10.8%, 75% 8.9%, 80.4% 10.8%, 85.7% 13.3%, 83.9% 18.2%, 89.3% 19.7%, 100% 23.1%, 100% 30%, 100% 100%, 0 100%); background: linear-gradient(to top, var(--band) 0 9%, transparent 9%), #efe6d2; color: var(--forest-2); text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,.08); }
 .hero-bottle__label small { font-size: 7.2px; font-weight: 800; letter-spacing: .08em; }
 /* Painted label art (aria-hidden): sized in px like the bottle itself. */
 .hero-bottle__label strong { margin-top: 8px; display: grid; font-family: var(--serif); font-size: 19.2px; font-weight: 500; line-height: .82; letter-spacing: -.03em; }
 .hero-bottle__label i { margin-top: 10px; font-size: 6.9px; font-style: normal; letter-spacing: .05em; }
-.hero-bottle--small .hero-bottle__label { min-height: 108px; padding-top: 18px; }
+.hero-bottle--small .hero-bottle__label { min-height: 118px; padding-top: 32px; padding-bottom: 18px; }
 .hero-bottle--small .hero-bottle__label strong { font-size: 14.4px; }
 .hero-art__ingredient { position: absolute; z-index: 2; filter: drop-shadow(0 14px 18px rgba(0,0,0,.18)); }
 .hero-art__ingredient--lemon { width: 100px; height: 78px; left: 3%; top: 28%; border-radius: 50%; border: 2px solid #e2bd65; background: rgba(225,184,85,.12); transform: rotate(-22deg); }
@@ -330,8 +342,8 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .jart-wood { fill: none; stroke: #9a7442; stroke-width: 5; }
 .jart-dipper { fill: #d9b98a; stroke: var(--forest-2); stroke-width: 1.3; }
 .jart-dipper-grooves { fill: none; stroke: rgba(15, 40, 33, .55); stroke-width: 1; }
-.jart-cap { fill: #d8c291; stroke: var(--forest-2); stroke-width: 1.3; }
-.jart-cap-rib { fill: none; stroke: rgba(15, 40, 33, .35); stroke-width: 1; }
+.jart-cloth { stroke: var(--forest-2); stroke-width: 1.2; stroke-linejoin: round; }
+.jart-twine { fill: none; stroke: #a9834e; stroke-width: 2.4; stroke-linecap: round; }
 .jart-label { fill: #fbf7ec; stroke: var(--forest-2); stroke-width: 1.2; }
 .jart-label-small { fill: var(--forest-2); font-family: var(--sans); font-size: 5.6px; font-weight: 800; letter-spacing: .9px; }
 .jart-label-big { fill: var(--forest-2); font-family: var(--serif); font-size: 17px; letter-spacing: -.2px; }
@@ -708,7 +720,6 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .atlas .at-tw0{stroke:rgba(78,116,126,.34)}.atlas .at-tw1{stroke:var(--atlas-paper)}.atlas .at-tw2{stroke:rgba(15,40,33,.66)}.atlas .at-tw3{stroke:var(--atlas-water-fill)}
 .atlas .at-city__area{fill:url(#atCity);stroke:rgba(15,40,33,.55);stroke-width:.6}
 .atlas .at-cityblock{fill:rgba(15,40,33,.2)}
-.atlas .at-fort{fill:var(--atlas-paper);stroke:var(--forest-2);stroke-width:.6}
 .atlas .at-roads path{fill:none;stroke-linecap:round;stroke-linejoin:round}
 .atlas .at-road{stroke:rgba(15,40,33,.42);stroke-width:.6}.atlas .at-road--main{stroke:rgba(15,40,33,.55);stroke-width:.8}
 .atlas .at-poplar{fill:#aeb69b;stroke:var(--forest-2);stroke-width:.45}.atlas .at-trunk{stroke:var(--forest-2);stroke-width:.45}
@@ -733,17 +744,17 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .atlas .at-north__grain{fill:rgba(216,162,72,.5);stroke:var(--forest-2);stroke-width:.5}
 .atlas .at-north__s{font-family:var(--serif);font-size:10px;fill:var(--forest-2)}
 .atlas .at-scale__fill{fill:var(--forest-2)}.atlas .at-scale__frame{fill:none;stroke:var(--forest-2);stroke-width:.5}
-.atlas .at-scale__t{font-family:var(--sans);font-size:6.5px;font-weight:700;letter-spacing:.06em;fill:var(--muted)}
+.atlas .at-scale__t{font-family:var(--sans);font-size:8.5px;font-weight:700;letter-spacing:.06em;fill:var(--muted)}
 .atlas .at-l{font-family:var(--serif);fill:var(--forest-2);paint-order:stroke;stroke:var(--atlas-paper);stroke-width:2.8px;stroke-linejoin:round}
 .atlas .at-l--origin{font-size:17px;font-style:italic}
-.atlas .at-l--tag{font-family:var(--sans);font-size:8px;font-weight:800;letter-spacing:.14em;fill:var(--honey-dark)}
+.atlas .at-l--tag{font-family:var(--sans);font-size:9px;font-weight:800;letter-spacing:.14em;fill:var(--honey-dark)}
 .atlas .at-l--city{font-size:13px;letter-spacing:.14em}
 .atlas .at-l--note{font-size:9.5px;font-style:italic;fill:var(--muted)}
 .atlas .at-l--village{font-size:11.5px}
 .atlas .at-l--water{font-size:12px;font-style:italic;letter-spacing:.28em;fill:#3e5f68}
 .atlas .at-l--range{font-size:11px;letter-spacing:.5em;word-spacing:.4em;fill:rgba(15,40,33,.82);stroke-width:3.4px}
 .atlas .at-l--region{font-size:9.5px;letter-spacing:.6em;fill:rgba(15,40,33,.46);stroke-width:2px}
-.atlas .at-l--physical{font-size:8.5px;font-style:italic;fill:var(--muted)}
+.atlas .at-l--physical{font-size:10px;font-style:italic;fill:var(--muted)}
 .atlas .at-ticks{fill:none;stroke:var(--forest-2);stroke-width:.6}
 
 
@@ -791,7 +802,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .atlas .at-scale { transform:translate(234px,428px); }
 }
 .atlas-plate__canvas > svg { display:block; width:100%; height:auto; overflow:hidden; }
-.atlas-plate__legend svg { flex:none; width:26px; height:18px; }
+.atlas-plate__legend svg { flex:none; width:26px; height:22px; }
 
 /* Proof */
 .proof-section { padding: clamp(100px,11vw,150px) 0; }
@@ -868,7 +879,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
 .order-drawer__foot .text-link { margin-top:17px; }
 .order-drawer__foot > p { margin:15px 0 0;color:var(--muted);font-size:.61rem;line-height:1.5; }
 .order-drawer__foot > p.order-drawer__notice { margin:10px 0 0;color:var(--ink);font-size:.7rem; }
-.order-item__controls button:disabled { opacity:.35; cursor:not-allowed; }
+.order-item__controls button:is(:disabled, [aria-disabled="true"]) { opacity:.35; cursor:not-allowed; }
 .mobile-order-bar { display:none; }
 
 /* Responsive */
@@ -973,7 +984,7 @@ section[id] { scroll-margin-top: calc(var(--header-height) + var(--anchor-cleara
   .final-cta__actions { align-items:stretch;flex-direction:column; }.final-cta__actions .button{width:100%}
   .final-cta__contacts { margin-top:62px; }
   .site-footer { padding-bottom:92px; }
-  .site-footer__bottom { grid-template-columns:1fr; }.site-footer__bottom div{grid-column:auto;grid-row:auto;flex-wrap:wrap}.site-footer__bottom span,.site-footer__bottom>a:last-child{grid-row:auto;justify-self:start}
+  .site-footer__bottom { grid-template-columns:1fr;row-gap:26px; }.site-footer__bottom div{grid-column:auto;grid-row:auto;flex-wrap:wrap}.site-footer__bottom span,.site-footer__bottom>a:last-child{grid-row:auto;justify-self:start}
   /* The fixed order bar covers the bottom 70px: scroll-padding shrinks the
      viewport's "visible" region, so keyboard focus that lands behind the
      bar scrolls the control clear of it (scroll-margin alone only applies
@@ -1129,6 +1140,8 @@ body.has-overlay .page-bee__wings { animation-play-state: paused; }
   font-size: .98rem;
 }
 .catalog-search input::placeholder { color: #5f635c; opacity: 1; }
+/* The native clear button, drawn in the site palette (it was browser blue). */
+.catalog-search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; cursor: pointer; background: var(--forest-2); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2 2l10 10M12 2 2 12' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2 2l10 10M12 2 2 12' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; }
 .order-contact-form ::placeholder { color: #5f635c; opacity: 1; }
 .catalog-search:focus-within input { border-color: var(--forest); }
 /* The field suppresses the outline ring, so its focus cue must be strong. */
@@ -1641,7 +1654,7 @@ body.has-overlay .page-bee__wings { animation-play-state: paused; }
   z-index: 86;
   right: 22px;
   bottom: 22px;
-  width: min(420px, calc(100% - 44px));
+  width: min(460px, calc(100% - 44px));
   min-height: 76px;
   display: grid;
   grid-template-columns: 38px minmax(0,1fr) auto 24px;
@@ -1662,7 +1675,8 @@ body.has-overlay .page-bee__wings { animation-play-state: paused; }
 .cart-toast__mark { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--honey); color: var(--forest-2); font-weight: 900; }
 .cart-toast__copy { min-width: 0; display: grid; gap: 3px; }
 .cart-toast__copy span { color: rgba(251,247,236,.55); font-size: .58rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
-.cart-toast__copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--serif); font-size: 1rem; font-weight: 400; animation: toastCopyIn .3s cubic-bezier(.22,.8,.24,1) both; }
+/* Two lines rather than an ellipsis: the product name is the message. */
+.cart-toast__copy strong { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; font-family: var(--serif); font-size: 1rem; font-weight: 400; animation: toastCopyIn .3s cubic-bezier(.22,.8,.24,1) both; }
 @keyframes toastCopyIn { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
 .cart-toast > button:not(.cart-toast__close) { border: 0; border-bottom: 1px solid rgba(251,247,236,.28); padding: 4px 0; background: transparent; color: var(--white); cursor: pointer; font-size: .65rem; font-weight: 780; }
 .cart-toast__close { width: 24px; height: 30px; border: 0; background: transparent; color: rgba(251,247,236,.55); cursor: pointer; font-size: 1.15rem; }

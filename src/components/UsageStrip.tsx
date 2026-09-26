@@ -25,15 +25,17 @@ function Glyph({ kind }: { kind: string }) {
         <>
           <path d="M4.5 8h17c0 5.4-4 8-8.5 8S4.5 13.4 4.5 8Z" />
           <path d="M13 16v7.5M8.5 23.5h9" />
+          {/* A lemon wheel on the rim: segment spokes, not a "+" cross. */}
           <circle className="catalog-ritual__accent" cx="21.5" cy="7.5" r="3.2" />
-          <path d="M21.5 4.3v6.4M18.3 7.5h6.4" />
+          <path d="M21.5 4.3v6.4M18.7 5.9l5.6 3.2M18.7 9.1l5.6-3.2" />
         </>
       )}
       {kind === "morning" && (
         <>
-          <path d="M3 19.5h22" />
-          <path className="catalog-ritual__accent" d="M8 19.5a6 6 0 0 1 12 0Z" />
-          <path d="M14 8.5v3M6.8 11.6l2 2M21.2 11.6l-2 2M4 16h2.4M21.6 16H24" />
+          {/* On the shared baseline and at the other glyphs' height. */}
+          <path d="M3 23.5h22" />
+          <path className="catalog-ritual__accent" d="M7 23.5a7 7 0 0 1 14 0Z" />
+          <path d="M14 10.5v3M6.2 13.8l2 2M21.8 13.8l-2 2M3.8 19h2.4M21.8 19h2.4" />
         </>
       )}
     </svg>

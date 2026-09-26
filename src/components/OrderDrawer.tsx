@@ -246,7 +246,9 @@ export function OrderDrawer() {
                       <div className="order-item__controls" role="group" aria-label={`Količina: ${productLabel(item.product)}`}>
                         <button type="button" onClick={() => { decrement(item.product.id); rescueFocus(); }} aria-label={`Smanji količinu: ${productLabel(item.product)}`}>−</button>
                         <span aria-live="polite">{item.quantity}</span>
-                        <button type="button" onClick={() => add(item.product, { notify: false })} disabled={item.quantity >= MAX_QUANTITY} aria-label={`Povećaj količinu: ${productLabel(item.product)}`}>+</button>
+                        {/* aria-disabled, not disabled: a disabled button would drop
+                            keyboard focus to <body> the moment the cap is reached. */}
+                        <button type="button" onClick={() => { if (item.quantity < MAX_QUANTITY) add(item.product, { notify: false }); }} aria-disabled={item.quantity >= MAX_QUANTITY} aria-label={`Povećaj količinu: ${productLabel(item.product)}`}>+</button>
                       </div>
                     </div>
                     <button type="button" className="order-item__remove" onClick={() => { remove(item.product.id); rescueFocus(); }} aria-label={`Ukloni iz upita: ${productLabel(item.product)}`}>×</button>
@@ -278,6 +280,10 @@ export function OrderDrawer() {
           </p>
           <div className="order-drawer__alternatives">
             <button type="button" className="text-link" onClick={copyMessage}>{shownCopyState === "copied" ? "Upit kopiran ✓" : shownCopyState === "failed" ? "Kopiranje nije uspelo" : "Kopiraj tekst upita"}<span aria-hidden="true">↗</span></button>
+            {/* A name change on the focused button is rarely announced. */}
+            <p className="sr-only" role="status">
+              {shownCopyState === "copied" ? "Tekst upita je kopiran." : shownCopyState === "failed" ? "Kopiranje nije uspelo — tekst možete kopirati iz polja „Prikaži tekst upita“." : ""}
+            </p>
             <a className="text-link" href={`tel:${contact.phoneHref}`}>Pozovi {contact.phoneDisplay}<span aria-hidden="true">↗</span></a>
             <a className="text-link" href={contact.instagramUrl} target="_blank" rel="noreferrer">Instagram<span aria-hidden="true">↗</span></a>
           </div>

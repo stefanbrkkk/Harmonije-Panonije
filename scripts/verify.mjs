@@ -196,7 +196,9 @@ const tripwires = [
   ["dialog semantics", !/<aside[^>]*role="dialog"/.test(drawer) && drawer.includes('role="dialog"')],
   ["brand mark naming", !read("src/components/BrandMark.tsx").includes("aria-label")],
   // HP-30/42 + HP-41 + HP-R2-01: button reset + variable-driven clearance.
-  ["text-link reset", css.includes("background: transparent;") && css.includes("scroll-margin-top: calc(var(--header-height) + var(--anchor-clearance))")],
+  // Clearance now lives on the scroll container (scroll-padding-top) so
+  // native focus scrolling honours it too; anchors add --anchor-clearance.
+  ["text-link reset", css.includes("background: transparent;") && css.includes("html { scroll-padding-top: var(--header-height); }") && css.includes("section[id] { scroll-margin-top: var(--anchor-clearance); }")],
   // HP-R2-03: fresh production-server ownership by default.
   ["fresh test server default", read("playwright.config.ts").includes('process.env.PW_REUSE_EXISTING_SERVER === "1"')],
   // HP-R2-05: CI enforces the QA chain without deploying.

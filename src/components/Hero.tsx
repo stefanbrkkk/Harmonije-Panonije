@@ -54,7 +54,7 @@ export function Hero() {
           </div>
         </div>
       </div>
-      <a className="scroll-cue" href="#put-pcele" aria-label="Nastavi skrolovanje">
+      <a className="scroll-cue" href="#put-pcele" aria-label="Skroluj dalje">
         <span>skroluj</span><i aria-hidden="true" />
       </a>
     </section>

@@ -34,28 +34,31 @@ export function DeliverySection() {
             <span className="sr-only">Legenda mape:</span>
             <ul className="atlas-plate__legend">
               <li>
-                <svg viewBox="0 0 26 18" aria-hidden="true" focusable="false">
-                  <g transform="translate(13 17) scale(.44)">
-                    <path d={FACADE} fill="#fbf7ec" stroke="#7a4f0e" strokeWidth="2" />
+                <svg viewBox="0 0 26 22" aria-hidden="true" focusable="false">
+                  {/* The atlas farmhouse, large enough to read as a house:
+                      gable facade, band and arched door. */}
+                  <g transform="translate(13 21.5) scale(.56)">
+                    <path d={FACADE} fill="#fbf7ec" stroke="#7a4f0e" strokeWidth="1.8" />
                     <path d="M-13-4.4H13V0H-13Z" fill="#d8a248" />
+                    <path d="M-3.2-4.4V-11.5A3.2 3.2 0 0 1 3.2-11.5V-4.4" fill="none" stroke="#7a4f0e" strokeWidth="1.8" />
                   </g>
                 </svg>
                 <span><b>Budisava</b><em>naše gazdinstvo</em></span>
               </li>
               <li>
-                <svg viewBox="0 0 26 18" aria-hidden="true" focusable="false">
+                <svg viewBox="0 0 26 22" aria-hidden="true" focusable="false">
                   <defs>
                     <pattern id="lgCity" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(22)">
                       <rect x=".5" y=".5" width="2" height="2" fill="rgba(15,40,33,.3)" />
                     </pattern>
                   </defs>
-                  <path d="M5 11c-1-4 2-7 6-7 3 0 4 2 7 1 3 0 4 3 3 6-1 3-4 4-8 4-4 0-7-1-8-4Z" fill="url(#lgCity)" stroke="rgba(15,40,33,.6)" strokeWidth=".8" />
+                  <path transform="translate(0 2)" d="M5 11c-1-4 2-7 6-7 3 0 4 2 7 1 3 0 4 3 3 6-1 3-4 4-8 4-4 0-7-1-8-4Z" fill="url(#lgCity)" stroke="rgba(15,40,33,.6)" strokeWidth=".8" />
                 </svg>
-                <span><b>Novi Sad</b><em>gde smo počeli</em></span>
+                <span><b>Novi Sad</b><em>naš prvi grad</em></span>
               </li>
               <li>
-                <svg viewBox="0 0 26 18" aria-hidden="true" focusable="false">
-                  <path d="M2 9H24" stroke="#7a4f0e" strokeWidth="2.2" strokeLinecap="round" strokeDasharray="0 5" />
+                <svg viewBox="0 0 26 22" aria-hidden="true" focusable="false">
+                  <path d="M2 11H24" stroke="#7a4f0e" strokeWidth="2.2" strokeLinecap="round" strokeDasharray="0 5" />
                 </svg>
                 <span><b>Dostava i preuzimanje</b><em>po dogovoru</em></span>
               </li>

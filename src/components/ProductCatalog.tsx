@@ -133,7 +133,9 @@ export function ProductCatalog() {
           const el = moreRef.current;
           if (!el) return;
           const r = el.getBoundingClientRect();
-          if (r.top >= 0 && r.bottom <= window.innerHeight) return;
+          // "Visible" means below the fixed header, not merely top >= 0.
+          const header = document.querySelector(".site-header")?.getBoundingClientRect().bottom ?? 0;
+          if (r.top >= header + 12 && r.bottom <= window.innerHeight) return;
           window.scrollTo({ top: Math.max(0, window.scrollY + r.top - window.innerHeight * 0.4), behavior: "instant" as ScrollBehavior });
         });
       });
@@ -219,7 +221,9 @@ export function ProductCatalog() {
             <p>{bindShortWords(copy.note)}</p>
           </div>
 
-          <p className="catalog-count" role="status">{resultCountText(visible.length, categoryProducts.length, searching)}</p>
+          {/* Empty state: the box below says it visibly; the status line
+              stays for screen readers only, so it is not said twice. */}
+          <p className={`catalog-count ${visible.length === 0 ? "sr-only" : ""}`} role="status">{resultCountText(visible.length, categoryProducts.length, searching)}</p>
           {visible.length > 0 && elsewhere.length > 0 && (
             <p className="catalog-elsewhere">Još poklapanja: {elsewhereLinks}</p>
           )}

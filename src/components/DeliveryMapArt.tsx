@@ -27,20 +27,21 @@ export function DeliveryMapArt() {
       <rect className="at-paper" width="600" height="480"/>
       <image className="at-base" href="/atlas/juzna-backa-podloga.svg" x="0" y="0" width="600" height="480" preserveAspectRatio="none"/>
       <g className="at-water">
-        <path className="at-tw0" d={TISA} style={{ strokeWidth: 11 }}/>
-        <path className="at-tw1" d={TISA} style={{ strokeWidth: 10 }}/>
-        <path className="at-tw2" d={TISA} style={{ strokeWidth: 5 }}/>
-        <path className="at-tw3" d={TISA} style={{ strokeWidth: 3.8 }}/>
+        {/* Casings, halos and fills interleaved so the Tisa mouth opens into
+            the Danube instead of stopping at its bank line. */}
         <path className="at-dw0" d={DANUBE} style={{ strokeWidth: 17 }}/>
+        <path className="at-tw0" d={TISA} style={{ strokeWidth: 11 }}/>
         <path className="at-dw1" d={DANUBE} style={{ strokeWidth: 16 }}/>
+        <path className="at-tw1" d={TISA} style={{ strokeWidth: 10 }}/>
         <path className="at-dw2" d={DANUBE} style={{ strokeWidth: 11.8 }}/>
         <path className="at-dw3" d={DANUBE} style={{ strokeWidth: 11 }}/>
         <path className="at-dw4" d={DANUBE} style={{ strokeWidth: 7.4 }}/>
+        <path className="at-tw2" d={TISA} style={{ strokeWidth: 5 }}/>
         <path className="at-dw5" d={DANUBE} style={{ strokeWidth: 6 }}/>
+        <path className="at-tw3" d={TISA} style={{ strokeWidth: 3.8 }}/>
       </g>
       <g className="at-city">
         <path className="at-city__area" d="M66 219C70 221.8 78.5 222.3 84 224C89.5 225.7 94.5 229.3 99 229C103.5 228.7 107.7 224.5 111 222C114.3 219.5 116.8 217.2 119 214C121.2 210.8 122.8 206.7 124 203C125.2 199.3 125.2 195.3 126 192C126.8 188.7 129.3 186.2 129 183C128.7 179.8 126.2 175.8 124 173C121.8 170.2 118.7 168.5 116 166C113.3 163.5 111.3 159.7 108 158C104.7 156.3 99.7 155.7 96 156C92.3 156.3 89.3 159.8 86 160C82.7 160.2 79.3 156.7 76 157C72.7 157.3 68.7 159.5 66 162C63.3 164.5 60.5 168.5 60 172C59.5 175.5 63.5 179.3 63 183C62.5 186.7 57.5 190 57 194C56.5 198 58.5 202.8 60 207C61.5 211.2 62 216.2 66 219.0Z"/>
-        <path className="at-fort" d="M138.0 189.8L139.7 192.7L142.9 193.4L140.8 195.9L141.1 199.2L138.0 197.9L134.9 199.2L135.2 195.9L133.1 193.4L136.3 192.7Z"/>
       </g>
       <g className="at-roads">
         <path className="at-road" d="M112 170C114.7 157.5 123 116.7 128 95C133 73.3 137.3 56.5 142 40C146.7 23.5 153.7 3.3 156 -4.0"/>
@@ -121,7 +122,7 @@ export function DeliveryMapArt() {
         <text className="at-l at-l--village at-l--minor" x="534" y="262" textAnchor="end">Titel</text>
         <text className="at-l at-l--village at-l--minor" x="330" y="40">Žabalj</text>
         <text className="at-l at-l--water" x="300" y="296" transform="rotate(3 300 296)">Dunav</text>
-        <text className="at-l at-l--water at-l--minor" x="512" y="146" transform="rotate(43 512 146)">Tisa</text>
+        <text className="at-l at-l--water at-l--minor" x="521" y="136" transform="rotate(43 521 136)">Tisa</text>
         <text className="at-l at-l--range" x="96" y="388">FRUŠKA GORA</text>
         <text className="at-l at-l--region at-l--minor" x="330" y="212">ŠAJKAŠKA</text>
         <text className="at-l at-l--region at-l--minor" x="30" y="64">BAČKA</text>
