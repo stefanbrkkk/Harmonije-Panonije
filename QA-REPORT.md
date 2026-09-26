@@ -520,3 +520,55 @@ wording (possible health connotation); footer year updates on redeploy.
 Not changed (protected HoneyHarvest choreography): the brief copy gap at
 two exact scroll positions, the fast catch-up swoop on large in-section
 jumps, and comb cropping at the right edge during the pour at ≤1024 px.
+
+## Addendum — client email, Budisava atlas map, third audit (26 September 2026)
+
+Input: the client's email of 26 September 2026 (see `CLIENT-CONFIRMATION.md`)
+and their photo set. Discovery ran as parallel design, content and audit
+agents; every audit finding was re-reproduced by an independent verifier
+before it was fixed (94 confirmed, 11 rejected).
+
+Client content, implemented:
+
+- Syrups are 0,75 l everywhere (catalogue, drawer, mailto, metadata, social
+  image). verify.mjs now fails if the old volume string comes back.
+- Base recipe stated plainly: one third meadow honey + 1 dl squeezed lemon
+  (hero caption, honey scene, ingredients plate, catalogue note).
+- New "Kako se pije" strip in the catalogue: 3–3,5 l of drink per bottle;
+  by the spoon, with warm/cold/mineral water, in cocktails and cakes,
+  mornings before food; storage (fridge up to a month, shake before use).
+- Budisava is the home of production and growing since August 2025, Novi
+  Sad is where it started: hero eyebrow, story (first person, timeline),
+  delivery copy, footer, meta description, JSON-LD (address Budisava 21242,
+  foundingLocation Novi Sad), manifest, OG image.
+- Catalogue realigned with the real range: 13 products in three
+  categories. Seven match the client's current labels; six stay listed with
+  the "to confirm" badge. The 0,3 l juice family is removed (no current
+  label or mention). Boosters are named "Immuno Booster" consistently.
+- Product art redrawn as packaging-true SVG (gable-house label, label line,
+  band colour, gingham/plain/linen fabric cap, twine) from a per-product
+  spec; the photo set was used only as colour reference. The AI promo
+  composites and their immunity headline are not used.
+
+Delivery map: replaced the pastel blob widget with an engraved atlas plate
+of southern Bačka (real projection, 12 units = 1 km): Danube and Tisa,
+Novi Sad as a hatched city, poplar rows, the farm vignette in Budisava, a
+route that draws once, north arrow, scale bar, coordinates, and an HTML
+legend. Container-query crop tiers keep labels ≥ 8 px at every width.
+
+Audit fixes (highlights): hero headline no longer breaks inside a word at
+≥1700 px; journey multi-boundary jumps land on the right chapter and
+skipped chapters never slide through the word slot; honey scene frames the
+whole comb during the pour at mid-size desktops (comb-aware camera pan)
+and no longer shows all chapters before hydration; final-CTA bee redrawn
+and moved off the headline; drawer fits at 200 % text; toast never covers
+the focused control (WCAG 2.4.11); add/quantity/remove controls carry
+their visible text in the accessible name (WCAG 2.5.3); 44 px tap targets;
+contrast fixes; decorative loops pause off-screen; mobile menu fades out;
+header is solid before hydration on deep links; self-hosted Gelasio as the
+fallback serif (Georgia metrics, Serbian Latin glyphs); favicon.ico and
+192/512 PNG manifest icons; unused CSS selectors removed.
+
+Deliberately not changed: the per-frame scroll read/write refactor (no long
+tasks measured; high risk to tuned scenes), the OG image serif font, and
+the phone availability-badge wording (client decision).
