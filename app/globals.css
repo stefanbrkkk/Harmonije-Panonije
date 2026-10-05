@@ -1798,7 +1798,7 @@ p, li, blockquote { text-wrap: pretty; }
   .honey-harvest--video .honey-harvest__chapter { top: calc(var(--header-height) + 30px); translate: none; width: 100%; padding: 0; }
   .honey-harvest--video .honey-harvest__chapter h2 { max-width: 540px; font-size: clamp(2.5rem, 10vw, 4.3rem); }
   .honey-harvest--video .honey-harvest__chapter > p:last-child { max-width: 540px; margin-top: 18px; font-size: .85rem; }
-  .honey-harvest--video .honey-harvest__scene { inset: max(48%, 23rem) 0 calc(84px + env(safe-area-inset-bottom, 0px)); }
+  .honey-harvest--video .honey-harvest__scene { inset: max(38%, 21rem) 0 calc(84px + env(safe-area-inset-bottom, 0px)); align-items: flex-start; }
 }
 @media (max-height: 500px) {
   .honey-harvest--video .honey-harvest__chapter { top: calc(var(--header-height) + 10px); translate: none; width: 36vw; padding: 0; }
