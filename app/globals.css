@@ -1780,8 +1780,8 @@ p, li, blockquote { text-wrap: pretty; }
   -webkit-mask-image: none; mask-image: none;
 }
 .honey-harvest__video, .honey-harvest__frames {
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent), linear-gradient(180deg, transparent, #000 8%, #000 92%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent), linear-gradient(180deg, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent), linear-gradient(180deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent), linear-gradient(180deg, transparent, #000 12%, #000 88%, transparent);
   -webkit-mask-composite: source-in; mask-composite: intersect;
 }
 .honey-harvest__frames {
@@ -1789,7 +1789,7 @@ p, li, blockquote { text-wrap: pretty; }
   background-image: url("/videos/bee-nectar-mobile.webp");
   background-size: 1000% 1000%; background-position: 0% 0%;
 }
-.honey-harvest__video { display: block; width: 100%; height: 100%; object-fit: contain; }
+.honey-harvest__video { display: block; width: min(100cqw, 184cqh); height: auto; aspect-ratio: 736 / 400; flex-shrink: 0; object-fit: contain; }
 @media (max-width: 800px), (pointer: coarse) {
   .honey-harvest--video .honey-harvest__video { display: none; }
   .honey-harvest--video .honey-harvest__frames { display: block; width: min(100cqw, 184cqh); flex-shrink: 0; background-repeat: no-repeat; }

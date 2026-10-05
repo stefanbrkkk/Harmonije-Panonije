@@ -22,6 +22,8 @@ export function HoneyHarvestSection() {
     let targetTime = 0;
     let seeking = false;
     let disposed = false;
+    let activeChapter = -1;
+    const chapterAnimations: Animation[] = [];
     const readProgress = () => {
       const rect = section.getBoundingClientRect();
       return Math.min(1, Math.max(0, -rect.top / Math.max(1, rect.height - window.innerHeight)));
@@ -46,14 +48,26 @@ export function HoneyHarvestSection() {
       }
       // Keep one chapter fully legible even at the exact handoff boundaries.
       const active = progress < 0.46 ? 0 : progress < 0.78 ? 1 : 2;
-      chapters.forEach((node, index) => {
-        if (node) {
+      if (active !== activeChapter) {
+        chapterAnimations.splice(0).forEach((animation) => animation.cancel());
+        const animateEntry = activeChapter !== -1;
+        activeChapter = active;
+        chapters.forEach((node, index) => {
+          if (!node) return;
           node.style.opacity = index === active ? "1" : "0";
           node.style.transform = "none";
-        }
-      });
+          if (index === active && animateEntry) {
+            chapterAnimations.push(node.animate([
+              { opacity: 0, transform: "translate3d(0, 12px, 0)" },
+              { opacity: 1, transform: "translate3d(0, 0, 0)" },
+            ], { duration: 420, easing: "cubic-bezier(.22,.8,.24,1)" }));
+          }
+        });
+      }
     };
     const paintStatic = () => {
+      chapterAnimations.splice(0).forEach((animation) => animation.cancel());
+      activeChapter = -1;
       video.pause();
       chapters.forEach((node) => {
         if (node) { node.style.opacity = "1"; node.style.transform = "none"; }
@@ -74,6 +88,7 @@ export function HoneyHarvestSection() {
     }, 1);
     return () => {
       disposed = true;
+      chapterAnimations.forEach((animation) => animation.cancel());
       stopLoop();
       video.removeEventListener("seeked", onSeeked);
       video.removeEventListener("loadeddata", onReady);
