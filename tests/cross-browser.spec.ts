@@ -58,12 +58,13 @@ test("honey scene reaches a valid mid-state", async ({ page }) => {
   );
   await page.waitForTimeout(900);
   const state = await page.evaluate(() => ({
-    bee: document.querySelector(".honey-macro-bee")?.getAttribute("transform") ?? "",
+    time: document.querySelector<HTMLVideoElement>(".honey-harvest__video")?.currentTime ?? 0,
     chapter: ["a", "b", "c"].map(
       (suffix) => parseFloat(document.querySelector<HTMLElement>(`.honey-harvest__chapter--${suffix}`)?.style.opacity ?? "0"),
     ),
   }));
-  expect(state.bee).toMatch(/translate/);
+  expect(state.time).toBeGreaterThan(2.8);
+  expect(state.time).toBeLessThan(3.2);
   expect(Math.max(...state.chapter)).toBeGreaterThan(0.9);
   assertClean();
 });

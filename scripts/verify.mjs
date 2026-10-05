@@ -109,6 +109,10 @@ const toast = read("src/components/CartToast.tsx");
 const scene = read("src/lib/scene.ts");
 
 const tripwires = [
+  ["scroll video asset", fs.existsSync(path.join(root, "public/videos/bee-nectar-scroll.mp4"))],
+  ["scroll video poster", fs.existsSync(path.join(root, "public/videos/bee-nectar-poster.jpg"))],
+  ["video inline and muted", honey.includes("playsInline") && honey.includes("muted")],
+  ["serialized video seeking", honey.includes('video.addEventListener("seeked", onSeeked)') && honey.includes("video.currentTime = targetTime")],
   // HP-01/02/25: menu must be a header sibling (stacking context), not a child.
   ["menu/header sibling", header.indexOf('id="mobile-menu"') > header.indexOf("</header>")],
   ["menu trap covers toggle", header.includes("toggleNode, ...panel")],
@@ -134,7 +138,6 @@ const tripwires = [
   // HP-08: static bee poses for no-JS first paint.
   ["journey bee fallback pose", journey.includes("translate(${PERCHES[LAST][0]} ${PERCHES[LAST][1]})")],
   ["journey horizon progress", journey.includes("journey__progress") && css.includes(".journey__progress")],
-  ["honey bee fallback pose", honey.includes('transform="translate(150 150)')],
   // HP-14/33: notice events carry sequence + quantity; quantities bounded.
   ["notice event model", cart.includes("seq") && cart.includes("MAX_QUANTITY")],
   ["toast hover/focus pause", toast.includes("pausedRef")],
@@ -152,19 +155,12 @@ const tripwires = [
   // widths, so they can never leak into the two-column or phone layouts.
   ["feature card scoped to desktop", /@media \(min-width: 1081px\) \{\s*\.product-card:nth-child\(6n\),/.test(css) && !/^\.product-card:nth-child\(6n\) \{/m.test(css)],
   // HP-03/05/09: camera-framed responsive scenes.
-  ["scene camera", honey.includes("cameraShift(")],
   // HP-04: sequential chapter handoff aligned to visual actions (never a
   // symmetric crossfade sharing coordinates at equal opacity).
-  ["chapter handoff windows", honey.includes("fade(copyARef.current, -0.05, 0.0, 0.3, 0.325)")],
   // Sequential phase beats with an explicit retract before takeoff.
-  ["drink phase timeline", honey.includes("RETRACT .40–.45") && honey.includes("1 - phaseProgress(progress, 0.4, 0.45)")],
-  ["honey exit lift", honey.includes("(1 - exit) * 22")],
   // One coordinate system: bee, drop, stream and comb share viewBox units;
   // a single fill rect replaces 42 transition-chasing cells.
-  ["shared pour geometry", honey.includes("POUR_X = 592") && honey.includes("STREAM_BOT_Y = 366")],
-  ["single comb fill", honey.includes("honey-fill-level") && !honey.includes("honeycomb-3d") && !css.includes(".honeycomb-3d")],
   ["no scrubbed transitions", !css.includes("transition: transform .05s") && !css.includes("transition: opacity .06s")],
-  ["time-clocked flap", honey.includes("flapT") && honey.includes("Math.sin(flapT * 0.35)")],
   ["page-bee exclusions", bee.includes('[data-page-bee="hide"]')],
   ["exclusion beats end fallback", bee.indexOf("excluded === 1") < bee.indexOf("progress > 0.985")],
   // Chapter selection with hysteresis: boundary jitter never toggles.
