@@ -109,6 +109,7 @@ const toast = read("src/components/CartToast.tsx");
 const scene = read("src/lib/scene.ts");
 
 const tripwires = [
+  ["mobile frame atlas", fs.existsSync(path.join(root, "public/videos/bee-nectar-mobile.webp")) && honey.includes("framesRef.current.dataset.frame")],
   ["scroll video asset", fs.existsSync(path.join(root, "public/videos/bee-nectar-scroll.mp4"))],
   ["scroll video poster", fs.existsSync(path.join(root, "public/videos/bee-nectar-poster.jpg"))],
   ["video inline and muted", honey.includes("playsInline") && honey.includes("muted")],

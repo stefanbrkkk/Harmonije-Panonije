@@ -12,18 +12,24 @@ for (const viewport of [
     await page.setViewportSize(viewport);
     await page.goto(process.env.HONEY_TEST_URL || "/", { waitUntil: "networkidle" });
     const video = page.locator(".honey-harvest__video");
-    await expect(video).toBeVisible();
+    const mobile = viewport.width <= 800;
+    const frames = page.locator(".honey-harvest__frames");
+    await expect(mobile ? frames : video).toBeVisible();
     await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState)).toBeGreaterThanOrEqual(2);
     const duration = await video.evaluate((node: HTMLVideoElement) => node.duration);
     expect(duration).toBeGreaterThan(5.9);
     for (const fraction of [0, 0.25, 0.46, 0.6, 0.78, 0.95, 0.3, 0.85, 0.05]) {
       await scrollToStickyProgress(page, ".honey-harvest", fraction);
-      await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.currentTime)).toBeCloseTo(fraction * (duration - 1 / 24), 1);
+      if (mobile) {
+        await expect.poll(() => frames.getAttribute("data-frame")).toBe(String(Math.round(fraction * 96)));
+      } else {
+        await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.currentTime)).toBeCloseTo(fraction * (duration - 1 / 24), 1);
+      }
       const layout = await page.evaluate(() => {
         const chapters = [...document.querySelectorAll<HTMLElement>(".honey-harvest__chapter")];
         const active = chapters.filter((node) => Number(getComputedStyle(node).opacity) > 0.99);
         const copy = active[0].getBoundingClientRect();
-        const film = document.querySelector(".honey-harvest__video")!.getBoundingClientRect();
+        const film = document.querySelector(window.innerWidth <= 800 ? ".honey-harvest__frames" : ".honey-harvest__video")!.getBoundingClientRect();
         const header = document.querySelector(".site-header")!.getBoundingClientRect();
         return {
           count: active.length, copyTop: copy.top, copyBottom: copy.bottom,

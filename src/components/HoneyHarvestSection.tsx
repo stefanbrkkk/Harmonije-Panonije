@@ -6,6 +6,7 @@ import { bindShortWords } from "@/src/lib/typography";
 
 export function HoneyHarvestSection() {
   const sectionRef = useRef<HTMLElement>(null);
+  const framesRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const copyARef = useRef<HTMLDivElement>(null);
   const copyBRef = useRef<HTMLDivElement>(null);
@@ -16,6 +17,7 @@ export function HoneyHarvestSection() {
     const video = videoRef.current;
     if (!section || !video) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mobile = window.matchMedia("(max-width: 800px), (pointer: coarse)");
     const chapters = [copyARef.current, copyBRef.current, copyCRef.current];
     let targetTime = 0;
     let seeking = false;
@@ -27,7 +29,7 @@ export function HoneyHarvestSection() {
     // One outstanding seek at a time. The newest scroll position replaces
     // the pending target, so rapid scrolling never queues obsolete frames.
     const seek = () => {
-      if (disposed || reduced.matches || seeking || video.readyState < 2 || !Number.isFinite(video.duration)) return;
+      if (disposed || mobile.matches || reduced.matches || seeking || video.readyState < 2 || !Number.isFinite(video.duration)) return;
       if (Math.abs(video.currentTime - targetTime) < 1 / 48) return;
       seeking = true;
       video.currentTime = targetTime;
@@ -35,6 +37,13 @@ export function HoneyHarvestSection() {
     const paint = (progress: number) => {
       targetTime = progress * Math.max(0, (video.duration || 0) - 1 / 24);
       seek();
+      // A single predecoded atlas avoids iOS paused-video/seek restrictions.
+      // 97 frames sampled directly from the supplied video at 16 fps.
+      const frame = Math.min(96, Math.round(progress * 96));
+      if (framesRef.current) {
+        framesRef.current.style.backgroundPosition = `${(frame % 10) * 100 / 9}% ${Math.floor(frame / 10) * 100 / 9}%`;
+        framesRef.current.dataset.frame = String(frame);
+      }
       // Keep one chapter fully legible even at the exact handoff boundaries.
       const active = progress < 0.46 ? 0 : progress < 0.78 ? 1 : 2;
       chapters.forEach((node, index) => {
@@ -54,6 +63,7 @@ export function HoneyHarvestSection() {
     const onReady = () => { seeking = false; if (!reduced.matches) paint(readProgress()); };
     video.addEventListener("seeked", onSeeked);
     video.addEventListener("loadeddata", onReady);
+    mobile.addEventListener("change", onReady);
     section.classList.add("is-live");
     if (reduced.matches) paintStatic(); else paint(readProgress());
     const stopLoop = createSceneLoop(section, reduced, {
@@ -67,6 +77,7 @@ export function HoneyHarvestSection() {
       stopLoop();
       video.removeEventListener("seeked", onSeeked);
       video.removeEventListener("loadeddata", onReady);
+      mobile.removeEventListener("change", onReady);
       section.classList.remove("is-live");
     };
   }, []);
@@ -93,6 +104,7 @@ export function HoneyHarvestSection() {
         </div>
 
         <div className="honey-harvest__scene" aria-hidden="true">
+          <div ref={framesRef} className="honey-harvest__frames" data-frame="0" />
           <video
             ref={videoRef}
             className="honey-harvest__video"
