@@ -63,7 +63,7 @@ export default function HomePage() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
       <CartProvider>
         <a className="skip-link" href="#glavni-sadrzaj">Preskoči na glavni sadržaj</a>
         <Header />
